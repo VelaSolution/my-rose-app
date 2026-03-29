@@ -1,4 +1,4 @@
-export type IndustryKey = "cafe" | "restaurant" | "bar" | "finedining";
+export type IndustryKey = "cafe" | "restaurant" | "bar" | "finedining" | "gogi";
 
 // ─── 폼 상태 (4단계 분리) ──────────────────────────────────────
 
@@ -73,10 +73,6 @@ export type Step3Form = {
   // 목표
   recoveryMonths: number;         // 투자금 회수 목표 (개월)
   targetMonthlyProfit: number;    // 목표 월 순이익
-  // 이중사업자 (고깃집)
-  isDualBiz: boolean;             // 이중사업자 여부
-  meatCostRatio: number;          // 고기 원가 비율 (%)
-  biz2Name: string;               // 2호 사업자명
 };
 
 // 전체 폼
@@ -140,7 +136,6 @@ export const INDUSTRY_CONFIG: Record<
       deposit: 30000000, premiumKey: 10000000, interior: 20000000, equipment: 10000000, signage: 2000000, otherSetup: 3000000,
       loanEnabled: false, loanAmount: 0, loanInterestRate: 5, loanTermMonths: 36,
       recoveryMonths: 24, targetMonthlyProfit: 3000000,
-      isDualBiz: false, meatCostRatio: 40, biz2Name: "",
     },
   },
   restaurant: {
@@ -167,7 +162,6 @@ export const INDUSTRY_CONFIG: Record<
       deposit: 50000000, premiumKey: 30000000, interior: 40000000, equipment: 20000000, signage: 3000000, otherSetup: 5000000,
       loanEnabled: true, loanAmount: 50000000, loanInterestRate: 5, loanTermMonths: 48,
       recoveryMonths: 36, targetMonthlyProfit: 5000000,
-      isDualBiz: false, meatCostRatio: 40, biz2Name: "",
     },
   },
   bar: {
@@ -194,7 +188,33 @@ export const INDUSTRY_CONFIG: Record<
       deposit: 30000000, premiumKey: 20000000, interior: 30000000, equipment: 10000000, signage: 2000000, otherSetup: 3000000,
       loanEnabled: true, loanAmount: 30000000, loanInterestRate: 5, loanTermMonths: 36,
       recoveryMonths: 30, targetMonthlyProfit: 4000000,
-      isDualBiz: false, meatCostRatio: 40, biz2Name: "",
+    },
+  },
+  gogi: {
+    label: "🥩 고깃집",
+    defaultStep1: {
+      seats: 30, avgSpend: 35000, turnover: 2.0,
+      weekdayDays: 22, weekendDays: 8, weekendMultiplier: 1.5,
+      deliveryEnabled: false, deliverySales: 0, deliveryAppRate: 70, deliveryDirectRate: 30,
+      deliveryPreference: "possible",
+      lunchRatio: 20, dinnerRatio: 60, nightRatio: 20,
+    },
+    defaultStep2: {
+      laborType: "direct", labor: 5000000, staffCount: 4, hourlyWage: 12000,
+      workHoursPerDay: 8, workDaysPerMonth: 22,
+      rent: 2500000, utilities: 500000, telecom: 100000,
+      cogsRate: 45, alcoholCogsRate: 30, alcoholSalesRatio: 20,
+      deliveryFeeRate: 15, cardFeeRate: 1.5,
+      marketing: 300000, supplies: 200000, maintenance: 150000,
+      etc: 200000,
+    },
+    defaultStep3: {
+      businessType: "operating",
+      deposit: 50000000, premium: 30000000, interior: 40000000, equipment: 20000000,
+      loanAmount: 50000000, loanRate: 5.5, loanTerm: 60,
+      recoveryMonths: 24,
+      incomeTaxRate: 15,
+      isDualBiz: true, meatCostRatio: 40, biz2Name: "정육점",
     },
   },
   finedining: {
@@ -221,12 +241,11 @@ export const INDUSTRY_CONFIG: Record<
       deposit: 100000000, premiumKey: 50000000, interior: 100000000, equipment: 50000000, signage: 5000000, otherSetup: 10000000,
       loanEnabled: true, loanAmount: 100000000, loanInterestRate: 4.5, loanTermMonths: 60,
       recoveryMonths: 48, targetMonthlyProfit: 8000000,
-      isDualBiz: false, meatCostRatio: 40, biz2Name: "",
     },
   },
 };
 
-export const VALID_INDUSTRIES: IndustryKey[] = ["cafe", "restaurant", "bar", "finedining"];
+export const VALID_INDUSTRIES: IndustryKey[] = ["cafe", "restaurant", "bar", "finedining", "gogi"];
 
 /** 모든 수치를 0으로 초기화한 빈 폼 — 시뮬레이터 최초 진입 시 사용 */
 export function createEmptyForm(industry: IndustryKey = "restaurant"): FullForm {
@@ -251,7 +270,6 @@ export function createEmptyForm(industry: IndustryKey = "restaurant"): FullForm 
     deposit: 0, premiumKey: 0, interior: 0, equipment: 0, signage: 0, otherSetup: 0,
     loanEnabled: false, loanAmount: 0, loanInterestRate: 5, loanTermMonths: 36,
     recoveryMonths: 24, targetMonthlyProfit: 0,
-    isDualBiz: false, meatCostRatio: 40, biz2Name: "",
   };
 }
 
@@ -324,9 +342,6 @@ export function sanitizeFullForm(raw: Record<string, unknown>): FullForm {
     loanTermMonths:       num("loanTermMonths", def.loanTermMonths, 1, 360),
     recoveryMonths:       num("recoveryMonths", def.recoveryMonths, 1, 120),
     targetMonthlyProfit:  num("targetMonthlyProfit", def.targetMonthlyProfit, 0),
-    isDualBiz:            bool("isDualBiz", false),
-    meatCostRatio:        num("meatCostRatio", 40, 10, 70),
-    biz2Name:             typeof raw.biz2Name === "string" ? raw.biz2Name : "",
   };
 }
 

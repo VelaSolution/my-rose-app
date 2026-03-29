@@ -16,6 +16,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "VELA — 사업의 방향을 계산하다",
   description: "외식업 창업자와 운영자를 위한 수익 시뮬레이터 & AI 경영 컨설턴트",
+  keywords: ["외식업", "수익 시뮬레이터", "창업", "카페", "음식점", "경영 분석"],
+  openGraph: {
+    title: "VELA — 사업의 방향을 계산하다",
+    description: "외식업 창업자와 운영자를 위한 수익 시뮬레이터 & AI 경영 컨설턴트",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -36,3 +42,4 @@ export default function RootLayout({
     </html>
   );
 }
+
