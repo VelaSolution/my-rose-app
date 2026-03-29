@@ -207,6 +207,7 @@ export const INDUSTRY_CONFIG: Record<
       deliveryFeeRate: 15, cardFeeRate: 1.5,
       marketing: 300000, supplies: 200000, maintenance: 150000,
       etc: 200000,
+      incomeTaxRate: 24, vatEnabled: true, insuranceRate: 9,
     },
     defaultStep3: {
       businessType: "operating",
