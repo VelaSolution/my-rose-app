@@ -436,7 +436,7 @@ export default function LandingPage() {
           <div className="contact-layout">
             <FadeIn>
               <div className="contact-info">
-                {[{ label: "이메일", value: "hello@vela.kr" }, { label: "운영 시간", value: "평일 10:00 — 18:00" }, { label: "응답 시간", value: "영업일 기준 1일 이내" }].map((c) => (
+                {[{ label: "이메일", value: "mnhyuk0213@velaanalytics.com" }, { label: "운영 시간", value: "평일 10:00 — 18:00" }, { label: "응답 시간", value: "영업일 기준 1일 이내" }].map((c) => (
                   <div key={c.label}><div className="contact-label">{c.label}</div><div className="contact-value">{c.value}</div></div>
                 ))}
                 <div style={{ paddingTop: 16, borderTop: "1px solid var(--gray-200)" }}>
