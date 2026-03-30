@@ -530,7 +530,7 @@ export default function MenuCostPage() {
           cost: totalCost,
           cogs_rate: parseFloat(cogsRate.toFixed(2)),
           margin: sellPrice - totalCost,
-          ingredients: m.ingredients.map(i => ({ name: i.name, amount: i.amount, cost: i.cost })),
+          ingredients: m.ingredients.map(i => ({ name: i.name, cost: parseInt(i.cost) || 0 })),
           memo: "",
         };
       });
