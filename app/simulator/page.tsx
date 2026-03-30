@@ -608,15 +608,15 @@ function PreviewBar({ form }: { form: FullForm }) {
     <div className="rounded-[28px] bg-slate-900 p-5 text-white">
       <p className="mb-3 text-xs font-medium text-slate-400">실시간 미리보기</p>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
           <p className="text-xs text-slate-400">월 총 매출</p>
-          <p className="mt-1 text-base font-bold">{fmt(result.totalSales)}원</p>
+          <p className="mt-1 text-sm font-bold leading-tight">{fmt(result.totalSales)}원</p>
         </div>
         <div>
           <p className="text-xs text-slate-400">세전 순이익</p>
           <p
-            className={`mt-1 text-base font-bold ${
+            className={`mt-1 text-sm font-bold leading-tight ${
               isProfit ? "text-emerald-400" : "text-red-400"
             }`}
           >
@@ -626,7 +626,7 @@ function PreviewBar({ form }: { form: FullForm }) {
         <div>
           <p className="text-xs text-slate-400">세후 실수령</p>
           <p
-            className={`mt-1 text-base font-bold ${
+            className={`mt-1 text-sm font-bold leading-tight ${
               result.netProfit >= 0 ? "text-emerald-300" : "text-red-300"
             }`}
           >
@@ -636,7 +636,7 @@ function PreviewBar({ form }: { form: FullForm }) {
         <div>
           <p className="text-xs text-slate-400">현금흐름</p>
           <p
-            className={`mt-1 text-base font-bold ${
+            className={`mt-1 text-sm font-bold leading-tight ${
               result.cashFlow >= 0 ? "text-blue-300" : "text-red-300"
             }`}
           >
@@ -1709,10 +1709,17 @@ export default function Page() {
       return;
     }
 
+    if (!simTitle.trim()) {
+      setStepError("시뮬레이션 제목을 입력해주세요.");
+      window.scrollTo(0, 0);
+      return;
+    }
+
     setStepError("");
     localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
+    localStorage.setItem("vela-sim-title", simTitle.trim());
     window.dispatchEvent(new Event("vela-form-updated"));
-    const titleParam = simTitle.trim() ? `&title=${encodeURIComponent(simTitle.trim())}` : "";
+    const titleParam = `&title=${encodeURIComponent(simTitle.trim())}`;
     router.push(`/result?${buildQuery(form)}${titleParam}`);
   };
 
@@ -1790,7 +1797,7 @@ export default function Page() {
           <PreviewBar form={form} />
         </div>
 
-        <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6 lg:items-start">
+        <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-6 lg:items-start">
 
           <div className="space-y-6">
             {step === 1 && <Step1 form={form} update={update} errors={step1Errors} loadIndustryDefaults={loadIndustryDefaults} applyPosResult={applyPosResult} />}
@@ -1801,7 +1808,7 @@ export default function Page() {
               {stepError && <div className="mb-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">{stepError}</div>}
               {step === 3 && (
                 <div className="mb-3">
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">시뮬레이션 제목 (선택)</label>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">시뮬레이션 제목 <span className="text-red-400">*</span></label>
                   <input
                     type="text"
                     value={simTitle}

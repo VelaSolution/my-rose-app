@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -503,6 +504,51 @@ export default function MenuCostPage() {
   const [industry, setIndustry] = useState<IndustryKey>("cafe");
   const [menus, setMenus] = useState<MenuItem[]>(INDUSTRY_PRESETS["cafe"]);
   const [filterCategory, setFilterCategory] = useState("전체");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
+
+  async function saveAllMenus() {
+    setSaveStatus("saving");
+    const supabase = createSupabaseBrowserClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = "/login?next=/tools/menu-cost";
+      return;
+    }
+
+    const toSave = menus
+      .filter(m => num(m.price) > 0)
+      .map(m => {
+        const totalCost = m.ingredients.reduce((s, i) => s + (parseInt(i.cost) || 0), 0);
+        const sellPrice = num(m.price);
+        const cogsRate = sellPrice > 0 ? (totalCost / sellPrice) * 100 : 0;
+        return {
+          user_id: user.id,
+          name: m.name,
+          category: m.category,
+          industry,
+          sell_price: sellPrice,
+          cost: totalCost,
+          cogs_rate: parseFloat(cogsRate.toFixed(2)),
+          margin: sellPrice - totalCost,
+          ingredients: m.ingredients.map(i => ({ name: i.name, amount: i.amount, cost: i.cost })),
+          memo: "",
+        };
+      });
+
+    if (toSave.length === 0) {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus("idle"), 2000);
+      return;
+    }
+
+    const { error } = await supabase.from("menu_costs").upsert(toSave);
+    if (error) {
+      setSaveStatus("error");
+    } else {
+      setSaveStatus("done");
+    }
+    setTimeout(() => setSaveStatus("idle"), 3000);
+  }
 
   function changeIndustry(key: IndustryKey) {
     setIndustry(key);
@@ -575,10 +621,29 @@ export default function MenuCostPage() {
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">
           {/* 상단 헤더 */}
-          <div className="flex items-center gap-3 mb-8 mt-4">
+          <div className="flex items-center justify-between gap-3 mb-8 mt-4">
             <Link href="/tools" className="text-sm text-slate-400 hover:text-slate-700 transition">
               ← 도구 목록
             </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/tools/menu-cost/saved"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                📋 저장된 메뉴 보기
+              </Link>
+              <button
+                onClick={saveAllMenus}
+                disabled={saveStatus === "saving"}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
+                  saveStatus === "done" ? "bg-emerald-500 text-white" :
+                  saveStatus === "error" ? "bg-red-500 text-white" :
+                  "bg-slate-900 text-white hover:bg-slate-700"
+                }`}>
+                {saveStatus === "saving" ? "저장 중..." :
+                 saveStatus === "done" ? "✓ 저장 완료" :
+                 saveStatus === "error" ? "판매가 입력 필요" :
+                 "💾 현황 저장"}
+              </button>
+            </div>
           </div>
 
           <div className="mb-8">

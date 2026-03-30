@@ -235,10 +235,10 @@ export default function LandingPage() {
               <p className="hero-desc">매출·원가·인건비·대출을 한 번에 시뮬레이션하고<br />AI 컨설턴트의 맞춤 전략을 받아보세요.</p>
               <div className="hero-actions">
                 <Link href={isLoggedIn ? "/simulator" : "/signup"} className="btn-primary">무료로 시작하기 →</Link>
-                <a href="#features" className="btn-secondary">서비스 알아보기</a>
+                <Link href="/simulator" className="btn-secondary">직접 계산해보기 →</Link>
               </div>
               <div className="hero-stats">
-                <div><div className="stat-num">4<span>개</span></div><div className="stat-label">업종 지원</div></div>
+                <div><div className="stat-num">5<span>개</span></div><div className="stat-label">업종 지원</div></div>
                 <div><div className="stat-num">20<span>+</span></div><div className="stat-label">재무 지표</div></div>
                 <div><div className="stat-num">AI</div><div className="stat-label">실시간 전략</div></div>
               </div>
@@ -269,7 +269,7 @@ export default function LandingPage() {
           <div className="features-grid">
             {[
               { icon: "📊", title: "수익 시뮬레이터", desc: "좌석·객단가·회전율·배달 매출까지 입력하면 월 매출·순이익·손익분기점을 즉시 계산합니다.", tag: "실시간 계산", delay: 0 },
-              { icon: "🤖", title: "AI 전략 컨설팅", desc: "매장 데이터를 기반으로 AI가 운영·마케팅·메뉴 전략을 제안하고 채팅으로 추가 질문도 가능합니다.", tag: "Claude AI", delay: 80 },
+              { icon: "🤖", title: "AI 전략 컨설팅", desc: "매장 데이터를 기반으로 AI가 운영·마케팅·메뉴 전략을 제안하고 채팅으로 추가 질문도 가능합니다.", tag: "AI 분석", delay: 80 },
               { icon: "📋", title: "POS 데이터 분석", desc: "엑셀 POS 파일을 업로드하면 AI가 매출 패턴·피크 시간·인기 메뉴를 자동 분석합니다.", tag: "파일 업로드", delay: 160 },
               { icon: "🎯", title: "목표 역산 계획", desc: "원하는 월 순이익을 입력하면 필요한 객단가·회전율을 역산해 달성 경로를 제시합니다.", tag: "목표 설정", delay: 0 },
               { icon: "💰", title: "투자금 회수 예측", desc: "보증금·권리금·인테리어와 대출 조건을 입력하면 투자금 회수 기간을 자동 계산합니다.", tag: "재무 계획", delay: 80 },
@@ -375,8 +375,8 @@ export default function LandingPage() {
           <div className="pricing-grid">
             {[
               { plan: "무료", price: "0", unit: "원/월", desc: "혼자 운영하는 소규모 매장", features: ["수익 시뮬레이터", "월 3회 AI 브리핑", "기본 차트 및 분석", "링크 공유"], btn: "무료로 시작", cls: "pricing-btn-gray", href: "/signup", popular: false },
-              { plan: "스탠다드", price: "9,900", unit: "원/월", desc: "성장하는 매장을 위한 핵심 기능", features: ["무료 플랜 모든 기능", "무제한 AI 브리핑", "AI 전략 추천", "POS 파일 분석", "히스토리 12개월"], btn: "스탠다드 시작", cls: "pricing-btn-blue", href: "/pricing", popular: true },
-              { plan: "프로", price: "29,900", unit: "원/월", desc: "다점포·프랜차이즈 운영자", features: ["스탠다드 모든 기능", "매장 무제한 관리", "팀 멤버 초대", "우선 고객 지원", "맞춤 컨설팅 월 1회"], btn: "프로 시작", cls: "pricing-btn-gray", href: "/pricing", popular: false },
+              { plan: "스탠다드", price: "9,900", unit: "원/월", desc: "성장하는 매장을 위한 핵심 기능", features: ["무료 플랜 모든 기능", "무제한 AI 브리핑", "AI 전략 추천", "POS 파일 분석", "히스토리 12개월"], btn: "스탠다드 시작", cls: "pricing-btn-blue", href: "/signup", popular: true },
+              { plan: "프로", price: "29,900", unit: "원/월", desc: "다점포·프랜차이즈 운영자", features: ["스탠다드 모든 기능", "매장 무제한 관리", "팀 멤버 초대", "우선 고객 지원", "맞춤 컨설팅 월 1회"], btn: "프로 시작", cls: "pricing-btn-gray", href: "/signup", popular: false },
             ].map((p) => (
               <FadeIn key={p.plan}>
                 <div className={`pricing-card${p.popular ? " popular" : ""}`}>
@@ -399,9 +399,9 @@ export default function LandingPage() {
           <FadeIn><span className="section-tag" style={{ background: "rgba(255,255,255,.1)", color: "#93C5FD" }}>후기</span><h2 className="section-title">실제 사장님들의 이야기</h2></FadeIn>
           <div className="testi-grid">
             {[
-              { text: "손익분기점을 처음으로 제대로 이해했어요. 숫자를 보니 어디서 돈이 새는지 바로 보이더라고요.", name: "김○○", role: "카페 운영 3년차", av: "김", delay: 0 },
-              { text: "AI가 배달 채널 추가를 추천해줬는데, 실행 후 월 매출이 20% 올랐습니다. 믿기 어렵지만 사실이에요.", name: "박○○", role: "분식점 사장님", av: "박", delay: 80 },
-              { text: "창업 전에 미리 수치를 검토할 수 있어서 보증금 협상도 자신 있게 했습니다.", name: "이○○", role: "파인다이닝 예비 창업자", av: "이", delay: 160 },
+              { text: "손익분기점을 처음으로 제대로 이해했어요. 월 매출이 2,800만원인데 실수령이 왜 이것밖에 안 되는지 숫자로 보이니까 바로 알겠더라고요.", name: "김○○", role: "홍대 카페 운영 2년차", av: "김", delay: 0 },
+              { text: "창업 전에 시뮬레이터로 3가지 시나리오를 다 계산해봤어요. 덕분에 보증금 협상할 때 숫자 근거가 있어서 자신 있게 했습니다.", name: "이○○", role: "음식점 예비 창업자", av: "이", delay: 80 },
+              { text: "세금 계산기랑 원가 계산기가 특히 유용했어요. 메뉴 가격 올릴 때 이걸로 계산하고 결정했는데 순이익이 확실히 올랐습니다.", name: "박○○", role: "분식점 사장님 3년차", av: "박", delay: 160 },
             ].map((t) => (
               <FadeIn key={t.name} delay={t.delay}>
                 <div className="testi-card">

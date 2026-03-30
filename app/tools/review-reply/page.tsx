@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 
 type ReplyTone = "apologetic" | "grateful" | "professional" | "friendly";
@@ -36,6 +37,13 @@ const INDUSTRY_LABEL: Record<string, string> = {
 
 export default function ReviewReplyPage() {
   const simData = useSimulatorData();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user));
+  }, []);
+
   const [platform, setPlatform] = useState<Platform>("naver");
   const [tone, setTone] = useState<ReplyTone>("grateful");
   const [review, setReview] = useState("");
@@ -113,10 +121,6 @@ ${review}
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
-        body{font-family:'Pretendard',-apple-system,sans-serif}
-      `}</style>
       <NavBar />
       <ToolNav />
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
@@ -221,7 +225,7 @@ ${review}
                 <button
                   onClick={generate}
                   disabled={loading || !review.trim()}
-                  className="w-full rounded-2xl bg-orange-500 py-3.5 text-sm font-bold text-white transition hover:bg-orange-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full rounded-2xl bg-slate-900 py-3.5 text-sm font-bold text-white transition hover:bg-slate-700 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -257,7 +261,7 @@ ${review}
                   )}
                   {loading && (
                     <div className="h-full flex flex-col items-center justify-center gap-3">
-                      <svg className="animate-spin w-8 h-8 text-orange-400" viewBox="0 0 24 24" fill="none">
+                      <svg className="animate-spin w-8 h-8 text-slate-400" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>

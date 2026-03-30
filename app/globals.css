@@ -1,54 +1,58 @@
 @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+/* ── VELA 디자인 토큰 ─────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --vela-blue: #3182F6;
+  --vela-blue-dark: #1B64DA;
+  --vela-blue-light: #EBF3FF;
+  --vela-slate: #191F28;
+  --gray-50: #F9FAFB;
+  --gray-100: #F2F4F6;
+  --gray-200: #E5E8EB;
+  --gray-400: #9EA6B3;
+  --gray-600: #6B7684;
+  --gray-800: #333D4B;
+  --gray-900: #191F28;
+  --success: #059669;
+  --danger: #DC2626;
+  --font-base: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* ── 기본 ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-base);
+  background: #fff;
+  color: var(--gray-900);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* 스크롤바 스타일링 */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+/* ── 스크롤바 ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--gray-100); }
+::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* ── 포커스 ────────────────────────────────────────── */
+*:focus-visible { outline: 2px solid var(--vela-blue); outline-offset: 2px; }
+
+/* ── 인쇄 ─────────────────────────────────────────── */
+@media print {
+  .no-print, nav, aside { display: none !important; }
+  body { background: white !important; }
+  main { padding: 0 !important; }
+  @page { margin: 15mm; size: A4; }
 }
 
-/* 포커스 아웃라인 제거 (접근성 대체 스타일 적용) */
-*:focus-visible {
-  outline: 2px solid #3182F6;
-  outline-offset: 2px;
-}
-
-/* 애니메이션 */
+/* ── 애니메이션 ────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: none; }
 }
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }

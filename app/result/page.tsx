@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import NavBar from "@/components/NavBar";
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -457,6 +458,7 @@ function ResultContent() {
   const searchParams = useSearchParams();
   const [userId, setUserId] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState("");
+  const simTitle = searchParams.get("title") ?? "";
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -483,7 +485,8 @@ function ResultContent() {
     if (!userId) { router.push("/login"); return; }
     const supabase = createSupabaseBrowserClient();
     const now = new Date();
-    const label = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const autoLabel = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const label = simTitle.trim() ? simTitle.trim() : autoLabel;
     const { error } = await supabase.from("simulation_history").insert({
       user_id: userId,
       label,
@@ -515,7 +518,9 @@ function ResultContent() {
   }, [result, form, isProfit]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 md:px-8 print:bg-white print:px-0">
+    <>
+    <NavBar />
+    <main className="min-h-screen bg-slate-50 px-4 pt-20 pb-6 md:px-8 print:bg-white print:px-0 print:pt-0">
       <div className="mx-auto max-w-7xl space-y-6">
 
         {/* 헤더 */}
@@ -527,7 +532,9 @@ function ResultContent() {
                 <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{config.label}</div>
                 <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{form.businessType === "new" ? "창업 예정" : "운영 중"}</div>
               </div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900">분석 결과</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                {simTitle ? `${simTitle} 분석 결과` : "분석 결과"}
+              </h1>
               <p className="mt-2 text-slate-500">입력하신 수치를 {config.label} 기준으로 분석했습니다.</p>
             </div>
             <div className={`inline-flex h-fit rounded-full px-4 py-2 text-sm font-semibold ${isProfit ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
@@ -715,6 +722,7 @@ function ResultContent() {
       {/* 플로팅 AI 채팅 */}
       <VelaChat context={{ form: form as unknown as Record<string, unknown>, result: result as unknown as Record<string, unknown> }} />
     </main>
+    </>
   );
 }
 

@@ -12,6 +12,7 @@ const TOOL_SECTIONS = [
     section: "💰 재무·수익",
     tools: [
       { href: "/tools/menu-cost", emoji: "🧮", label: "메뉴 원가 계산기" },
+      { href: "/tools/menu-cost/saved", emoji: "📋", label: "저장된 원가 현황" },
       { href: "/tools/labor", emoji: "👥", label: "인건비 스케줄러" },
       { href: "/tools/tax", emoji: "🧾", label: "세금 계산기" },
       { href: "/tools/pl-report", emoji: "📄", label: "손익계산서 PDF" },
