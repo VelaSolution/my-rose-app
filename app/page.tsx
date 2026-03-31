@@ -253,23 +253,27 @@ export default function LandingPage() {
       {/* FEATURES */}
       <section id="features" className="features-bg">
         <div className="section-inner">
-          <FadeIn><span className="section-tag">서비스</span><h2 className="section-title">사장님에게 꼭 필요한 것만</h2><p className="section-desc">복잡한 회계 지식 없이도 내 매장의 재무를 정확하게 파악할 수 있습니다.</p></FadeIn>
+          <FadeIn><span className="section-tag">도구</span><h2 className="section-title">사장님에게 꼭 필요한 것만</h2><p className="section-desc">복잡한 회계 지식 없이도 내 매장의 재무를 정확하게 파악할 수 있습니다.</p></FadeIn>
           <div className="features-grid">
             {[
-              { icon: "📊", title: "수익 시뮬레이터", desc: "좌석·객단가·회전율·배달 매출까지 입력하면 월 매출·순이익·손익분기점을 즉시 계산합니다.", tag: "실시간 계산", delay: 0 },
-              { icon: "🤖", title: "AI 전략 컨설팅", desc: "매장 데이터를 기반으로 AI가 운영·마케팅·메뉴 전략을 제안하고 채팅으로 추가 질문도 가능합니다.", tag: "Claude AI", delay: 80 },
-              { icon: "📋", title: "POS 데이터 분석", desc: "엑셀 POS 파일을 업로드하면 AI가 매출 패턴·피크 시간·인기 메뉴를 자동 분석합니다.", tag: "파일 업로드", delay: 160 },
-              { icon: "🎯", title: "목표 역산 계획", desc: "원하는 월 순이익을 입력하면 필요한 객단가·회전율을 역산해 달성 경로를 제시합니다.", tag: "목표 설정", delay: 0 },
-              { icon: "💰", title: "투자금 회수 예측", desc: "보증금·권리금·인테리어와 대출 조건을 입력하면 투자금 회수 기간을 자동 계산합니다.", tag: "재무 계획", delay: 80 },
-              { icon: "📈", title: "월별 히스토리", desc: "매달 분석 결과를 저장하고 추이를 추적하세요. 링크 하나로 투자자·컨설턴트와 공유도 됩니다.", tag: "협업 지원", delay: 160 },
+              { icon: "📊", title: "수익 시뮬레이터", desc: "좌석·객단가·회전율·배달 매출까지 입력하면 월 매출·순이익·손익분기점을 즉시 계산합니다.", tag: "실시간 계산", delay: 0, href: "/simulator" },
+              { icon: "🤖", title: "AI 전략 컨설팅", desc: "매장 데이터를 기반으로 AI가 운영·마케팅·메뉴 전략을 제안하고 채팅으로 추가 질문도 가능합니다.", tag: "Claude AI", delay: 80, href: "/simulator" },
+              { icon: "📋", title: "POS 데이터 분석", desc: "엑셀 POS 파일을 업로드하면 AI가 매출 패턴·피크 시간·인기 메뉴를 자동 분석합니다.", tag: "파일 업로드", delay: 160, href: "/simulator" },
+              { icon: "🎯", title: "목표 역산 계획", desc: "원하는 월 순이익을 입력하면 필요한 객단가·회전율을 역산해 달성 경로를 제시합니다.", tag: "목표 설정", delay: 0, href: "/simulator" },
+              { icon: "💰", title: "투자금 회수 예측", desc: "보증금·권리금·인테리어와 대출 조건을 입력하면 투자금 회수 기간을 자동 계산합니다.", tag: "재무 계획", delay: 80, href: "/simulator" },
+              { icon: "📈", title: "월별 히스토리", desc: "매달 분석 결과를 저장하고 추이를 추적하세요. 링크 하나로 투자자·컨설턴트와 공유도 됩니다.", tag: "협업 지원", delay: 160, href: "/profile" },
+              { icon: "🎮", title: "경영 시뮬레이션 게임", desc: "90일간 실제 매장을 운영해보는 게임. 날씨·이벤트·직원 관리로 사장님 감각을 키워보세요.", tag: "게임", delay: 0, href: "/game" },
+              { icon: "👥", title: "사장님 커뮤니티", desc: "수익을 공유하고 고민을 나누고 업종 평균을 확인하세요. 익명 상담도 가능합니다.", tag: "커뮤니티", delay: 80, href: "/community" },
             ].map((f) => (
               <FadeIn key={f.title} delay={f.delay}>
-                <div className="feature-card">
-                  <div className="feature-icon">{f.icon}</div>
-                  <div className="feature-title">{f.title}</div>
-                  <div className="feature-desc">{f.desc}</div>
-                  <span className="feature-tag">{f.tag}</span>
-                </div>
+                <Link href={f.href} style={{ textDecoration: "none" }}>
+                  <div className="feature-card">
+                    <div className="feature-icon">{f.icon}</div>
+                    <div className="feature-title">{f.title}</div>
+                    <div className="feature-desc">{f.desc}</div>
+                    <span className="feature-tag">{f.tag}</span>
+                  </div>
+                </Link>
               </FadeIn>
             ))}
           </div>
@@ -444,12 +448,21 @@ export default function LandingPage() {
       <footer>
         <div className="footer-inner">
           <div className="footer-top">
-            <div className="footer-logo">VELA<span>.</span></div>
+            <div>
+              <div className="footer-logo">VELA<span>.</span></div>
+              <p style={{fontSize:"13px",color:"var(--gray-400)",marginTop:"12px",lineHeight:"1.8"}}>
+                외식업 사장님을 위한 숫자 경영 파트너<br />
+                대표 : 민현욱 | 이메일 : mnhyuk@velaanalytics.com<br />
+                사업자등록번호 : 준비 중
+              </p>
+            </div>
             <div className="footer-links">
-              <a href="#features">서비스</a>
+              <a href="#features">도구</a>
+              <Link href="/simulator">시뮬레이터</Link>
+              <Link href="/community">커뮤니티</Link>
+              <Link href="/game">게임</Link>
               <a href="#pricing">요금제</a>
               <a href="#contact">문의</a>
-              <Link href="/simulator">시뮬레이터</Link>
             </div>
           </div>
           <div className="footer-bottom">

@@ -7,33 +7,19 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, message } = await req.json();
 
-    if (!name?.trim() || !email?.trim() || !message?.trim()) {
-      return NextResponse.json({ error: "모든 항목을 입력해 주세요." }, { status: 400 });
-    }
-
-    // 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: "올바른 이메일 주소를 입력해 주세요." }, { status: 400 });
-    }
-
-    const resendApiKey = process.env.RESEND_API_KEY;
-
-    // Resend API 키가 없으면 콘솔에만 기록 (개발/테스트 모드)
-    if (!resendApiKey) {
-      console.log("[문의 접수 - API 키 없음]", { name, email, message });
-      return NextResponse.json({ ok: true, mode: "dev" });
+    if (!name || !email || !message) {
+      return NextResponse.json({ error: "필드를 모두 입력해 주세요." }, { status: 400 });
     }
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${resendApiKey}`,
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "VELA 문의 <onboarding@resend.dev>", // Resend 기본 도메인 (인증 전 사용 가능)
-        to: ["hello@vela.kr"],
+        from: "VELA 문의 <onboarding@resend.dev>",
+        to: ["mnhyuk@velaanalytics.com"],               // ← 본인 이메일
         reply_to: email,
         subject: `[VELA 문의] ${name}님의 문의`,
         html: `
@@ -62,16 +48,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
+      const err = await res.json();
       console.error("Resend error:", err);
-      // Resend 실패해도 접수는 됐다고 처리 (로그만 남김)
-      console.log("[문의 접수 - 이메일 발송 실패]", { name, email, message });
-      return NextResponse.json({ ok: true, warning: "이메일 발송에 문제가 있었지만 문의가 접수되었습니다." });
+      return NextResponse.json({ error: "이메일 발송 실패" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요." }, { status: 500 });
+    return NextResponse.json({ error: "서버 오류" }, { status: 500 });
   }
 }

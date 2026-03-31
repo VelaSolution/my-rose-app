@@ -59,6 +59,7 @@ export default function NavBar() {
 
           <div className="vela-nav-links">
             <a href="/#features">서비스</a>
+            <Link href="/simulator">시뮬레이터</Link>
             <Link href="/community">커뮤니티</Link>
             <Link href="/game">🎮 게임</Link>
             <Link href="/pricing">요금제</Link>
@@ -68,8 +69,10 @@ export default function NavBar() {
           <div className="vela-nav-actions">
             {user ? (
               <>
-                <span className="vela-user-name">{user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "내 계정"}</span>
-                <Link href="/profile" className="vela-btn-login">히스토리</Link>
+                <Link href="/profile" className="vela-user-name" style={{ textDecoration:"none", cursor:"pointer" }}>
+                  {user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "내 계정"}
+                </Link>
+                <Link href="/profile" style={{ background:"#F2F4F6", color:"#333D4B", padding:"8px 16px", borderRadius:"10px", fontSize:"14px", fontWeight:"600", textDecoration:"none" }}>대시보드</Link>
                 <Link href="/simulator" className="vela-btn-start">시뮬레이터 →</Link>
                 <button className="vela-btn-logout" onClick={handleLogout}>로그아웃</button>
               </>
@@ -90,14 +93,14 @@ export default function NavBar() {
       {/* 모바일 메뉴 */}
       <div className={`vela-mobile-menu${menuOpen ? " open" : ""}`}>
         <a href="/#features" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>서비스</a>
+        <Link href="/simulator" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>시뮬레이터</Link>
         <Link href="/community" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>커뮤니티</Link>
         <Link href="/game" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>🎮 게임</Link>
         <Link href="/pricing" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>요금제</Link>
         <a href="/#contact" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>문의</a>
         {user ? (
           <>
-            <Link href="/simulator" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>시뮬레이터</Link>
-            <Link href="/profile" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>내 히스토리</Link>
+            <Link href="/profile" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>대시보드</Link>
             <button className="vela-mobile-link" style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", fontFamily: "inherit" }} onClick={() => { handleLogout(); setMenuOpen(false); }}>로그아웃</button>
           </>
         ) : (

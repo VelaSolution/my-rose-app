@@ -421,19 +421,42 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
 
   useEffect(()=>{ setSpend(IND[ind].spend); setCogs(IND[ind].cogs); },[ind]);
 
-  // 저장된 시뮬레이션 목록 불러오기
-  const openSimPicker = () => {
+  // 저장된 시뮬레이션 목록 불러오기 (localStorage + Supabase)
+  const openSimPicker = async () => {
     try {
-      const saves = JSON.parse(localStorage.getItem("vela-saves-v1") || "[]");
+      const all: typeof simSaves = [];
+
+      // 1. localStorage 최근 시뮬레이션
       const current = localStorage.getItem("vela-form-v3");
-      const all = [];
       if (current) {
         const f = JSON.parse(current);
-        all.push({ id:"current", name:"최근 시뮬레이션", industry:f.industry||"restaurant", avgSpend:Number(f.avgSpend||0), cogsRate:Number(f.cogsRate||0), savedAt:"현재" });
+        if (f.industry) all.push({ id:"current", name:"최근 시뮬레이션 (임시저장)", industry:f.industry||"restaurant", avgSpend:Number(f.avgSpend||0), cogsRate:Number(f.cogsRate||0), savedAt:"현재" });
       }
-      saves.forEach((s: {id:string;name?:string;form:{industry?:string;avgSpend?:number;cogsRate?:number};savedAt?:string}) => {
-        all.push({ id:s.id, name:s.name||"저장된 시뮬레이션", industry:s.form?.industry||"restaurant", avgSpend:Number(s.form?.avgSpend||0), cogsRate:Number(s.form?.cogsRate||0), savedAt:s.savedAt||"" });
+
+      // 2. localStorage 저장 목록 (vela-saves-v1)
+      const localSaves = JSON.parse(localStorage.getItem("vela-saves-v1") || "[]");
+      localSaves.forEach((s: {id:string; name?:string; form?:{industry?:string; avgSpend?:number; cogsRate?:number}; savedAt?:string}) => {
+        all.push({ id:"local-"+s.id, name:s.name||"저장된 시뮬레이션", industry:s.form?.industry||"restaurant", avgSpend:Number(s.form?.avgSpend||0), cogsRate:Number(s.form?.cogsRate||0), savedAt:s.savedAt||"" });
       });
+
+      // 3. Supabase 클라우드 저장 목록
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from("simulation_history")
+            .select("id, label, created_at, form, result")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(15);
+          if (data) {
+            data.forEach((row: {id:string; label:string; created_at:string; form?:{industry?:string; avgSpend?:number; cogsRate?:number}}) => {
+              all.push({ id:"sb-"+row.id, name:"☁️ "+row.label, industry:row.form?.industry||"restaurant", avgSpend:Number(row.form?.avgSpend||0), cogsRate:Number(row.form?.cogsRate||0), savedAt:row.created_at });
+            });
+          }
+        }
+      } catch {}
+
       if (all.length===0) { alert("저장된 시뮬레이션 결과가 없어요.\n시뮬레이터에서 먼저 분석을 완료해주세요!"); return; }
       setSimSaves(all);
       setShowSimPicker(true);
