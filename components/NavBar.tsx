@@ -63,7 +63,7 @@ export default function NavBar() {
         .vela-dropdown-btn:hover{color:#191F28}
         .vela-dropdown-arrow{font-size:10px;transition:transform .2s;display:inline-block}
         .vela-dropdown:hover .vela-dropdown-arrow{transform:rotate(180deg)}
-        .vela-dropdown-menu{position:absolute;top:calc(100% + 14px);left:50%;transform:translateX(-50%);background:#fff;border:1px solid #E5E8EB;border-radius:20px;padding:10px;box-shadow:0 8px 32px rgba(0,0,0,.12);min-width:520px;display:none;z-index:200;grid-template-columns:1fr 1fr;gap:4px}
+        .vela-dropdown-menu{position:absolute;top:100%;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #E5E8EB;border-radius:20px;padding:14px 10px 10px;box-shadow:0 8px 32px rgba(0,0,0,.12);min-width:520px;display:none;z-index:200;grid-template-columns:1fr 1fr;gap:4px}
         .vela-dropdown:hover .vela-dropdown-menu{display:grid}
         .vela-dropdown-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;text-decoration:none;transition:background .15s}
         .vela-dropdown-item:hover{background:#F2F4F6}
