@@ -67,7 +67,7 @@ type SharePost = {
   memo: string; likes: number; views: number; created_at: string;
 };
 
-function FeedTab({ userId }: { userId: string | null }) {
+function FeedTab({ userId, isAdmin }: { userId: string | null; isAdmin: boolean }) {
   const [posts, setPosts] = useState<SharePost[]>([]);
   const [filter, setFilter] = useState<IndustryFilter>("all");
   const [sort, setSort] = useState<"created_at" | "likes" | "views">("created_at");
@@ -126,16 +126,17 @@ function FeedTab({ userId }: { userId: string | null }) {
         <EmptyState icon="📊" text="아직 공유된 분석이 없어요" sub="내 수익 공유 버튼으로 첫 번째 공유를 남겨보세요" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {posts.map(p => <FeedCard key={p.id} post={p} userId={userId} onLike={() => handleLike(p.id)} onDelete={() => handleDelete(p.id)} />)}
+          {posts.map(p => <FeedCard key={p.id} post={p} userId={userId} isAdmin={isAdmin} onLike={() => handleLike(p.id)} onDelete={() => handleDelete(p.id)} />)}
         </div>
       )}
     </div>
   );
 }
 
-function FeedCard({ post: p, userId, onLike, onDelete }: { post: SharePost; userId: string | null; onLike: () => void; onDelete: () => void }) {
+function FeedCard({ post: p, userId, isAdmin, onLike, onDelete }: { post: SharePost; userId: string | null; isAdmin: boolean; onLike: () => void; onDelete: () => void }) {
   const isProfit = p.profit >= 0;
   const isOwn = userId && p.user_id === userId;
+  const canDelete = isOwn || isAdmin;
   return (
     <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
@@ -175,7 +176,7 @@ function FeedCard({ post: p, userId, onLike, onDelete }: { post: SharePost; user
         </button>
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-300">조회 {p.views}</span>
-          {isOwn && (
+          {canDelete && (
             <button onClick={onDelete} className="text-xs text-red-400 hover:text-red-600 font-medium">삭제</button>
           )}
         </div>
@@ -246,7 +247,7 @@ type BoardPost = {
   comment_count: number; created_at: string;
 };
 
-function BoardTab({ userId }: { userId: string | null }) {
+function BoardTab({ userId, isAdmin }: { userId: string | null; isAdmin: boolean }) {
   const [posts, setPosts] = useState<BoardPost[]>([]);
   const [category, setCategory] = useState<BoardCategory>("all");
   const [loading, setLoading] = useState(true);
@@ -319,7 +320,7 @@ function BoardTab({ userId }: { userId: string | null }) {
                 <div className="shrink-0 flex items-center gap-3 text-xs text-slate-400">
                   <span>💬 {p.comment_count}</span>
                   <span>♥ {p.likes}</span>
-                  {userId && p.user_id === userId && (
+                  {(userId && p.user_id === userId || isAdmin) && (
                     <span onClick={e => handleDeletePost(p.id, e)} className="text-red-400 hover:text-red-600 font-medium cursor-pointer">삭제</span>
                   )}
                 </div>
@@ -731,10 +732,17 @@ function BenchmarkTab() {
 export default function CommunityPage() {
   const [tab, setTab] = useState<Tab>("feed");
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const ADMIN_EMAILS = ["mnhyuk@velaanalytics.com", "mnhyuk0213@gmail.com"];
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
-    sb.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+    sb.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+      const email = data.user?.email ?? "";
+      setIsAdmin(ADMIN_EMAILS.includes(email));
+    });
   }, []);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
@@ -768,8 +776,8 @@ export default function CommunityPage() {
           </div>
 
           {/* 탭 콘텐츠 */}
-          {tab === "feed" && <FeedTab userId={userId} />}
-          {tab === "board" && <BoardTab userId={userId} />}
+          {tab === "feed" && <FeedTab userId={userId} isAdmin={isAdmin} />}
+          {tab === "board" && <BoardTab userId={userId} isAdmin={isAdmin} />}
           {tab === "anonymous" && <AnonymousTab userId={userId} />}
           {tab === "benchmark" && <BenchmarkTab />}
 
