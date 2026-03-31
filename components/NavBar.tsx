@@ -47,6 +47,18 @@ export default function NavBar() {
         .vela-mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:#fff;border-bottom:1px solid #E5E8EB;padding:16px 24px;flex-direction:column;gap:4px;z-index:99}
         .vela-mobile-menu.open{display:flex}
         .vela-mobile-link{font-size:15px;font-weight:500;color:#333D4B;text-decoration:none;padding:12px 0;border-bottom:1px solid #F2F4F6}
+        .vela-dropdown{position:relative}
+        .vela-dropdown-btn{font-size:15px;font-weight:500;color:#6B7684;background:none;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;padding:0;transition:color .15s}
+        .vela-dropdown-btn:hover{color:#191F28}
+        .vela-dropdown-btn:hover .vela-dropdown-arrow{transform:rotate(180deg)}
+        .vela-dropdown-arrow{font-size:10px;transition:transform .2s}
+        .vela-dropdown-menu{position:absolute;top:calc(100% + 16px);left:50%;transform:translateX(-50%);background:#fff;border:1px solid #E5E8EB;border-radius:20px;padding:12px;box-shadow:0 8px 32px rgba(0,0,0,.12);min-width:280px;display:none;z-index:200}
+        .vela-dropdown:hover .vela-dropdown-menu{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+        .vela-dropdown-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;text-decoration:none;transition:background .15s}
+        .vela-dropdown-item:hover{background:#F2F4F6}
+        .vela-dropdown-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+        .vela-dropdown-label{font-size:13px;font-weight:600;color:#191F28}
+        .vela-dropdown-desc{font-size:11px;color:#9EA6B3;margin-top:1px}
         @media(max-width:768px){
           .vela-nav-links,.vela-nav-actions{display:none}
           .vela-hamburger{display:flex}
@@ -59,7 +71,31 @@ export default function NavBar() {
 
           <div className="vela-nav-links">
             <a href="/#features">서비스</a>
-            <Link href="/simulator">시뮬레이터</Link>
+            <div className="vela-dropdown">
+              <button className="vela-dropdown-btn">
+                도구 <span className="vela-dropdown-arrow">▾</span>
+              </button>
+              <div className="vela-dropdown-menu">
+                {[
+                  { icon:"📊", label:"수익 시뮬레이터",  desc:"매출·순이익·BEP 계산",  href:"/simulator" },
+                  { icon:"🤖", label:"AI 전략 컨설팅",  desc:"Claude AI 맞춤 전략",   href:"/simulator" },
+                  { icon:"📋", label:"POS 데이터 분석", desc:"엑셀 업로드 자동 분석",  href:"/simulator" },
+                  { icon:"🎯", label:"목표 역산 계획",  desc:"목표 순이익 역산",       href:"/simulator" },
+                  { icon:"💰", label:"투자금 회수 예측", desc:"회수 기간 자동 계산",   href:"/simulator" },
+                  { icon:"📈", label:"월별 히스토리",   desc:"매출 추이 추적",         href:"/profile" },
+                  { icon:"🎮", label:"경영 게임",       desc:"90일 경영 시뮬레이션",   href:"/game" },
+                  { icon:"👥", label:"사장님 커뮤니티", desc:"수익 공유·업종 평균",    href:"/community" },
+                ].map(item => (
+                  <Link key={item.label} href={item.href} className="vela-dropdown-item">
+                    <span className="vela-dropdown-icon">{item.icon}</span>
+                    <div>
+                      <p className="vela-dropdown-label">{item.label}</p>
+                      <p className="vela-dropdown-desc">{item.desc}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
             <Link href="/community">커뮤니티</Link>
             <Link href="/game">🎮 게임</Link>
             <Link href="/pricing">요금제</Link>
@@ -93,9 +129,24 @@ export default function NavBar() {
       {/* 모바일 메뉴 */}
       <div className={`vela-mobile-menu${menuOpen ? " open" : ""}`}>
         <a href="/#features" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>서비스</a>
-        <Link href="/simulator" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>시뮬레이터</Link>
-        <Link href="/community" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>커뮤니티</Link>
-        <Link href="/game" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>🎮 게임</Link>
+        <div style={{paddingBottom:"4px",borderBottom:"1px solid #F2F4F6"}}>
+          <p style={{fontSize:"11px",fontWeight:700,color:"#9EA6B3",padding:"10px 0 6px",letterSpacing:"0.5px"}}>도구</p>
+          <div style={{display:"flex",flexDirection:"column",gap:0}}>
+            {[
+              {icon:"📊",label:"수익 시뮬레이터",href:"/simulator"},
+              {icon:"📋",label:"POS 데이터 분석",href:"/simulator"},
+              {icon:"🎯",label:"목표 역산 계획",href:"/simulator"},
+              {icon:"💰",label:"투자금 회수 예측",href:"/simulator"},
+              {icon:"📈",label:"월별 히스토리",href:"/profile"},
+              {icon:"🎮",label:"경영 시뮬레이션 게임",href:"/game"},
+              {icon:"👥",label:"사장님 커뮤니티",href:"/community"},
+            ].map(item=>(
+              <Link key={item.label} href={item.href} className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                <span>{item.icon}</span>{item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
         <Link href="/pricing" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>요금제</Link>
         <a href="/#contact" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>문의</a>
         {user ? (
