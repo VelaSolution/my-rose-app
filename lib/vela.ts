@@ -1,4 +1,4 @@
-export type IndustryKey = "cafe" | "restaurant" | "bar" | "finedining" | "gogi";
+export type IndustryKey = "cafe" | "restaurant" | "bar" | "finedining";
 
 // ─── 폼 상태 (4단계 분리) ──────────────────────────────────────
 
@@ -13,15 +13,13 @@ export type Step1Form = {
   weekendMultiplier: number;
   // 배달 매출
   deliveryEnabled: boolean;
-  deliverySales: number;
-  deliveryAppRate: number;
-  deliveryDirectRate: number;
-  // 배달 운영 의향 (AI 전략 제안에 반영)
-  deliveryPreference: "possible" | "impossible"; // possible=배달 추천 허용, impossible=배달 추천 금지
+  deliverySales: number;          // 월 배달 매출
+  deliveryAppRate: number;        // 배달앱 수수료율 (%)
+  deliveryDirectRate: number;     // 직접 배달 비율 (%)
   // 시간대별 매출 비중
-  lunchRatio: number;
-  dinnerRatio: number;
-  nightRatio: number;
+  lunchRatio: number;             // 점심 비중 (%)
+  dinnerRatio: number;            // 저녁 비중 (%)
+  nightRatio: number;             // 심야 비중 (%)
 };
 
 // 2단계: 고정비 & 운영비
@@ -120,7 +118,6 @@ export const INDUSTRY_CONFIG: Record<
       seats: 20, avgSpend: 6000, turnover: 4,
       weekdayDays: 20, weekendDays: 8, weekendMultiplier: 1.5,
       deliveryEnabled: false, deliverySales: 0, deliveryAppRate: 15, deliveryDirectRate: 30,
-      deliveryPreference: "possible",
       lunchRatio: 40, dinnerRatio: 40, nightRatio: 20,
     },
     defaultStep2: {
@@ -146,7 +143,6 @@ export const INDUSTRY_CONFIG: Record<
       seats: 36, avgSpend: 25000, turnover: 1.6,
       weekdayDays: 20, weekendDays: 6, weekendMultiplier: 1.4,
       deliveryEnabled: true, deliverySales: 3000000, deliveryAppRate: 15, deliveryDirectRate: 20,
-      deliveryPreference: "possible",
       lunchRatio: 40, dinnerRatio: 50, nightRatio: 10,
     },
     defaultStep2: {
@@ -172,7 +168,6 @@ export const INDUSTRY_CONFIG: Record<
       seats: 24, avgSpend: 35000, turnover: 1.2,
       weekdayDays: 16, weekendDays: 8, weekendMultiplier: 2.0,
       deliveryEnabled: false, deliverySales: 0, deliveryAppRate: 15, deliveryDirectRate: 0,
-      deliveryPreference: "impossible",
       lunchRatio: 0, dinnerRatio: 40, nightRatio: 60,
     },
     defaultStep2: {
@@ -190,35 +185,6 @@ export const INDUSTRY_CONFIG: Record<
       recoveryMonths: 30, targetMonthlyProfit: 4000000,
     },
   },
-  gogi: {
-    label: "고깃집", icon: "🥩",
-    maxTurnover: 4, cogsWarnRate: 45, laborWarnRate: 30, netMarginWarn: 8,
-    simPctMin: 0.05, simPctMax: 0.20, simSteps: 4,
-    defaultStep1: {
-      seats: 30, avgSpend: 35000, turnover: 2.0,
-      weekdayDays: 22, weekendDays: 8, weekendMultiplier: 1.5,
-      deliveryEnabled: false, deliverySales: 0, deliveryAppRate: 70, deliveryDirectRate: 30,
-      deliveryPreference: "possible",
-      lunchRatio: 20, dinnerRatio: 60, nightRatio: 20,
-    },
-    defaultStep2: {
-      laborType: "direct", labor: 5000000, staffCount: 4, hourlyWage: 12000,
-      workHoursPerDay: 8, workDaysPerMonth: 22,
-      rent: 2500000, utilities: 500000, telecom: 100000,
-      cogsRate: 45, alcoholCogsRate: 30, alcoholSalesRatio: 20,
-      deliveryFeeRate: 15, cardFeeRate: 1.5,
-      marketing: 300000, supplies: 200000, maintenance: 150000,
-      etc: 200000,
-      incomeTaxRate: 24, vatEnabled: true, insuranceRate: 9,
-    },
-    defaultStep3: {
-      businessType: "existing",
-      deposit: 50000000, premiumKey: 30000000, interior: 40000000, equipment: 20000000, signage: 3000000, otherSetup: 5000000,
-      loanEnabled: true, loanAmount: 50000000, loanInterestRate: 5.5, loanTermMonths: 60,
-      recoveryMonths: 24,
-      targetMonthlyProfit: 5000000,
-    },
-  },
   finedining: {
     label: "파인다이닝", icon: "✨",
     maxTurnover: 1.5, cogsWarnRate: 35, laborWarnRate: 30, netMarginWarn: 12,
@@ -227,7 +193,6 @@ export const INDUSTRY_CONFIG: Record<
       seats: 16, avgSpend: 80000, turnover: 0.9,
       weekdayDays: 18, weekendDays: 6, weekendMultiplier: 1.3,
       deliveryEnabled: false, deliverySales: 0, deliveryAppRate: 0, deliveryDirectRate: 0,
-      deliveryPreference: "impossible",
       lunchRatio: 30, dinnerRatio: 65, nightRatio: 5,
     },
     defaultStep2: {
@@ -247,7 +212,7 @@ export const INDUSTRY_CONFIG: Record<
   },
 };
 
-export const VALID_INDUSTRIES: IndustryKey[] = ["cafe", "restaurant", "bar", "finedining", "gogi"];
+export const VALID_INDUSTRIES: IndustryKey[] = ["cafe", "restaurant", "bar", "finedining"];
 
 /** 모든 수치를 0으로 초기화한 빈 폼 — 시뮬레이터 최초 진입 시 사용 */
 export function createEmptyForm(industry: IndustryKey = "restaurant"): FullForm {
@@ -257,7 +222,6 @@ export function createEmptyForm(industry: IndustryKey = "restaurant"): FullForm 
     seats: 0, avgSpend: 0, turnover: 0,
     weekdayDays: 0, weekendDays: 0, weekendMultiplier: 1.0,
     deliveryEnabled: false, deliverySales: 0, deliveryAppRate: 15, deliveryDirectRate: 0,
-    deliveryPreference: "possible",
     lunchRatio: 34, dinnerRatio: 33, nightRatio: 33,
     // Step2
     laborType: "direct", labor: 0,
@@ -304,7 +268,6 @@ export function sanitizeFullForm(raw: Record<string, unknown>): FullForm {
     deliverySales:        num("deliverySales", def.deliverySales, 0),
     deliveryAppRate:      num("deliveryAppRate", def.deliveryAppRate, 0, 40),
     deliveryDirectRate:   num("deliveryDirectRate", def.deliveryDirectRate, 0, 100),
-    deliveryPreference:   str("deliveryPreference", def.deliveryPreference, ["possible", "impossible"]),
     lunchRatio:           num("lunchRatio", def.lunchRatio, 0, 100),
     dinnerRatio:          num("dinnerRatio", def.dinnerRatio, 0, 100),
     nightRatio:           num("nightRatio", def.nightRatio, 0, 100),
@@ -416,8 +379,8 @@ export function calcResult(form: FullForm): CalcResult {
   const cogs = foodCogs + alcoholCogs;
   const cogsRatio = totalSales > 0 ? (cogs / totalSales) * 100 : 0;
 
-  // 카드 수수료 — 홀 매출에만 적용 (배달 순매출은 앱 정산 구조라 별도 카드수수료 없음)
-  const cardFee = hallSales * (form.cardFeeRate / 100);
+  // 카드 수수료
+  const cardFee = totalSales * (form.cardFeeRate / 100);
 
   // 고정비 합계
   const fixedCosts = laborCost + insuranceCost + form.rent + form.utilities + form.telecom
@@ -425,9 +388,8 @@ export function calcResult(form: FullForm): CalcResult {
   const totalCost = cogs + cardFee + fixedCosts;
   const profit = totalSales - totalCost;
 
-  // BEP — 변동비율도 홀 매출 기준 카드수수료로 수정
-  const hallSalesRatio = totalSales > 0 ? hallSales / totalSales : 1;
-  const variableRatio = cogsRatio / 100 + (form.cardFeeRate / 100) * hallSalesRatio;
+  // BEP
+  const variableRatio = cogsRatio / 100 + form.cardFeeRate / 100;
   const bep = variableRatio < 1 ? fixedCosts / (1 - variableRatio) : 0;
   const bepGap = totalSales - bep;
 
@@ -438,11 +400,9 @@ export function calcResult(form: FullForm): CalcResult {
 
   // 세금
   const incomeTax = profit > 0 ? profit * (form.incomeTaxRate / 100) : 0;
-  // 부가세 납부액 = (매출세액 - 매입세액)
-  // 매입세액 공제 대상: 원가 + 임대료 + 공과금 + 통신비 + 소모품 + 유지보수 + 기타 (인건비·마케팅 제외)
-  const vatDeductible = cogs + form.rent + form.utilities + form.telecom
-    + form.supplies + form.maintenance + form.etc;
-  const vatBurden = form.vatEnabled ? Math.max((totalSales - vatDeductible) / 11, 0) : 0;
+  // 부가세 = 매출세액 - 매입세액 (원가·비용 관련 매입세액 공제)
+  // 매출세액: totalSales / 11  /  매입세액: cogs / 11
+  const vatBurden = form.vatEnabled ? Math.max((totalSales - cogs) / 11, 0) : 0;
   const netProfit = profit - incomeTax - vatBurden;
   const netProfitMargin = totalSales > 0 ? (netProfit / totalSales) * 100 : 0;
 
@@ -474,14 +434,15 @@ export function calcResult(form: FullForm): CalcResult {
 export type ReverseCalcResult = {
   neededAvgSpend: number;
   neededTurnover: number;
-  neededCogsRate: number | null;
+  neededCogsRate: number;
   avgSpendDiff: number;
   turnoverDiff: number;
-  cogsRateDiff: number | null;
+  cogsRateDiff: number;
 };
 
 export function calcReverse(form: FullForm, targetNetProfit: number): ReverseCalcResult {
   const taxRate = form.incomeTaxRate / 100;
+  const targetProfit = targetNetProfit / Math.max(1 - taxRate, 0.3);
   const laborCost = form.laborType === "calculate"
     ? form.staffCount * form.hourlyWage * form.workHoursPerDay * form.workDaysPerMonth
     : form.labor;
@@ -491,38 +452,24 @@ export function calcReverse(form: FullForm, targetNetProfit: number): ReverseCal
 
   const alcoholSalesRatio = form.industry === "cafe" ? 0 : form.alcoholSalesRatio / 100;
   const effectiveCogsRate = (form.cogsRate * (1 - alcoholSalesRatio) + form.alcoholCogsRate * alcoholSalesRatio) / 100;
-
-  // 카드수수료는 홀 매출 비중만큼만 적용 (배달 제외)
-  // 역산 시점에는 홀/배달 비율을 현재 값 기준으로 추정
-  const currentResult = calcResult(form);
-  const hallRatio = currentResult.totalSales > 0
-    ? currentResult.hallSales / currentResult.totalSales : 1;
-  const effectiveCardRate = (form.cardFeeRate / 100) * hallRatio;
-  const variableRatio = effectiveCogsRate + effectiveCardRate;
-
+  const variableRatio = effectiveCogsRate + form.cardFeeRate / 100;
   const totalDays = form.weekdayDays + form.weekendDays * form.weekendMultiplier;
-
-  // VAT 납부액을 역산에 반영: 세후목표 = 세전이익 - 소득세 - VAT
-  // VAT ≈ (매출 - 공제가능비용) / 11 → 매출에 비례하므로 targetProfit 역산에 포함
-  // 단순화: 세전이익 역산 후 VAT는 근사치로 처리 (반복계산 회피)
-  const targetProfit = targetNetProfit / Math.max(1 - taxRate, 0.3);
 
   const neededSales = variableRatio < 1 ? (targetProfit + fixedCosts) / (1 - variableRatio) : 0;
   const neededAvgSpend = totalDays > 0 && form.seats > 0 && form.turnover > 0
     ? neededSales / (form.seats * form.turnover * totalDays) : 0;
   const neededTurnover = totalDays > 0 && form.seats > 0 && form.avgSpend > 0
     ? neededSales / (form.seats * form.avgSpend * totalDays) : 0;
+  const currentResult = calcResult(form);
 
-  // 최대 허용 통합 원가율 (현재 매출 기준)
-// 매출이 0이거나 목표이익+고정비가 매출을 초과하면 의미없는 값 → null 처리
-const rawCogsRate = currentResult.totalSales > 0
-  ? (1 - (targetProfit + fixedCosts) / currentResult.totalSales - effectiveCardRate) * 100
-  : null;
-const neededCogsRate = rawCogsRate !== null && rawCogsRate >= 0
-  ? Math.min(95, rawCogsRate)
-  : null;
+  // 목표 달성에 필요한 통합 원가율 (혼합 원가율 기준 — 음수 방지를 위해 0~95% 클램프)
+  const neededCogsRate = currentResult.totalSales > 0
+    ? Math.min(95, Math.max(0,
+        (1 - (targetProfit + fixedCosts) / currentResult.totalSales - form.cardFeeRate / 100) * 100
+      ))
+    : 0;
 
-  // 현재 통합 원가율 (diff 비교 기준)
+  // diff 비교 대상도 현재 통합 원가율로 통일 (단위 일치)
   const currentEffectiveCogsRate = form.industry === "cafe"
     ? form.cogsRate
     : form.cogsRate * (1 - form.alcoholSalesRatio / 100) + form.alcoholCogsRate * (form.alcoholSalesRatio / 100);
@@ -530,12 +477,10 @@ const neededCogsRate = rawCogsRate !== null && rawCogsRate >= 0
   return {
     neededAvgSpend: Math.round(neededAvgSpend),
     neededTurnover: Math.round(neededTurnover * 10) / 10,
-    neededCogsRate: neededCogsRate !== null ? Math.round(neededCogsRate * 10) / 10 : null,
+    neededCogsRate: Math.round(neededCogsRate * 10) / 10,
     avgSpendDiff: Math.round(neededAvgSpend - form.avgSpend),
     turnoverDiff: Math.round((neededTurnover - form.turnover) * 10) / 10,
-    cogsRateDiff: neededCogsRate !== null
-      ? Math.round((neededCogsRate - currentEffectiveCogsRate) * 10) / 10
-      : null,
+    cogsRateDiff: Math.round((neededCogsRate - currentEffectiveCogsRate) * 10) / 10,
   };
 }
 
@@ -578,7 +523,7 @@ export function calcStrategies(form: FullForm, baseProfit: number): StrategyItem
   [0.05, 0.10].forEach((ratio) =>
     simulate({ labor: Math.round((form.laborType === "calculate" ? form.staffCount * form.hourlyWage * form.workHoursPerDay * form.workDaysPerMonth : form.labor) * (1 - ratio)) }, `운영 효율화 -${Math.round(ratio * 100)}%`, ["효율화"])
   );
-  if (!form.deliveryEnabled && form.deliveryPreference !== "impossible") {
+  if (!form.deliveryEnabled) {
     simulate({ deliveryEnabled: true, deliverySales: Math.round(form.seats * form.avgSpend * 0.3) }, "배달 채널 추가", ["배달"]);
   }
   const midPct = (simPctMin + simPctMax) / 2;
