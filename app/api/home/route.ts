@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-export const revalidate = 3600; // 1시간 캐시
-
+export const dynamic = "force-dynamic";
 async function getStocks() {
     const key = process.env.BOK_API_KEY;
     if (!key) return null;
