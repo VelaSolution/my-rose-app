@@ -56,7 +56,7 @@ const PLANS = [
 ];
 
 export default function PricingPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean|null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<typeof PLANS[0] | null>(null);
   const [userId, setUserId] = useState<string | null>(null);

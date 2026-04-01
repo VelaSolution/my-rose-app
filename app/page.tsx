@@ -493,40 +493,31 @@ type NewsItem = { title:string; summary:string; source:string; url:string };
 import type { User } from "@supabase/supabase-js";
 
 function StockTicker() {
-  useEffect(() => {
-    const container = document.getElementById("tv-ticker-container");
-    if (!container) return;
-    // 이미 위젯 로드된 경우 스킵
-    if (container.querySelector("iframe")) return;
-    container.innerHTML = "";
-    const widgetDiv = document.createElement("div");
-    widgetDiv.className = "tradingview-widget-container__widget";
-    container.appendChild(widgetDiv);
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js";
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      symbols: [
-        { proName: "KRX:KOSPI",      title: "코스피"  },
-        { proName: "KRX:KOSDAQ",     title: "코스닥"  },
-        { proName: "OANDA:USDKRW",   title: "달러/원" },
-        { proName: "CAPITALCOM:OIL", title: "국제유가" },
-        { proName: "OANDA:XAUUSD",   title: "금"      },
-        { proName: "INDEX:SPX",      title: "S&P500"  },
-      ],
-      showSymbolLogo: false,
-      isTransparent: false,
-      displayMode: "adaptive",
-      colorTheme: "light",
-      locale: "kr",
-    });
-    container.appendChild(script);
-  }, []);
-
   return (
-    <div className="rounded-2xl bg-white ring-1 ring-slate-200 overflow-hidden" style={{minHeight:46}}>
-      <div id="tv-ticker-container" className="tradingview-widget-container" style={{minHeight:46}} />
+    <div className="rounded-2xl bg-white ring-1 ring-slate-200 overflow-hidden" style={{minHeight:50}}>
+      <div className="tradingview-widget-container" style={{minHeight:50}}>
+        <div className="tradingview-widget-container__widget" />
+        <script
+          type="text/javascript"
+          src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              symbols: [
+                { proName: "KRX:KOSPI",    title: "코스피"  },
+                { proName: "KRX:KOSDAQ",   title: "코스닥"  },
+                { proName: "OANDA:USDKRW", title: "달러/원" },
+                { proName: "OANDA:XAUUSD", title: "금"      },
+                { proName: "INDEX:SPX",    title: "S&P500"  },
+              ],
+              showSymbolLogo: false,
+              isTransparent: false,
+              displayMode: "adaptive",
+              colorTheme: "light",
+              locale: "kr",
+            }),
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -725,6 +716,15 @@ function MemberHome() {
 export default function HomePage() {
   const [checked, setChecked] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    // 해시 감지 (#features, #contact 등)
+    setHash(window.location.hash);
+    const onHash = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
@@ -734,14 +734,9 @@ export default function HomePage() {
     });
   }, []);
 
-  if (!checked) return (
-    <div className="min-h-screen bg-white">
-      <NavBar />
-      <div className="flex items-center justify-center h-[80vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
-      </div>
-    </div>
-  );
-
+  // 체크 전엔 랜딩 먼저 (깜빡임 방지)
+  if (!checked) return <LandingContent />;
+  // /#features, /#contact 등 앵커 링크면 항상 랜딩 보여주기
+  if (hash) return <LandingContent />;
   return loggedIn ? <MemberHome /> : <LandingContent />;
 }
