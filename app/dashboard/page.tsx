@@ -8,7 +8,9 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 type Snapshot = {
   id: string; user_id: string; month: string;
   total_sales: number; cogs: number; labor_cost: number;
-  rent: number; other_cost: number; net_profit: number;
+  rent: number; utilities: number; marketing: number;
+  delivery_fee: number; other_cost: number; net_profit: number;
+  avg_spend: number; customer_count: number;
   industry: string; memo: string; created_at: string;
 };
 
@@ -25,7 +27,7 @@ export default function DashboardPage() {
   const [menus, setMenus] = useState<MenuCost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInput, setShowInput] = useState(false);
-  const [form, setForm] = useState({ month: new Date().toISOString().slice(0,7), industry: "cafe", total_sales: "", cogs: "", labor_cost: "", rent: "", other_cost: "", memo: "" });
+  const [form, setForm] = useState({ month: new Date().toISOString().slice(0,7), industry: "cafe", total_sales: "", cogs: "", labor_cost: "", rent: "", utilities: "", marketing: "", delivery_fee: "", other_cost: "", avg_spend: "", customer_count: "", memo: "" });
   const [saving, setSaving] = useState(false);
   const sb = typeof window !== "undefined" ? createSupabaseBrowserClient() : null;
 
@@ -51,16 +53,20 @@ export default function DashboardPage() {
     setSaving(true);
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return;
-    const net = Number(form.total_sales) - Number(form.cogs||0) - Number(form.labor_cost||0) - Number(form.rent||0) - Number(form.other_cost||0);
-    await sb.from("monthly_snapshots").upsert({
+    const net = Number(form.total_sales) - Number(form.cogs||0) - Number(form.labor_cost||0) - Number(form.rent||0) - Number(form.utilities||0) - Number(form.marketing||0) - Number(form.delivery_fee||0) - Number(form.other_cost||0);
+    const { error } = await sb.from("monthly_snapshots").upsert({
       user_id: user.id, month: form.month, industry: form.industry,
       total_sales: Number(form.total_sales), cogs: Number(form.cogs||0),
       labor_cost: Number(form.labor_cost||0), rent: Number(form.rent||0),
-      other_cost: Number(form.other_cost||0), net_profit: net, memo: form.memo,
+      utilities: Number(form.utilities||0), marketing: Number(form.marketing||0),
+      delivery_fee: Number(form.delivery_fee||0), other_cost: Number(form.other_cost||0),
+      avg_spend: Number(form.avg_spend||0), customer_count: Number(form.customer_count||0),
+      net_profit: net, memo: form.memo,
     }, { onConflict: "user_id,month" });
+    if (error) { alert("저장 실패: " + error.message); setSaving(false); return; }
     setSaving(false);
     setShowInput(false);
-    setForm(f => ({ ...f, total_sales:"", cogs:"", labor_cost:"", rent:"", other_cost:"", memo:"" }));
+    setForm(f => ({ ...f, total_sales:"", cogs:"", labor_cost:"", rent:"", utilities:"", marketing:"", delivery_fee:"", other_cost:"", avg_spend:"", customer_count:"", memo:"" }));
     load();
   };
 
@@ -101,47 +107,93 @@ export default function DashboardPage() {
 
           {/* 입력 폼 */}
           {showInput && (
-            <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 space-y-4">
+            <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 space-y-5">
               <h2 className="text-base font-bold text-slate-900">월별 매출 등록</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 block mb-1">월 *</label>
-                  <input type="month" value={form.month} onChange={e => setForm(f=>({...f,month:e.target.value}))}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 block mb-1">업종</label>
-                  <select value={form.industry} onChange={e => setForm(f=>({...f,industry:e.target.value}))}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
-                    {Object.entries(IND).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
-                  </select>
-                </div>
-                {[
-                  {key:"total_sales",label:"월 총 매출 (원) *"},
-                  {key:"cogs",label:"식재료비 (원)"},
-                  {key:"labor_cost",label:"인건비 (원)"},
-                  {key:"rent",label:"임대료 (원)"},
-                  {key:"other_cost",label:"기타 비용 (원)"},
-                ].map(({key,label}) => (
-                  <div key={key}>
-                    <label className="text-xs font-semibold text-slate-500 block mb-1">{label}</label>
-                    <input type="number" value={form[key as keyof typeof form]} onChange={e => setForm(f=>({...f,[key]:e.target.value}))}
+
+              {/* 기본 정보 */}
+              <div>
+                <p className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wide">기본 정보</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">월 *</label>
+                    <input type="month" value={form.month} onChange={e => setForm(f=>({...f,month:e.target.value}))}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">업종</label>
+                    <select value={form.industry} onChange={e => setForm(f=>({...f,industry:e.target.value}))}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                      {Object.entries(IND).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">월 총 매출 (원) *</label>
+                    <input type="number" value={form.total_sales} onChange={e => setForm(f=>({...f,total_sales:e.target.value}))}
                       placeholder="0" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
                   </div>
-                ))}
-                <div className="sm:col-span-3">
-                  <label className="text-xs font-semibold text-slate-500 block mb-1">메모</label>
-                  <input value={form.memo} onChange={e => setForm(f=>({...f,memo:e.target.value}))}
-                    placeholder="이번 달 특이사항" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">객단가 (원)</label>
+                    <input type="number" value={form.avg_spend} onChange={e => setForm(f=>({...f,avg_spend:e.target.value}))}
+                      placeholder="0" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">월 고객 수 (명)</label>
+                    <input type="number" value={form.customer_count} onChange={e => setForm(f=>({...f,customer_count:e.target.value}))}
+                      placeholder="0" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
+                  </div>
                 </div>
               </div>
+
+              {/* 비용 항목 */}
+              <div>
+                <p className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wide">비용 항목</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {[
+                    {key:"cogs",        label:"식재료비 (원)",   placeholder:"원재료·식자재"},
+                    {key:"labor_cost",  label:"인건비 (원)",     placeholder:"급여·아르바이트"},
+                    {key:"rent",        label:"임대료 (원)",     placeholder:"월세·관리비"},
+                    {key:"utilities",   label:"공과금 (원)",     placeholder:"전기·가스·수도"},
+                    {key:"marketing",   label:"마케팅비 (원)",   placeholder:"광고·SNS·쿠폰"},
+                    {key:"delivery_fee",label:"배달 수수료 (원)",placeholder:"배민·쿠팡이츠 등"},
+                    {key:"other_cost",  label:"기타 비용 (원)",  placeholder:"소모품·수선 등"},
+                  ].map(({key,label,placeholder}) => (
+                    <div key={key}>
+                      <label className="text-xs font-semibold text-slate-500 block mb-1">{label}</label>
+                      <input type="number" value={form[key as keyof typeof form]} onChange={e => setForm(f=>({...f,[key]:e.target.value}))}
+                        placeholder={placeholder} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 순이익 미리보기 */}
               {form.total_sales && (
-                <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
-                  예상 순이익: <strong className={Number(form.total_sales) - Number(form.cogs||0) - Number(form.labor_cost||0) - Number(form.rent||0) - Number(form.other_cost||0) >= 0 ? "text-emerald-600" : "text-red-500"}>
-                    {fmt(Number(form.total_sales) - Number(form.cogs||0) - Number(form.labor_cost||0) - Number(form.rent||0) - Number(form.other_cost||0))}원
-                  </strong>
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="grid grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">총 매출</p>
+                      <p className="font-bold text-slate-900">{fmt(Number(form.total_sales))}원</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">총 비용</p>
+                      <p className="font-bold text-slate-700">{fmt(Number(form.cogs||0)+Number(form.labor_cost||0)+Number(form.rent||0)+Number(form.utilities||0)+Number(form.marketing||0)+Number(form.delivery_fee||0)+Number(form.other_cost||0))}원</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">순이익</p>
+                      <p className={`font-bold ${Number(form.total_sales)-Number(form.cogs||0)-Number(form.labor_cost||0)-Number(form.rent||0)-Number(form.utilities||0)-Number(form.marketing||0)-Number(form.delivery_fee||0)-Number(form.other_cost||0)>=0?"text-emerald-600":"text-red-500"}`}>
+                        {fmt(Number(form.total_sales)-Number(form.cogs||0)-Number(form.labor_cost||0)-Number(form.rent||0)-Number(form.utilities||0)-Number(form.marketing||0)-Number(form.delivery_fee||0)-Number(form.other_cost||0))}원
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
+
+              <div>
+                <label className="text-xs font-semibold text-slate-500 block mb-1">메모</label>
+                <input value={form.memo} onChange={e => setForm(f=>({...f,memo:e.target.value}))}
+                  placeholder="이번 달 특이사항 (예: 설 연휴로 매출 증가)" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
+              </div>
+
               <div className="flex gap-2 justify-end">
                 <button onClick={() => setShowInput(false)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600">취소</button>
                 <button onClick={saveSnapshot} disabled={saving} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
@@ -199,6 +251,10 @@ export default function DashboardPage() {
                         <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">순이익</th>
                         <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">식재료비</th>
                         <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">인건비</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">임대료</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">공과금</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">마케팅</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">배달수수료</th>
                         <th className="px-4 py-3"></th>
                       </tr>
                     </thead>
@@ -213,6 +269,10 @@ export default function DashboardPage() {
                           </td>
                           <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">{fmt(s.cogs)}원</td>
                           <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">{fmt(s.labor_cost)}원</td>
+                          <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">{fmt(s.rent)}원</td>
+                          <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">{fmt(s.utilities||0)}원</td>
+                          <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">{fmt(s.marketing||0)}원</td>
+                          <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">{fmt(s.delivery_fee||0)}원</td>
                           <td className="px-4 py-3 text-right">
                             <button onClick={() => delSnapshot(s.id)} className="text-xs text-red-400 hover:text-red-600">삭제</button>
                           </td>
