@@ -1,38 +1,40 @@
-// app/api/payment/confirm/route.ts
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
     const { paymentKey, orderId, amount } = await req.json();
 
     if (!paymentKey || !orderId || !amount) {
-      return NextResponse.json({ error: "필수 파라미터 누락" }, { status: 400 });
+      return NextResponse.json({ error: "필수 값 누락" }, { status: 400 });
     }
 
-    // 토스페이먼츠 결제 승인 API 호출
-    const res = await fetch("https://api.tosspayments.com/v1/payments/confirm", {
+    const secretKey = process.env.TOSS_SECRET_KEY!;
+    const encoded = Buffer.from(`${secretKey}:`).toString("base64");
+
+    const tossRes = await fetch("https://api.tosspayments.com/v1/payments/confirm", {
       method: "POST",
       headers: {
-        Authorization: `Basic ${Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString("base64")}`,
+        Authorization: `Basic ${encoded}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ paymentKey, orderId, amount }),
     });
 
-    const data = await res.json();
+    const tossData = await tossRes.json();
 
-    if (!res.ok) {
-      console.error("Toss 결제 승인 실패:", data);
-      return NextResponse.json({ error: data.message ?? "결제 승인 실패" }, { status: 400 });
+    if (!tossRes.ok) {
+      console.error("Toss error:", tossData);
+      return NextResponse.json(
+        { error: tossData.message || "결제 승인 실패" },
+        { status: tossRes.status }
+      );
     }
 
-    // TODO: DB에 구독 정보 저장 (Supabase)
-    // const supabase = createServerClient(...);
-    // await supabase.from("subscriptions").upsert({ user_id, plan, ... });
-
-    return NextResponse.json({ ok: true, payment: data });
+    return NextResponse.json({ success: true, payment: tossData });
   } catch (e) {
-    console.error(e);
+    console.error("Payment confirm error:", e);
     return NextResponse.json({ error: "서버 오류" }, { status: 500 });
   }
 }

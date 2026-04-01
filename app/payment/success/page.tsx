@@ -1,24 +1,24 @@
 "use client";
-
-// app/payment/success/page.tsx
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
 function PaymentSuccessContent() {
-  const searchParams = useSearchParams();
+  const params = useSearchParams();
   const router = useRouter();
-  const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
-  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"loading" | "success" | "fail">("loading");
+  const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    const paymentKey = searchParams.get("paymentKey");
-    const orderId = searchParams.get("orderId");
-    const amount = searchParams.get("amount");
+    const paymentKey = params.get("paymentKey");
+    const orderId    = params.get("orderId");
+    const amount     = params.get("amount");
 
     if (!paymentKey || !orderId || !amount) {
-      setStatus("error");
-      setMessage("결제 정보가 올바르지 않습니다.");
+      setStatus("fail");
+      setMsg("결제 정보가 올바르지 않습니다.");
       return;
     }
 
@@ -27,57 +27,58 @@ function PaymentSuccessContent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paymentKey, orderId, amount: Number(amount) }),
     })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.ok) setStatus("ok");
-        else { setStatus("error"); setMessage(data.error ?? "결제 승인 중 오류가 발생했습니다."); }
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          setStatus("success");
+        } else {
+          setStatus("fail");
+          setMsg(d.error || "결제 승인 실패");
+        }
       })
-      .catch(() => { setStatus("error"); setMessage("네트워크 오류가 발생했습니다."); });
-  }, [searchParams]);
+      .catch(() => { setStatus("fail"); setMsg("서버 오류"); });
+  }, [params]);
 
   return (
-    <div className="max-w-md w-full mx-auto p-8 bg-white rounded-3xl shadow-sm ring-1 ring-slate-200 text-center">
-      {status === "loading" && (
-        <>
-          <div className="w-14 h-14 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-          <p className="text-slate-600">결제를 처리하고 있습니다...</p>
-        </>
-      )}
-      {status === "ok" && (
-        <>
-          <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6 text-3xl">✓</div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">결제 완료!</h1>
-          <p className="text-slate-500 mb-8">구독이 활성화되었습니다. VELA를 마음껏 이용하세요.</p>
-          <button onClick={() => router.push("/simulator")} className="w-full rounded-2xl bg-blue-500 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-600">
-            시작하기 →
-          </button>
-        </>
-      )}
-      {status === "error" && (
-        <>
-          <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-6 text-3xl">✕</div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">결제 실패</h1>
-          <p className="text-slate-500 mb-8">{message}</p>
-          <button onClick={() => router.push("/pricing")} className="w-full rounded-2xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-            요금제로 돌아가기
-          </button>
-        </>
-      )}
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="bg-white rounded-3xl p-10 text-center max-w-md w-full ring-1 ring-slate-200">
+        {status === "loading" && (
+          <>
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600 mx-auto mb-6" />
+            <p className="text-slate-600">결제 확인 중...</p>
+          </>
+        )}
+        {status === "success" && (
+          <>
+            <div className="text-5xl mb-4">🎉</div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">결제 완료!</h1>
+            <p className="text-slate-500 mb-8">VELA 프로 플랜이 활성화됐어요.</p>
+            <Link href="/dashboard"
+              className="block w-full rounded-2xl bg-blue-600 text-white font-semibold py-3 hover:bg-blue-700 transition">
+              대시보드로 가기 →
+            </Link>
+          </>
+        )}
+        {status === "fail" && (
+          <>
+            <div className="text-5xl mb-4">❌</div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">결제 실패</h1>
+            <p className="text-slate-500 mb-8">{msg}</p>
+            <Link href="/pricing"
+              className="block w-full rounded-2xl bg-slate-900 text-white font-semibold py-3 hover:bg-slate-700 transition">
+              다시 시도하기
+            </Link>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
 export default function PaymentSuccessPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-50">
-      <Suspense fallback={
-        <div className="max-w-md w-full mx-auto p-8 bg-white rounded-3xl shadow-sm ring-1 ring-slate-200 text-center">
-          <div className="w-14 h-14 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-          <p className="text-slate-600">로딩 중...</p>
-        </div>
-      }>
-        <PaymentSuccessContent />
-      </Suspense>
-    </main>
+    <Suspense>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }
