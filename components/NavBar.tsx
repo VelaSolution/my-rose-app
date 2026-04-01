@@ -81,7 +81,7 @@ export default function NavBar() {
           <Link href="/" className="vela-nav-logo">VELA<span>.</span></Link>
 
           <div className="vela-nav-links">
-            <a href="/tools">서비스</a>
+            <a href="/info#features">서비스</a>
             <div className="vela-dropdown">
               <Link href="/tools" className="vela-dropdown-btn" style={{ textDecoration:"none" }}>도구 <span className="vela-dropdown-arrow">▾</span></Link>
               <div className="vela-dropdown-menu">
@@ -99,7 +99,7 @@ export default function NavBar() {
             <Link href="/community">커뮤니티</Link>
             <Link href="/game">🎮 게임</Link>
             <Link href="/pricing">요금제</Link>
-            <a href="mailto:mnhyuk@velaanalytics.com">문의</a>
+            <a href="/#contact">문의</a>
           </div>
 
           <div className="vela-nav-actions">
@@ -128,7 +128,7 @@ export default function NavBar() {
 
       {/* 모바일 메뉴 */}
       <div className={`vela-mobile-menu${menuOpen ? " open" : ""}`}>
-        <a href="/tools" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>서비스</a>
+        <a href="/info#features" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>서비스</a>
         <div style={{ borderBottom:"1px solid #F2F4F6", paddingBottom:"8px" }}>
           <p style={{ fontSize:"11px", fontWeight:700, color:"#9EA6B3", padding:"12px 0 6px", letterSpacing:"0.5px" }}>도구</p>
           {TOOLS.map(item => (
@@ -140,7 +140,7 @@ export default function NavBar() {
         <Link href="/community" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>커뮤니티</Link>
         <Link href="/game" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>🎮 게임</Link>
         <Link href="/pricing" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>요금제</Link>
-        <a href="mailto:mnhyuk@velaanalytics.com" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>문의</a>
+        <a href="/#contact" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>문의</a>
         {user ? (
           <>
             <Link href="/dashboard" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>대시보드</Link>
