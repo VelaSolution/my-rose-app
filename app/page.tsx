@@ -497,7 +497,7 @@ function MemberHome() {
   const [loading, setLoading] = useState(true);
   const [news,    setNews]    = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
-  const [stocks, setStocks] = useState<{kospi:string;kospiChange:string;kospiUp:boolean;kosdaq:string;kosdaqChange:string;kosdaqUp:boolean}|null>(null);
+  const [stocks, setStocks] = useState<{kospi:string;kospiChange:string;kospiPct:string;kospiUp:boolean;kosdaq:string;kosdaqChange:string;kosdaqPct:string;kosdaqUp:boolean}|null>(null);
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
