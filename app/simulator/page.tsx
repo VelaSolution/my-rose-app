@@ -670,43 +670,39 @@ function PreviewBar({ form }: { form: FullForm }) {
   const result = useMemo(() => calcResult(form), [form]);
   const isProfit = result.profit >= 0;
 
+  const compact = (n: number) => {
+    const abs = Math.abs(n);
+    const sign = n < 0 ? "-" : "";
+    if (abs >= 100000000) return `${sign}${(abs / 100000000).toFixed(1)}억`;
+    if (abs >= 10000) return `${sign}${Math.round(abs / 10000)}만`;
+    return `${sign}${abs.toLocaleString()}`;
+  };
+
   return (
     <div className="rounded-[28px] bg-slate-900 p-5 text-white">
       <p className="mb-3 text-xs font-medium text-slate-400">실시간 미리보기</p>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="min-w-0">
           <p className="text-xs text-slate-400">월 총 매출</p>
-          <p className="mt-1 text-base font-bold">{fmt(result.totalSales)}원</p>
+          <p className="mt-1 text-sm font-bold truncate">{compact(result.totalSales)}원</p>
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-xs text-slate-400">세전 순이익</p>
-          <p
-            className={`mt-1 text-base font-bold ${
-              isProfit ? "text-emerald-400" : "text-red-400"
-            }`}
-          >
-            {fmt(result.profit)}원
+          <p className={`mt-1 text-sm font-bold truncate ${isProfit ? "text-emerald-400" : "text-red-400"}`}>
+            {compact(result.profit)}원
           </p>
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-xs text-slate-400">세후 실수령</p>
-          <p
-            className={`mt-1 text-base font-bold ${
-              result.netProfit >= 0 ? "text-emerald-300" : "text-red-300"
-            }`}
-          >
-            {fmt(result.netProfit)}원
+          <p className={`mt-1 text-sm font-bold truncate ${result.netProfit >= 0 ? "text-emerald-300" : "text-red-300"}`}>
+            {compact(result.netProfit)}원
           </p>
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-xs text-slate-400">현금흐름</p>
-          <p
-            className={`mt-1 text-base font-bold ${
-              result.cashFlow >= 0 ? "text-blue-300" : "text-red-300"
-            }`}
-          >
-            {fmt(result.cashFlow)}원
+          <p className={`mt-1 text-sm font-bold truncate ${result.cashFlow >= 0 ? "text-blue-300" : "text-red-300"}`}>
+            {compact(result.cashFlow)}원
           </p>
         </div>
       </div>
@@ -714,17 +710,11 @@ function PreviewBar({ form }: { form: FullForm }) {
       <div className="mt-3 flex items-center gap-2">
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-700">
           <div
-            className={`h-full rounded-full transition-all duration-300 ${
-              isProfit ? "bg-emerald-400" : "bg-red-400"
-            }`}
+            className={`h-full rounded-full transition-all duration-300 ${isProfit ? "bg-emerald-400" : "bg-red-400"}`}
             style={{ width: `${Math.min(Math.abs(result.netMargin) * 5, 100)}%` }}
           />
         </div>
-        <span
-          className={`text-xs font-semibold ${
-            isProfit ? "text-emerald-400" : "text-red-400"
-          }`}
-        >
+        <span className={`text-xs font-semibold whitespace-nowrap ${isProfit ? "text-emerald-400" : "text-red-400"}`}>
           순이익률 {pct(result.netMargin)}
         </span>
       </div>
