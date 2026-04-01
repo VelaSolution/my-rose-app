@@ -408,11 +408,14 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
   const [ind,  setInd]    = useState<Industry>("cafe");
   const [sname,setSname]  = useState("");
   const [capStr, setCapStr] = useState("20000000"); // string으로 관리해서 입력 버그 방지
-  const [spend,setSpend]  = useState(7000);
-  const [cogs, setCogs]   = useState(28);
+  const [spend,  setSpend]   = useState(7000);
+  const [cogs,   setCogs]    = useState(28);
+  const [rent,   setRent]    = useState(0);   // 0 = 업종 기본값 사용
+  const [util,   setUtil]    = useState(0);   // 0 = 업종 기본값 사용
+  const [labor,  setLabor]   = useState(0);   // 0 = 업종 기본값 사용
   const [simLoaded, setSimLoaded] = useState(false);
   const [showSimPicker, setShowSimPicker] = useState(false);
-  const [simSaves, setSimSaves] = useState<{id:string;name:string;industry:string;avgSpend:number;cogsRate:number;savedAt:string;source?:string}[]>([]);
+  const [simSaves, setSimSaves] = useState<{id:string;name:string;industry:string;avgSpend:number;cogsRate:number;savedAt:string;source?:string;rent?:number;util?:number;labor?:number;capital?:number}[]>([]);
 
   const cap = Math.max(0, Number(capStr.replace(/[^0-9]/g,"")) || 0);
 
@@ -455,23 +458,26 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
               const avgSpend = Number(f.avgSpend || f.avg_spend || 0);
               const cogsRate = Number(f.cogsRate || f.cogs_rate || f.cogsRatio || r.cogsRate || 0);
               const industry = String(f.industry || "restaurant");
+              const rent = Number(f.rent || 0);
+              const util = Number(f.utilities || f.util || 0);
+              const labor = Number(f.laborCost || f.labor_cost || r.laborCost || 0);
               const date = new Date(row.created_at).toLocaleDateString("ko-KR", {month:"short", day:"numeric"});
-              all.push({ id:"sb-"+row.id, name:`☁️ ${row.label} (${date})`, industry, avgSpend, cogsRate, savedAt:row.created_at, source:"sim" });
+              all.push({ id:"sb-"+row.id, name:`☁️ ${row.label} (${date})`, industry, avgSpend, cogsRate, savedAt:row.created_at, source:"sim", rent, util, labor });
             });
           }
 
           // 월별 매출 기록
           const { data: monthData } = await sb
             .from("monthly_snapshots")
-            .select("id, month, industry, total_sales, cogs, net_profit")
+            .select("id, month, industry, total_sales, cogs, labor_cost, rent, utilities, avg_spend, customer_count")
             .eq("user_id", user.id)
             .order("month", { ascending: false })
             .limit(12);
           if (monthData) {
-            monthData.forEach((row: {id:string; month:string; industry:string; total_sales:number; cogs:number; net_profit:number}) => {
-              const avgSpend = Math.round(row.total_sales / 30 / 50); // 대략 추정
+            monthData.forEach((row: {id:string; month:string; industry:string; total_sales:number; cogs:number; labor_cost:number; rent:number; utilities:number; avg_spend:number; customer_count:number}) => {
+              const avgSpend = row.avg_spend || (row.customer_count > 0 ? Math.round(row.total_sales / row.customer_count) : Math.round(row.total_sales / 30 / 50));
               const cogsRate = row.total_sales > 0 ? Math.round((row.cogs / row.total_sales) * 100) : 30;
-              all.push({ id:"month-"+row.id, name:`📈 ${row.month} 월별매출 (${(row.total_sales/10000).toFixed(0)}만원)`, industry:row.industry||"restaurant", avgSpend, cogsRate, savedAt:row.month, source:"monthly" });
+              all.push({ id:"month-"+row.id, name:`📈 ${row.month} 월별매출 (${(row.total_sales/10000).toFixed(0)}만원)`, industry:row.industry||"restaurant", avgSpend, cogsRate, savedAt:row.month, source:"monthly", rent:row.rent||0, util:row.utilities||0, labor:row.labor_cost||0 });
             });
           }
         }
@@ -485,8 +491,12 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
 
   const applySimSave = (save: typeof simSaves[0]) => {
     if (save.industry && IND[save.industry as Industry]) setInd(save.industry as Industry);
-    if (save.avgSpend) setSpend(save.avgSpend);
-    if (save.cogsRate) setCogs(save.cogsRate);
+    if (save.avgSpend)   setSpend(save.avgSpend);
+    if (save.cogsRate)   setCogs(save.cogsRate);
+    if (save.rent)       setRent(save.rent);
+    if (save.util)       setUtil(save.util);
+    if (save.labor)      setLabor(save.labor);
+    if (save.capital)    setCapStr(String(save.capital));
     setSimLoaded(true);
     setShowSimPicker(false);
   };
@@ -497,7 +507,9 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
     const name = sname.trim() || (cfg.icon+" 나의 "+cfg.label);
     onStart({
       day:1, maxDays:90, cash:finalCap, rep:60, phase:"morning",
-      ind, name, base:cfg.base, spend, cogs, rent:cfg.rent, util:cfg.util,
+      ind, name, base:cfg.base, spend, cogs,
+      rent: rent > 0 ? rent : cfg.rent,
+      util: util > 0 ? util : cfg.util,
       staff:cfg.staff.map(s=>({...s})), ev:null, efx:[],
       totalRev:0, totalProfit:0, logs:[],
       wx:getWx(1), cust:0, rev:0, cost:0, todayProfit:0,
@@ -627,9 +639,7 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
             </div>
             <input type="range" min={3000} max={150000} step={500} value={spend} onChange={e=>setSpend(Number(e.target.value))} style={{width:"100%",accentColor:B}} />
             <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:G400,marginTop:3}}>
-              <span>3,000원</span>
-              <span style={{color:B,fontWeight:600}}>{spend.toLocaleString()}원</span>
-              <span>150,000원</span>
+              <span>3,000원</span><span style={{color:B,fontWeight:600}}>{spend.toLocaleString()}원</span><span>150,000원</span>
             </div>
           </div>
           <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
@@ -639,10 +649,34 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
             </div>
             <input type="range" min={10} max={65} step={1} value={cogs} onChange={e=>setCogs(Number(e.target.value))} style={{width:"100%",accentColor:B}} />
             <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:G400,marginTop:3}}>
-              <span>10%</span>
-              <span style={{color:cogs>40?RD:GN,fontWeight:600}}>{cogs}%</span>
-              <span>65%</span>
+              <span>10%</span><span style={{color:cogs>40?RD:GN,fontWeight:600}}>{cogs}%</span><span>65%</span>
             </div>
+          </div>
+          <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+              <p style={{fontSize:15,fontWeight:700,color:G900,margin:0}}>🏠 월 임대료</p>
+              <span style={{fontSize:14,fontWeight:700,color:G800}}>{(rent>0?rent:cfg.rent).toLocaleString()}원</span>
+            </div>
+            <input type="range" min={300000} max={15000000} step={100000} value={rent>0?rent:cfg.rent} onChange={e=>setRent(Number(e.target.value))} style={{width:"100%",accentColor:B}} />
+            <p style={{fontSize:12,color:G400,marginTop:4}}>{rent===0?"업종 기본값":"직접 설정"} — 기본값: {cfg.rent.toLocaleString()}원</p>
+          </div>
+          <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+              <p style={{fontSize:15,fontWeight:700,color:G900,margin:0}}>⚡ 월 공과금</p>
+              <span style={{fontSize:14,fontWeight:700,color:G800}}>{(util>0?util:cfg.util).toLocaleString()}원</span>
+            </div>
+            <input type="range" min={100000} max={5000000} step={50000} value={util>0?util:cfg.util} onChange={e=>setUtil(Number(e.target.value))} style={{width:"100%",accentColor:B}} />
+            <p style={{fontSize:12,color:G400,marginTop:4}}>{util===0?"업종 기본값":"직접 설정"} — 기본값: {cfg.util.toLocaleString()}원</p>
+          </div>
+          <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+              <p style={{fontSize:15,fontWeight:700,color:G900,margin:0}}>👥 월 인건비</p>
+              <span style={{fontSize:14,fontWeight:700,color:G800}}>{(labor>0?labor:cfg.staff.reduce((a,s)=>a+s.wage*26,0)).toLocaleString()}원</span>
+            </div>
+            <input type="range" min={500000} max={20000000} step={100000}
+              value={labor>0?labor:cfg.staff.reduce((a,s)=>a+s.wage*26,0)}
+              onChange={e=>setLabor(Number(e.target.value))} style={{width:"100%",accentColor:B}} />
+            <p style={{fontSize:12,color:G400,marginTop:4}}>{labor===0?"직원 기본값":"직접 설정"} — 직원 {cfg.staff.length}명 기준</p>
           </div>
         </div>
         <div style={{display:"flex",gap:8,marginTop:16}}>
@@ -668,10 +702,18 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
             </div>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            {[{l:"초기 자본금",v:cap.toLocaleString("ko-KR")+"원"},{l:"객단가",v:spend.toLocaleString()+"원"},{l:"원가율",v:cogs+"%"},{l:"기간",v:"90일"}].map(x=>(
+            {[
+              {l:"초기 자본금", v:cap.toLocaleString("ko-KR")+"원"},
+              {l:"객단가",     v:spend.toLocaleString()+"원"},
+              {l:"원가율",     v:cogs+"%"},
+              {l:"월 임대료",  v:(rent>0?rent:cfg.rent).toLocaleString()+"원"},
+              {l:"월 공과금",  v:(util>0?util:cfg.util).toLocaleString()+"원"},
+              {l:"월 인건비",  v:(labor>0?labor:cfg.staff.reduce((a,s)=>a+s.wage*26,0)).toLocaleString()+"원"},
+              {l:"기간",       v:"90일"},
+            ].map(x=>(
               <div key={x.l} style={{background:G50,borderRadius:12,padding:"12px 14px"}}>
                 <p style={{fontSize:13,color:G400,margin:"0 0 4px"}}>{x.l}</p>
-                <p style={{fontSize:16,fontWeight:700,color:G900,margin:0}}>{x.v}</p>
+                <p style={{fontSize:15,fontWeight:700,color:G900,margin:0}}>{x.v}</p>
               </div>
             ))}
           </div>
