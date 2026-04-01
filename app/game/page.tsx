@@ -560,38 +560,47 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
               <p style={{fontSize:14,fontWeight:700,color:G900,margin:0}}>📊 데이터 선택</p>
               <button onClick={()=>setShowSimPicker(false)} style={{fontSize:13,color:G400,background:"none",border:"none",cursor:"pointer"}}>✕</button>
             </div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {simSaves.filter(s=>s.source!=="monthly").length>0 && (
-                <p style={{fontSize:11,fontWeight:700,color:G400,margin:"4px 0 2px",letterSpacing:"0.5px"}}>📊 시뮬레이션 기록</p>
-              )}
-              {simSaves.filter(s=>s.source!=="monthly").map(s=>(
-                <button key={s.id} onClick={()=>applySimSave(s)} style={{padding:"12px 14px",borderRadius:12,border:"1px solid "+G200,background:G50,cursor:"pointer",textAlign:"left",fontFamily:"inherit",transition:"background 0.1s"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div>
-                      <p style={{fontSize:14,fontWeight:700,color:G900,margin:"0 0 2px"}}>{s.name}</p>
-                      <p style={{fontSize:12,color:G400,margin:0}}>
-                        {IND[s.industry as Industry]?.icon} {IND[s.industry as Industry]?.label||s.industry} · 객단가 {s.avgSpend.toLocaleString()}원 · 원가율 {s.cogsRate}%
-                      </p>
-                    </div>
-                    <span style={{fontSize:12,color:G400}}>{s.savedAt==="현재"?"현재":s.savedAt?new Date(s.savedAt).toLocaleDateString("ko-KR"):""}</span>
-                  </div>
-                </button>
-              ))}
-              {simSaves.filter(s=>s.source==="monthly").length>0 && (
-                <p style={{fontSize:11,fontWeight:700,color:G400,margin:"8px 0 2px",letterSpacing:"0.5px"}}>📈 월별 매출 기록</p>
-              )}
-              {simSaves.filter(s=>s.source==="monthly").map(s=>(
-                <button key={s.id} onClick={()=>applySimSave(s)} style={{padding:"12px 14px",borderRadius:12,border:"1px solid "+G200,background:G50,cursor:"pointer",textAlign:"left",fontFamily:"inherit",transition:"background 0.1s"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div>
-                      <p style={{fontSize:14,fontWeight:700,color:G900,margin:"0 0 2px"}}>{s.name}</p>
-                      <p style={{fontSize:12,color:G400,margin:0}}>
-                        {IND[s.industry as Industry]?.icon} {IND[s.industry as Industry]?.label||s.industry} · 원가율 {s.cogsRate}%
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              {/* 좌측: 시뮬레이션 기록 */}
+              <div>
+                <p style={{fontSize:11,fontWeight:700,color:G400,margin:"0 0 8px",letterSpacing:"0.5px"}}>📊 시뮬레이션 기록</p>
+                <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:300,overflowY:"auto"}}>
+                  {simSaves.filter(s=>s.source!=="monthly").length===0
+                    ? <p style={{fontSize:12,color:G400,padding:"12px 0"}}>저장된 시뮬레이션이 없어요</p>
+                    : simSaves.filter(s=>s.source!=="monthly").map(s=>(
+                      <button key={s.id} onClick={()=>applySimSave(s)} style={{padding:"10px 12px",borderRadius:12,border:"1px solid "+G200,background:G50,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}>
+                        <p style={{fontSize:13,fontWeight:700,color:G900,margin:"0 0 3px",lineHeight:1.3}}>{s.name}</p>
+                        <p style={{fontSize:11,color:G400,margin:0}}>
+                          {IND[s.industry as Industry]?.icon} {IND[s.industry as Industry]?.label||s.industry}
+                        </p>
+                        <p style={{fontSize:11,color:G600,margin:"2px 0 0"}}>
+                          객단가 {s.avgSpend.toLocaleString()}원 · 원가율 {s.cogsRate}%
+                        </p>
+                      </button>
+                    ))
+                  }
+                </div>
+              </div>
+              {/* 우측: 월별 매출 기록 */}
+              <div>
+                <p style={{fontSize:11,fontWeight:700,color:G400,margin:"0 0 8px",letterSpacing:"0.5px"}}>📈 월별 매출 기록</p>
+                <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:300,overflowY:"auto"}}>
+                  {simSaves.filter(s=>s.source==="monthly").length===0
+                    ? <p style={{fontSize:12,color:G400,padding:"12px 0"}}>등록된 월별 매출이 없어요</p>
+                    : simSaves.filter(s=>s.source==="monthly").map(s=>(
+                      <button key={s.id} onClick={()=>applySimSave(s)} style={{padding:"10px 12px",borderRadius:12,border:"1px solid "+G200,background:G50,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}>
+                        <p style={{fontSize:13,fontWeight:700,color:G900,margin:"0 0 3px",lineHeight:1.3}}>{s.name}</p>
+                        <p style={{fontSize:11,color:G400,margin:0}}>
+                          {IND[s.industry as Industry]?.icon} {IND[s.industry as Industry]?.label||s.industry}
+                        </p>
+                        <p style={{fontSize:11,color:G600,margin:"2px 0 0"}}>
+                          원가율 {s.cogsRate}%
+                        </p>
+                      </button>
+                    ))
+                  }
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -614,21 +623,25 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
           <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
               <p style={{fontSize:15,fontWeight:700,color:G900,margin:0}}>🍽️ 객단가</p>
-              <span style={{fontSize:16,fontWeight:700,color:G900}}>{spend.toLocaleString()}원</span>
+              <span style={{fontSize:16,fontWeight:700,color:B}}>{spend.toLocaleString()}원</span>
             </div>
             <input type="range" min={3000} max={150000} step={500} value={spend} onChange={e=>setSpend(Number(e.target.value))} style={{width:"100%",accentColor:B}} />
             <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:G400,marginTop:3}}>
-              <span>3천원</span><span>기본 {IND[ind].spend.toLocaleString()}원</span><span>15만원</span>
+              <span>3,000원</span>
+              <span style={{color:B,fontWeight:600}}>{spend.toLocaleString()}원</span>
+              <span>150,000원</span>
             </div>
           </div>
           <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
               <p style={{fontSize:15,fontWeight:700,color:G900,margin:0}}>📦 초기 원가율</p>
-              <span style={{fontSize:16,fontWeight:700,color:cogs>40?RD:G900}}>{cogs}%</span>
+              <span style={{fontSize:16,fontWeight:700,color:cogs>40?RD:GN}}>{cogs}%</span>
             </div>
             <input type="range" min={10} max={65} step={1} value={cogs} onChange={e=>setCogs(Number(e.target.value))} style={{width:"100%",accentColor:B}} />
             <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:G400,marginTop:3}}>
-              <span>10%</span><span>기본 {IND[ind].cogs}%</span><span>65%</span>
+              <span>10%</span>
+              <span style={{color:cogs>40?RD:GN,fontWeight:600}}>{cogs}%</span>
+              <span>65%</span>
             </div>
           </div>
         </div>
