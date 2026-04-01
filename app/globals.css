@@ -24,3 +24,41 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ── NavBar ──────────────────────────────────────────── */
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        .vela-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #E5E8EB;display:flex;align-items:center;font-family:var(--font-geist-sans),'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif}
+        .vela-nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}
+        .vela-nav-logo{font-size:20px;font-weight:800;color:#191F28;text-decoration:none;letter-spacing:-0.02em;font-family:inherit}
+        .vela-nav-logo span{color:#3182F6}
+        .vela-nav-links{display:flex;align-items:center;gap:28px}
+        .vela-nav-links a{font-size:15px;font-weight:500;color:#6B7684;text-decoration:none;transition:color .15s;font-family:inherit}
+        .vela-nav-links a:hover{color:#191F28}
+        .vela-nav-actions{display:flex;align-items:center;gap:10px}
+        .vela-btn-login{font-size:14px;font-weight:600;color:#6B7684;text-decoration:none;transition:color .15s;font-family:inherit}
+        .vela-btn-login:hover{color:#191F28}
+        .vela-btn-dashboard{background:#F2F4F6;color:#333D4B;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;transition:all .15s;font-family:inherit;line-height:1}
+        .vela-btn-dashboard:hover{background:#E5E8EB}
+        .vela-btn-logout{background:none;border:1px solid #E5E8EB;color:#6B7684;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;line-height:1}
+        .vela-btn-logout:hover{border-color:#333D4B;color:#191F28}
+        .vela-btn-start{background:#3182F6;color:#fff;padding:9px 18px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;transition:background .15s;font-family:inherit;line-height:1}
+        .vela-btn-start:hover{background:#1B64DA}
+        .vela-user-name{font-size:14px;font-weight:600;color:#333D4B;text-decoration:none;cursor:pointer;font-family:inherit}
+        .vela-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+        .vela-hamburger span{display:block;width:22px;height:2px;background:#333D4B;border-radius:2px;transition:all .2s}
+        .vela-mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:#fff;border-bottom:1px solid #E5E8EB;padding:16px 24px;flex-direction:column;gap:0;z-index:99;max-height:80vh;overflow-y:auto;font-family:inherit}
+        .vela-mobile-menu.open{display:flex}
+        .vela-mobile-link{font-size:15px;font-weight:500;color:#333D4B;text-decoration:none;padding:12px 0;border-bottom:1px solid #F2F4F6;display:block;font-family:inherit}
+        .vela-dropdown{position:relative}
+        .vela-dropdown-btn{font-size:15px;font-weight:500;color:#6B7684;background:none;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;padding:0;transition:color .15s}
+        .vela-dropdown-btn:hover{color:#191F28}
+        .vela-dropdown-arrow{font-size:10px;transition:transform .2s;display:inline-block}
+        .vela-dropdown:hover .vela-dropdown-arrow{transform:rotate(180deg)}
+        .vela-dropdown-menu{position:absolute;top:100%;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #E5E8EB;border-radius:20px;padding:14px 10px 10px;box-shadow:0 8px 32px rgba(0,0,0,.12);min-width:520px;display:none;z-index:200;grid-template-columns:1fr 1fr;gap:4px}
+        .vela-dropdown:hover .vela-dropdown-menu{display:grid}
+        .vela-dropdown-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;text-decoration:none;transition:background .15s}
+        .vela-dropdown-item:hover{background:#F2F4F6}
+        .vela-dropdown-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+        .vela-dropdown-label{font-size:13px;font-weight:600;color:#191F28;margin:0 0 2px;font-family:inherit}
+        .vela-dropdown-desc{font-size:11px;color:#9EA6B3;margin:0;font-family:inherit}
+        @media(max-width:768px){.vela-nav-links,.vela-nav-actions{display:none}.vela-hamburger{display:flex}}
