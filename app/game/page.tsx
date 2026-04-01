@@ -20,6 +20,7 @@ interface Ev {
   type:"crisis"|"opportunity"|"random";
   choices:{ label:string; desc:string; cost?:number; apply:(s:S)=>Partial<S>&{efx?:Eff[]} }[];
 }
+type GameMode = "free" | "target" | "survive" | "growth";
 interface S {
   day:number; maxDays:number; cash:number; rep:number; phase:Day;
   ind:Industry; name:string; base:number; spend:number; cogs:number; rent:number; util:number;
@@ -28,6 +29,8 @@ interface S {
   wx:Weather; cust:number; rev:number; cost:number; todayProfit:number;
   flags:Record<string, boolean|number>; exp:number; streak:number; best:number;
   savedAt?:string;
+  mode:GameMode; monthlyProfit:number; negStreak:number;
+  targetRevenue?:number; targetProfit?:number; growthTarget?:number; firstMonthRev?:number;
 }
 
 // Colors
@@ -404,20 +407,22 @@ function Menu({onNew,onLoad,saved}:{onNew:()=>void;onLoad:()=>void;saved:S|null}
 
 // ── 셋업 ────────────────────────────────────────────────────
 function Setup({onStart}:{onStart:(s:S)=>void}) {
-  const [step, setStep]   = useState<0|1|2>(0);
+  const [step, setStep]   = useState<0|1|2|3>(0);
+  const [mode, setMode]   = useState<GameMode>("free");
   const [ind,  setInd]    = useState<Industry>("cafe");
   const [sname,setSname]  = useState("");
-  const [capStr, setCapStr] = useState("20000000"); // string으로 관리해서 입력 버그 방지
   const [spend,  setSpend]   = useState(7000);
   const [cogs,   setCogs]    = useState(28);
-  const [rent,   setRent]    = useState(0);   // 0 = 업종 기본값 사용
-  const [util,   setUtil]    = useState(0);   // 0 = 업종 기본값 사용
-  const [labor,  setLabor]   = useState(0);   // 0 = 업종 기본값 사용
+  const [rent,   setRent]    = useState(0);
+  const [util,   setUtil]    = useState(0);
+  const [labor,  setLabor]   = useState(0);
+  const [targetRevenue, setTargetRevenue] = useState("");
+  const [targetProfit,  setTargetProfit]  = useState("");
+  const [growthTarget,  setGrowthTarget]  = useState(2);
   const [simLoaded, setSimLoaded] = useState(false);
   const [showSimPicker, setShowSimPicker] = useState(false);
   const [simSaves, setSimSaves] = useState<{id:string;name:string;industry:string;avgSpend:number;cogsRate:number;savedAt:string;source?:string;rent?:number;util?:number;labor?:number;capital?:number}[]>([]);
 
-  const cap = Math.max(0, Number(capStr.replace(/[^0-9]/g,"")) || 0);
 
   useEffect(()=>{ setSpend(IND[ind].spend); setCogs(IND[ind].cogs); },[ind]);
 
@@ -496,34 +501,77 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
     if (save.rent)       setRent(save.rent);
     if (save.util)       setUtil(save.util);
     if (save.labor)      setLabor(save.labor);
-    if (save.capital)    setCapStr(String(save.capital));
     setSimLoaded(true);
     setShowSimPicker(false);
   };
 
   const cfg = IND[ind];
   const start = () => {
-    const finalCap = cap < 100000 ? 1000000 : cap;
     const name = sname.trim() || (cfg.icon+" 나의 "+cfg.label);
+    const monthlyRent = rent > 0 ? rent : cfg.rent;
+    const monthlyUtil = util > 0 ? util : cfg.util;
+    const monthlyLabor = labor > 0 ? labor : cfg.staff.reduce((a,s)=>a+s.wage*26,0);
+    const initCash = monthlyRent + monthlyUtil + monthlyLabor; // 한 달 운영비를 초기 현금으로
     onStart({
-      day:1, maxDays:90, cash:finalCap, rep:60, phase:"morning",
-      ind, name, base:cfg.base, spend, cogs,
-      rent: rent > 0 ? rent : cfg.rent,
-      util: util > 0 ? util : cfg.util,
+      day:1, maxDays:90, cash:initCash, rep:60, phase:"morning",
+      mode, ind, name, base:cfg.base, spend, cogs,
+      rent: monthlyRent,
+      util: monthlyUtil,
       staff:cfg.staff.map(s=>({...s})), ev:null, efx:[],
       totalRev:0, totalProfit:0, logs:[],
       wx:getWx(1), cust:0, rev:0, cost:0, todayProfit:0,
       flags:{}, exp:0, streak:0, best:0,
+      monthlyProfit:0, negStreak:0,
+      targetRevenue: targetRevenue ? Number(targetRevenue) : undefined,
+      targetProfit:  targetProfit  ? Number(targetProfit)  : undefined,
+      growthTarget:  growthTarget,
+      firstMonthRev: undefined,
     });
   };
 
   const bar = (
     <div style={{display:"flex",gap:6,marginBottom:28}}>
-      {[0,1,2].map(i=><div key={i} style={{flex:1,height:4,borderRadius:2,background:step>=i?B:G200}} />)}
+      {[0,1,2,3].map(i=><div key={i} style={{flex:1,height:4,borderRadius:2,background:step>=i?B:G200}} />)}
     </div>
   );
 
+  const MODES: {id:GameMode; icon:string; label:string; desc:string; color:string}[] = [
+    {id:"free",    icon:"🎯", label:"자유 모드",      desc:"90일 동안 최대 순이익 달성",        color:"#3182F6"},
+    {id:"target",  icon:"📈", label:"목표 달성 모드",  desc:"설정한 매출/순이익 목표를 달성",     color:"#00B386"},
+    {id:"survive", icon:"🛡️", label:"생존 모드",      desc:"적자 없이 최대한 오래 버티기",       color:"#F59E0B"},
+    {id:"growth",  icon:"🚀", label:"성장 모드",       desc:"첫 달 대비 매출 목표 배수 달성",     color:"#8B5CF6"},
+  ];
+
   if (step===0) return (
+    <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}><NavBar />
+      <div style={{maxWidth:520,margin:"0 auto",padding:"32px 20px"}}>
+        {bar}
+        <h2 style={{fontSize:24,fontWeight:800,color:G900,marginBottom:6,fontFamily:"inherit"}}>게임 모드를 선택하세요</h2>
+        <p style={{fontSize:15,color:G600,marginBottom:20}}>목표에 맞는 모드로 도전해보세요!</p>
+        <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+          {MODES.map(m=>{
+            const sel=mode===m.id;
+            return (
+              <button key={m.id} onClick={()=>setMode(m.id)}
+                style={{padding:"18px 20px",borderRadius:18,border:"2px solid "+(sel?m.color:G200),background:sel?m.color+"12":"#fff",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:16}}>
+                <div style={{fontSize:32,flexShrink:0}}>{m.icon}</div>
+                <div>
+                  <p style={{fontSize:16,fontWeight:700,color:sel?m.color:G900,margin:"0 0 3px"}}>{m.label}</p>
+                  <p style={{fontSize:13,color:G600,margin:0}}>{m.desc}</p>
+                </div>
+                {sel && <div style={{marginLeft:"auto",width:20,height:20,borderRadius:10,background:m.color,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,flexShrink:0}}>✓</div>}
+              </button>
+            );
+          })}
+        </div>
+        <button onClick={()=>setStep(1)} style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:MODES.find(m=>m.id===mode)?.color||B,color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+          다음 →
+        </button>
+      </div>
+    </div>
+  );
+
+  if (step===1) return (
     <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}><NavBar />
       <div style={{maxWidth:520,margin:"0 auto",padding:"32px 20px"}}>
         {bar}
@@ -546,14 +594,15 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
           <input value={sname} onChange={e=>setSname(e.target.value)} placeholder={cfg.icon+" 나의 소중한 "+cfg.label}
             style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"1px solid "+G200,fontSize:15,outline:"none",fontFamily:"inherit",boxSizing:"border-box" as const,color:G900}} />
         </div>
-        <button onClick={()=>setStep(1)} style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:cfg.color,color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-          다음 →
-        </button>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>setStep(0)} style={{flex:1,padding:"14px",borderRadius:14,border:"1px solid "+G200,background:"#fff",color:G800,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>← 이전</button>
+          <button onClick={()=>setStep(2)} style={{flex:2,padding:"14px",borderRadius:14,border:"none",background:cfg.color,color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>다음 →</button>
+        </div>
       </div>
     </div>
   );
 
-  if (step===1) return (
+  if (step===2) return (
     <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}><NavBar />
       <div style={{maxWidth:520,margin:"0 auto",padding:"32px 20px"}}>
         {bar}
@@ -618,20 +667,39 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
         )}
 
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
-            <p style={{fontSize:15,fontWeight:700,color:G900,marginBottom:10}}>💰 초기 자본금</p>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={capStr}
-              onChange={e => setCapStr(e.target.value.replace(/[^0-9]/g,""))}
-              onFocus={e => e.target.select()}
-              placeholder="예: 20000000"
-              style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"1px solid "+G200,fontSize:16,outline:"none",fontFamily:"inherit",boxSizing:"border-box" as const,color:G900}} />
-            <p style={{fontSize:13,color:B,marginTop:6,fontWeight:600}}>
-              {cap>0 ? cap.toLocaleString("ko-KR")+"원으로 시작" : "금액을 입력하세요"}
-            </p>
-          </div>
+          {/* 모드별 추가 설정 */}
+          {mode==="target" && (
+            <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
+              <p style={{fontSize:15,fontWeight:700,color:G900,marginBottom:4}}>📈 목표 설정</p>
+              <p style={{fontSize:13,color:G400,marginBottom:12}}>달성하고 싶은 월 목표를 입력하세요</p>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                <div>
+                  <p style={{fontSize:13,fontWeight:600,color:G600,marginBottom:6}}>월 매출 목표 (원)</p>
+                  <input type="number" value={targetRevenue} onChange={e=>setTargetRevenue(e.target.value)}
+                    placeholder="예: 30000000" style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"1px solid "+G200,fontSize:15,outline:"none",fontFamily:"inherit",boxSizing:"border-box" as const,color:G900}} />
+                </div>
+                <div>
+                  <p style={{fontSize:13,fontWeight:600,color:G600,marginBottom:6}}>월 순이익 목표 (원)</p>
+                  <input type="number" value={targetProfit} onChange={e=>setTargetProfit(e.target.value)}
+                    placeholder="예: 5000000" style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"1px solid "+G200,fontSize:15,outline:"none",fontFamily:"inherit",boxSizing:"border-box" as const,color:G900}} />
+                </div>
+              </div>
+            </div>
+          )}
+          {mode==="growth" && (
+            <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
+              <p style={{fontSize:15,fontWeight:700,color:G900,marginBottom:4}}>🚀 성장 목표</p>
+              <p style={{fontSize:13,color:G400,marginBottom:12}}>첫 달 대비 몇 배 성장이 목표인가요?</p>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <p style={{fontSize:15,fontWeight:700,color:G900,margin:0}}>목표 배수</p>
+                <span style={{fontSize:20,fontWeight:800,color:"#8B5CF6"}}>{growthTarget}배</span>
+              </div>
+              <input type="range" min={1.5} max={5} step={0.5} value={growthTarget} onChange={e=>setGrowthTarget(Number(e.target.value))} style={{width:"100%",accentColor:"#8B5CF6"}} />
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:G400,marginTop:4}}>
+                <span>1.5배</span><span>5배</span>
+              </div>
+            </div>
+          )}
           <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
               <p style={{fontSize:15,fontWeight:700,color:G900,margin:0}}>🍽️ 객단가</p>
@@ -687,10 +755,13 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
     </div>
   );
 
+  if (step!==3) return null;
   return (
     <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}><NavBar />
       <div style={{maxWidth:520,margin:"0 auto",padding:"32px 20px"}}>
         {bar}
+        {/* 모드 뱃지 */}
+        {(()=>{const m=MODES.find(m=>m.id===mode); return m?<div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:20,background:m.color+"15",border:"1px solid "+m.color+"40",marginBottom:16}}><span>{m.icon}</span><span style={{fontSize:13,fontWeight:700,color:m.color}}>{m.label}</span></div>:null;})()}
         <h2 style={{fontSize:24,fontWeight:800,color:G900,marginBottom:6,fontFamily:"inherit"}}>준비됐나요?</h2>
         <p style={{fontSize:15,color:G600,marginBottom:20}}>설정을 확인하고 게임을 시작하세요</p>
         <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:20,padding:20,marginBottom:16}}>
@@ -703,13 +774,15 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             {[
-              {l:"초기 자본금", v:cap.toLocaleString("ko-KR")+"원"},
-              {l:"객단가",     v:spend.toLocaleString()+"원"},
-              {l:"원가율",     v:cogs+"%"},
-              {l:"월 임대료",  v:(rent>0?rent:cfg.rent).toLocaleString()+"원"},
-              {l:"월 공과금",  v:(util>0?util:cfg.util).toLocaleString()+"원"},
-              {l:"월 인건비",  v:(labor>0?labor:cfg.staff.reduce((a,s)=>a+s.wage*26,0)).toLocaleString()+"원"},
-              {l:"기간",       v:"90일"},
+              {l:"객단가",    v:spend.toLocaleString()+"원"},
+              {l:"원가율",    v:cogs+"%"},
+              {l:"월 임대료", v:(rent>0?rent:cfg.rent).toLocaleString()+"원"},
+              {l:"월 공과금", v:(util>0?util:cfg.util).toLocaleString()+"원"},
+              {l:"월 인건비", v:(labor>0?labor:cfg.staff.reduce((a,s)=>a+s.wage*26,0)).toLocaleString()+"원"},
+              {l:"기간",      v:"90일"},
+              ...(mode==="target"&&targetRevenue?[{l:"매출 목표",v:Number(targetRevenue).toLocaleString()+"원"}]:[]),
+              ...(mode==="target"&&targetProfit?[{l:"순이익 목표",v:Number(targetProfit).toLocaleString()+"원"}]:[]),
+              ...(mode==="growth"?[{l:"성장 목표",v:growthTarget+"배"}]:[]),
             ].map(x=>(
               <div key={x.l} style={{background:G50,borderRadius:12,padding:"12px 14px"}}>
                 <p style={{fontSize:13,color:G400,margin:"0 0 4px"}}>{x.l}</p>
@@ -719,7 +792,7 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
           </div>
         </div>
         <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>setStep(1)} style={{flex:1,padding:"14px",borderRadius:14,border:"1px solid "+G200,background:"#fff",color:G800,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>← 이전</button>
+          <button onClick={()=>setStep(2)} style={{flex:1,padding:"14px",borderRadius:14,border:"1px solid "+G200,background:"#fff",color:G800,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>← 이전</button>
           <button onClick={start} style={{flex:2,padding:"17px",borderRadius:14,border:"none",background:cfg.color,color:"#fff",fontSize:17,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🚀 게임 시작!</button>
         </div>
       </div>
@@ -767,16 +840,54 @@ function Play({s, setS, onOver}:{s:S; setS:React.Dispatch<React.SetStateAction<S
       cust:r.cust, rev:r.rev, cost:r.cost, todayProfit:r.profit,
       logs:[...s.logs,{day:s.day,wx:s.wx,customers:r.cust,revenue:r.rev,profit:r.profit,event:s.ev.title}],
       phase:"result", efx:ne, exp:tmp.exp+(r.profit>500000?30:r.profit>0?15:5),
-      streak:r.profit>0?tmp.streak+1:0, best:Math.max(tmp.best,r.profit)};
+      streak:r.profit>0?tmp.streak+1:0, best:Math.max(tmp.best,r.profit),
+      negStreak:r.profit<0?tmp.negStreak+1:0,
+      monthlyProfit:tmp.monthlyProfit+r.profit};
     setS(ns); saveGame(ns);
     addFloat(r.profit>=0?("+"+fmt(r.profit)+" 💰"):(fmt(r.profit)+" 😢"), r.profit>=0?GN:RD);
   }, [s]);
 
   const nextDay = useCallback(() => {
-    if (s.cash<-5000000 || s.day>=s.maxDays) { onOver(); return; }
-    const nd = s.day+1;
-    setS(p=>p?{...p,day:nd,phase:"morning",wx:getWx(nd),ev:null,
-      staff:p.staff.map(st=>({...st,mood:Math.min(Math.max(st.mood+(Math.random()>0.7?3:-1),0),100),absent:Math.random()<0.025}))}:p);
+    if (s.day >= s.maxDays) { onOver(); return; }
+
+    // 모드별 패배 조건
+    if (s.mode === "survive") {
+      // 생존 모드: 3일 연속 적자면 게임오버
+      if (s.negStreak >= 3) { onOver(); return; }
+    } else {
+      // 기타 모드: 현금흐름이 -500만 이하면 위기
+      if (s.cash < -5000000) { onOver(); return; }
+    }
+
+    // 목표 달성 모드: 달성 시 즉시 승리
+    if (s.mode === "target") {
+      const monthDone = s.day % 30 === 0;
+      if (monthDone) {
+        const monthRev = s.logs.slice(-30).reduce((a, l) => a + l.revenue, 0);
+        const monthPro = s.logs.slice(-30).reduce((a, l) => a + l.profit, 0);
+        const revOk = s.targetRevenue ? monthRev >= s.targetRevenue : true;
+        const proOk = s.targetProfit  ? monthPro >= s.targetProfit  : true;
+        if (revOk && proOk) { onOver(); return; }
+      }
+    }
+
+    // 성장 모드: 첫 달 이후 배수 달성 시 승리
+    if (s.mode === "growth" && s.day >= 30 && s.firstMonthRev) {
+      const recentMonthRev = s.logs.slice(-30).reduce((a, l) => a + l.revenue, 0);
+      if (recentMonthRev >= s.firstMonthRev * (s.growthTarget || 2)) { onOver(); return; }
+    }
+
+    const nd = s.day + 1;
+    // 30일마다 firstMonthRev 기록
+    const newFirstMonth = (s.mode === "growth" && s.day === 30 && !s.firstMonthRev)
+      ? s.logs.slice(-30).reduce((a, l) => a + l.revenue, 0)
+      : s.firstMonthRev;
+
+    setS(p => p ? {
+      ...p, day:nd, phase:"morning", wx:getWx(nd), ev:null,
+      firstMonthRev: newFirstMonth,
+      staff: p.staff.map(st => ({...st, mood:Math.min(Math.max(st.mood+(Math.random()>0.7?3:-1),0),100), absent:Math.random()<0.025}))
+    } : p);
   }, [s, onOver]);
 
   const ec = s.ev?.type==="crisis"
@@ -807,7 +918,11 @@ function Play({s, setS, onOver}:{s:S; setS:React.Dispatch<React.SetStateAction<S
               <div style={{background:cfg.color,borderRadius:8,padding:"4px 10px",fontSize:13,fontWeight:800,color:"#fff"}}>LV.{getLv(s.exp)}</div>
               <div>
                 <p style={{fontSize:17,fontWeight:800,color:G900,margin:0}}>{s.day}일차 {isWk?"🎉":""}</p>
-                <p style={{fontSize:13,color:G400,margin:0}}>{WX[s.wx].icon} {WX[s.wx].label} · {s.maxDays-s.day}일 남음</p>
+                <p style={{fontSize:13,color:G400,margin:0}}>{WX[s.wx].icon} {WX[s.wx].label} · {s.maxDays-s.day}일 남음
+                  {s.mode==="survive" && s.negStreak>0 && <span style={{color:RD,fontWeight:700,marginLeft:8}}>⚠️ 적자 {s.negStreak}일 연속!</span>}
+                  {s.mode==="target" && <span style={{color:"#00B386",fontWeight:600,marginLeft:8}}>📈 목표달성모드</span>}
+                  {s.mode==="growth" && <span style={{color:"#8B5CF6",fontWeight:600,marginLeft:8}}>🚀 성장모드</span>}
+                </p>
               </div>
             </div>
             <div style={{textAlign:"right"}}>

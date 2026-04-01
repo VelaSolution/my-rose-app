@@ -27,34 +27,13 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
   );
 }
 
-export default function LandingPage() {
+function LandingContent() {
   const formMsgRef = useRef<HTMLParagraphElement>(null);
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [dashData, setDashData] = useState<{
-    name: string;
-    thisMonth: { total_sales: number; net_profit: number; month: string } | null;
-    simCount: number;
-  } | null>(null);
 
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(async ({ data }: { data: { user: { id: string; email?: string; user_metadata?: Record<string, string> } | null } }) => {
-      if (!data.user) return;
-      setIsLoggedIn(true);
-      const user = data.user;
-      const name = user.user_metadata?.nickname || user.user_metadata?.full_name || user.email?.split("@")[0] || "사장님";
-      const thisMonth = new Date().toISOString().slice(0, 7);
-      const [{ data: snap }, { count }] = await Promise.all([
-        supabase.from("monthly_snapshots").select("total_sales,net_profit,month").eq("user_id", user.id).eq("month", thisMonth).single(),
-        supabase.from("simulation_history").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-      ]);
-      setDashData({ name, thisMonth: snap ?? null, simCount: count ?? 0 });
-    });
-  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -228,41 +207,6 @@ export default function LandingPage() {
 
       <NavBar />
 
-      {/* 로그인 시 대시보드 위젯 */}
-      {isLoggedIn && (
-        <section style={{ background:"#F8FAFF", borderBottom:"1px solid #E5E8EB", padding:"20px 24px" }}>
-          <div style={{ maxWidth:1100, margin:"0 auto" }}>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:20, flexWrap:"wrap" }}>
-                <div>
-                  <p style={{ fontSize:13, color:"#6B7684", margin:"0 0 2px" }}>안녕하세요, {dashData?.name ?? "사장님"}님 👋</p>
-                  <p style={{ fontSize:15, fontWeight:700, color:"#191F28", margin:0 }}>
-                    {dashData?.thisMonth
-                      ? <>이번 달 매출 <span style={{ color:"#3182F6" }}>{Math.round(dashData.thisMonth.total_sales).toLocaleString()}원</span> · 순이익 <span style={{ color: dashData.thisMonth.net_profit >= 0 ? "#00B386" : "#EF4444" }}>{dashData.thisMonth.net_profit >= 0 ? "+" : ""}{Math.round(dashData.thisMonth.net_profit).toLocaleString()}원</span></>
-                      : <span style={{ color:"#9EA6B3" }}>이번 달 매출을 등록해보세요</span>
-                    }
-                  </p>
-                </div>
-                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                  {[
-                    { icon:"📊", label:"대시보드", href:"/dashboard" },
-                    { icon:"🧮", label:"원가 계산", href:"/tools/menu-cost" },
-                    { icon:"📱", label:"SNS 콘텐츠", href:"/tools/sns-content" },
-                    { icon:"🎮", label:"게임", href:"/game" },
-                  ].map(t => (
-                    <Link key={t.href} href={t.href} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 12px", borderRadius:20, background:"#fff", border:"1px solid #E5E8EB", fontSize:13, fontWeight:600, color:"#333D4B", textDecoration:"none", whiteSpace:"nowrap" }}>
-                      {t.icon} {t.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              <Link href="/simulator" style={{ padding:"8px 18px", borderRadius:10, background:"#3182F6", color:"#fff", fontSize:13, fontWeight:700, textDecoration:"none", whiteSpace:"nowrap" }}>
-                시뮬레이터 →
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* HERO */}
       <section className="hero" id="home">
@@ -274,7 +218,7 @@ export default function LandingPage() {
               <h1 className="hero-title">외식업 사장님을 위한<br /><span>숫자 경영</span> 파트너</h1>
               <p className="hero-desc">매출·원가·인건비·대출을 한 번에 시뮬레이션하고<br />AI 컨설턴트의 맞춤 전략을 받아보세요.</p>
               <div className="hero-actions">
-                <Link href={isLoggedIn ? "/simulator" : "/signup"} className="btn-primary">무료로 시작하기 →</Link>
+                <Link href="/signup" className="btn-primary">무료로 시작하기 →</Link>
                 <a href="#features" className="btn-secondary">서비스 알아보기</a>
               </div>
               <div className="hero-stats">
@@ -459,7 +403,7 @@ export default function LandingPage() {
           <FadeIn>
             <h2 className="cta-title">지금 바로 내 매장을 분석해보세요</h2>
             <p className="cta-desc">회원가입 후 무료로 시작할 수 있습니다. 신용카드 불필요.</p>
-            <Link href={isLoggedIn ? "/simulator" : "/signup"} className="btn-white">무료로 시작하기 →</Link>
+            <Link href="/signup" className="btn-white">무료로 시작하기 →</Link>
           </FadeIn>
         </div>
       </section>
@@ -530,4 +474,297 @@ export default function LandingPage() {
       </footer>
     </>
   );
+}
+
+// ── 회원 전용 홈화면 ─────────────────────────────────────────
+const fmt = (n: number) => Math.round(n).toLocaleString("ko-KR");
+const IND_I: Record<string,string> = { cafe:"☕", restaurant:"🍽️", bar:"🍺", finedining:"✨", gogi:"🥩" };
+const IND_L: Record<string,string> = { cafe:"카페", restaurant:"음식점", bar:"술집/바", finedining:"파인다이닝", gogi:"고깃집" };
+const TOOLS_HOME = [
+  { icon:"🧮", label:"원가 계산기",    href:"/tools/menu-cost" },
+  { icon:"👥", label:"인건비 스케줄러", href:"/tools/labor" },
+  { icon:"🧾", label:"세금 계산기",    href:"/tools/tax" },
+  { icon:"📄", label:"손익계산서 PDF", href:"/tools/pl-report" },
+  { icon:"✅", label:"창업 체크리스트", href:"/tools/startup-checklist" },
+  { icon:"📱", label:"SNS 콘텐츠",     href:"/tools/sns-content" },
+  { icon:"💬", label:"리뷰 답변",      href:"/tools/review-reply" },
+  { icon:"🗺️", label:"상권 분석",     href:"/tools/area-analysis" },
+];
+
+type MSnap   = { id:string; month:string; industry:string; total_sales:number; net_profit:number };
+type MSim    = { id:string; label:string; created_at:string; result:{totalSales:number;netProfit:number}; form:{industry:string} };
+type MMenu   = { id:string; name:string; cost_rate:number };
+type MFeed   = { id:string; industry:string; title:string; net_profit:number; total_sales:number };
+
+import type { User } from "@supabase/supabase-js";
+
+function MemberHome() {
+  const [user,      setUser]      = useState<User|null>(null);
+  const [snaps,     setSnaps]     = useState<MSnap[]>([]);
+  const [sims,      setSims]      = useState<MSim[]>([]);
+  const [menus,     setMenus]     = useState<MMenu[]>([]);
+  const [feed,      setFeed]      = useState<MFeed[]>([]);
+  const [loading,   setLoading]   = useState(true);
+
+  useEffect(() => {
+    const sb = createSupabaseBrowserClient();
+    sb.auth.getUser().then(async ({ data }: { data: { user: User|null } }) => {
+      if (!data.user) { setLoading(false); return; }
+      setUser(data.user);
+      const uid = data.user.id;
+      const [{ data: s }, { data: h }, { data: m }, { data: f }] = await Promise.all([
+        sb.from("monthly_snapshots").select("id,month,industry,total_sales,net_profit").eq("user_id", uid).order("month",{ascending:false}).limit(6),
+        sb.from("simulation_history").select("id,label,created_at,result,form").eq("user_id", uid).order("created_at",{ascending:false}).limit(4),
+        sb.from("menu_costs").select("id,name,cost_rate").eq("user_id", uid).order("cost_rate",{ascending:false}).limit(5),
+        sb.from("simulation_shares").select("id,industry,title,net_profit,total_sales").order("created_at",{ascending:false}).limit(4),
+      ]);
+      setSnaps((s??[]) as MSnap[]); setSims((h??[]) as MSim[]);
+      setMenus((m??[]) as MMenu[]); setFeed((f??[]) as MFeed[]);
+      setLoading(false);
+    });
+  }, []);
+
+  const name = user?.user_metadata?.nickname || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "사장님";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "좋은 아침이에요" : hour < 18 ? "안녕하세요" : "오늘도 수고하셨어요";
+  const latest  = snaps[0];
+  const maxSales = Math.max(...[...snaps].reverse().map(s=>s.total_sales), 1);
+  const avgCost  = menus.length ? menus.reduce((a,m)=>a+(m.cost_rate||0),0)/menus.length : 0;
+
+  if (loading) return (
+    <div className="min-h-screen bg-slate-50"><NavBar />
+      <div className="flex items-center justify-center h-[80vh]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <NavBar />
+      <main className="px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-6xl space-y-6">
+
+          {/* 인사 */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-sm text-slate-400">{new Date().toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric",weekday:"long"})}</p>
+              <h1 className="text-2xl font-bold text-slate-900 mt-1">{greeting}, {name}! 👋</h1>
+            </div>
+            <Link href="/simulator" className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition">시뮬레이터 시작 →</Link>
+          </div>
+
+          {/* 지표 4개 */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label:"최근 월 매출",   value: latest ? fmt(latest.total_sales)+"원" : "—",  sub: latest?.month ?? "아직 없음",     color:"text-slate-900" },
+              { label:"최근 월 순이익", value: latest ? fmt(latest.net_profit)+"원"  : "—",  sub: latest ? (latest.net_profit>=0?"흑자 ✓":"적자 ✗") : "", color: !latest?"text-slate-900":latest.net_profit>=0?"text-emerald-600":"text-red-500" },
+              { label:"등록 매출 개월", value: snaps.length+"개월", sub:"대시보드에서 관리", color:"text-blue-600" },
+              { label:"평균 원가율",    value: menus.length ? avgCost.toFixed(1)+"%" : "—",  sub:`메뉴 ${menus.length}개 기준`,      color: avgCost>40?"text-red-500":menus.length?"text-emerald-600":"text-slate-900" },
+            ].map(s=>(
+              <div key={s.label} className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+                <p className="text-xs text-slate-400 mb-1">{s.label}</p>
+                <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                {s.sub && <p className="text-xs text-slate-400 mt-1">{s.sub}</p>}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            {/* 왼쪽 */}
+            <div className="lg:col-span-2 space-y-5">
+
+              {/* 월별 매출 차트 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-base font-bold text-slate-900">📈 월별 매출 현황</h2>
+                  <Link href="/dashboard" className="text-xs text-blue-500 font-semibold hover:text-blue-700">상세보기 →</Link>
+                </div>
+                {snaps.length===0 ? (
+                  <div className="text-center py-10">
+                    <p className="text-3xl mb-2">📊</p>
+                    <p className="text-slate-400 text-sm mb-3">아직 등록된 매출이 없어요</p>
+                    <Link href="/dashboard" className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white">+ 매출 등록하기</Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-end gap-2 h-32">
+                      {[...snaps].reverse().map(s=>(
+                        <div key={s.id} className="flex-1 flex flex-col items-center gap-1">
+                          <span className={`text-center font-bold ${s.net_profit>=0?"text-emerald-600":"text-red-500"}`} style={{fontSize:"9px"}}>
+                            {s.net_profit>=0?"+":""}{Math.round(s.net_profit/10000)}만
+                          </span>
+                          <div className={`w-full rounded-t-lg ${s.net_profit>=0?"bg-blue-500":"bg-red-400"}`}
+                            style={{height:`${Math.max(4,(s.total_sales/maxSales)*100)}px`}} />
+                          <span className="text-slate-400 text-center" style={{fontSize:"9px"}}>{s.month.slice(2).replace("-","/")}월</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {snaps.slice(0,2).map(s=>(
+                        <div key={s.id} className="rounded-xl bg-slate-50 px-3 py-2.5">
+                          <p className="text-xs text-slate-400">{s.month} {IND_I[s.industry]}</p>
+                          <p className="text-sm font-bold text-slate-800 mt-0.5">{fmt(s.total_sales)}원</p>
+                          <p className={`text-xs font-semibold mt-0.5 ${s.net_profit>=0?"text-emerald-600":"text-red-500"}`}>
+                            순이익 {s.net_profit>=0?"+":""}{fmt(s.net_profit)}원
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 최근 시뮬 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-base font-bold text-slate-900">📊 최근 시뮬레이션</h2>
+                  <Link href="/profile" className="text-xs text-blue-500 font-semibold hover:text-blue-700">전체보기 →</Link>
+                </div>
+                {sims.length===0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-400 text-sm mb-3">시뮬레이션 기록이 없어요</p>
+                    <Link href="/simulator" className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white">시뮬레이터 시작</Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {sims.map(h=>(
+                      <Link key={h.id} href={`/result?historyId=${h.id}`}
+                        className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 hover:bg-slate-100 transition">
+                        <span className="text-xl">{IND_I[h.form?.industry]??"📊"}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 truncate">{h.label}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {new Date(h.created_at).toLocaleDateString("ko-KR",{month:"short",day:"numeric"})} · {IND_L[h.form?.industry]??""}
+                          </p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-sm font-bold text-slate-800">{fmt(h.result?.totalSales||0)}원</p>
+                          <p className={`text-xs font-semibold ${(h.result?.netProfit||0)>=0?"text-emerald-600":"text-red-500"}`}>
+                            {(h.result?.netProfit||0)>=0?"+":""}{fmt(h.result?.netProfit||0)}원
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* 오른쪽 */}
+            <div className="space-y-5">
+
+              {/* 도구 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+                <h2 className="text-base font-bold text-slate-900 mb-4">🛠️ 도구 바로가기</h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {TOOLS_HOME.map(t=>(
+                    <Link key={t.href} href={t.href}
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2 hover:bg-slate-100 transition text-xs font-medium text-slate-700">
+                      <span>{t.icon}</span><span className="truncate">{t.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* 원가 현황 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-base font-bold text-slate-900">🧮 메뉴 원가</h2>
+                  <Link href="/tools/menu-cost" className="text-xs text-blue-500 font-semibold hover:text-blue-700">관리 →</Link>
+                </div>
+                {menus.length===0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-slate-400 text-xs mb-2">등록된 메뉴가 없어요</p>
+                    <Link href="/tools/menu-cost" className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">등록하기</Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {menus.slice(0,5).map(m=>(
+                      <div key={m.id} className="flex items-center gap-2">
+                        <span className="text-sm text-slate-700 truncate flex-1 min-w-0">{m.name}</span>
+                        <div className="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden flex-shrink-0">
+                          <div className={`h-full rounded-full ${m.cost_rate>40?"bg-red-400":m.cost_rate>30?"bg-amber-400":"bg-emerald-400"}`}
+                            style={{width:`${Math.min(m.cost_rate*2,100)}%`}} />
+                        </div>
+                        <span className={`text-xs font-bold w-9 text-right flex-shrink-0 ${m.cost_rate>40?"text-red-500":"text-emerald-600"}`}>
+                          {m.cost_rate?.toFixed(0)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 커뮤니티 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-base font-bold text-slate-900">👥 커뮤니티</h2>
+                  <Link href="/community" className="text-xs text-blue-500 font-semibold hover:text-blue-700">더보기 →</Link>
+                </div>
+                {feed.length===0 ? (
+                  <p className="text-slate-400 text-xs text-center py-4">공유된 수익이 없어요</p>
+                ) : (
+                  <div className="space-y-2">
+                    {feed.map(p=>(
+                      <Link key={p.id} href="/community"
+                        className="block rounded-xl bg-slate-50 px-3 py-2.5 hover:bg-slate-100 transition">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span>{IND_I[p.industry]??"🏪"}</span>
+                          <span className="text-xs text-slate-400">{IND_L[p.industry]}</span>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-800 truncate">{p.title}</p>
+                        <div className="flex gap-2 mt-0.5">
+                          <span className="text-xs text-slate-400">{(p.total_sales/10000).toFixed(0)}만원</span>
+                          <span className={`text-xs font-semibold ${p.net_profit>=0?"text-emerald-600":"text-red-500"}`}>
+                            순이익 {(p.net_profit/10000).toFixed(0)}만
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+
+          {/* 게임 배너 */}
+          <div className="rounded-3xl bg-slate-900 p-6 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-white font-bold text-lg">🎮 경영 시뮬레이션 게임</p>
+              <p className="text-slate-400 text-sm mt-1">90일간 내 가게를 운영해보세요. 실제 데이터로 시작할 수 있어요!</p>
+            </div>
+            <Link href="/game" className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 transition flex-shrink-0">
+              게임 시작 →
+            </Link>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ── 라우터: 로그인 여부에 따라 분기 ─────────────────────────
+export default function HomePage() {
+  const [checked, setChecked] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const sb = createSupabaseBrowserClient();
+    sb.auth.getUser().then(({ data }: { data: { user: unknown } }) => {
+      setLoggedIn(!!data.user);
+      setChecked(true);
+    });
+  }, []);
+
+  if (!checked) return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+    </div>
+  );
+
+  return loggedIn ? <MemberHome /> : <LandingContent />;
 }
