@@ -32,7 +32,9 @@ export async function POST(req: NextRequest) {
 
     const tossData = await tossRes.json();
 
-    if (!tossRes.ok) {
+    const alreadyProcessed = !tossRes.ok && tossData.code === "ALREADY_PROCESSED_PAYMENT";
+
+    if (!tossRes.ok && !alreadyProcessed) {
       console.error("Toss error:", tossData);
       return NextResponse.json(
         { error: tossData.message || "결제 승인 실패" },
@@ -55,22 +57,31 @@ export async function POST(req: NextRequest) {
     /* ── 3. payments 테이블에 결제 내역 저장 (admin: RLS 우회) ── */
     const plan = parsePlan(orderId);
 
-    // 테이블에 확실히 존재하는 컬럼만 사용
-    const { error: insertError } = await supabaseAdmin.from("payments").insert({
-      user_id: user.id,
-      plan,
-      amount: Number(amount),
-      status: "done",
-    });
+    // 이미 저장된 결제인지 확인 (중복 방지)
+    const { data: existing } = await supabaseAdmin
+      .from("payments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("plan", plan)
+      .eq("status", "done")
+      .limit(1);
 
-    if (insertError) {
-      console.error("Payment insert error:", JSON.stringify(insertError));
-      // insert 실패 시 success: false로 반환하여 클라이언트에서 인지 가능하게
-      return NextResponse.json({
-        success: false,
-        error: "결제는 완료되었으나 내역 저장에 실패했습니다. 고객센터에 문의해주세요.",
-        detail: insertError.message,
-      }, { status: 500 });
+    if (!existing || existing.length === 0) {
+      const { error: insertError } = await supabaseAdmin.from("payments").insert({
+        user_id: user.id,
+        plan,
+        amount: Number(amount),
+        status: "done",
+      });
+
+      if (insertError) {
+        console.error("Payment insert error:", JSON.stringify(insertError));
+        return NextResponse.json({
+          success: false,
+          error: "결제는 완료되었으나 내역 저장에 실패했습니다. 고객센터에 문의해주세요.",
+          detail: insertError.message,
+        }, { status: 500 });
+      }
     }
 
     /* ── 4. profiles 테이블의 plan 필드 업데이트 (admin: RLS 우회) ── */
