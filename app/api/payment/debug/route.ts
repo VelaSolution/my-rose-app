@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
@@ -7,27 +7,20 @@ export async function GET() {
   const result: Record<string, unknown> = {};
 
   try {
-    // 1. supabaseAdmin 존재 확인
-    result.adminExists = !!supabaseAdmin;
+    const supabase = await createSupabaseServerClient();
 
-    // 2. 인증된 사용자 확인
-    let userId: string | null = null;
-    try {
-      const supabase = await createSupabaseServerClient();
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      userId = user?.id ?? null;
-      result.auth = { userId, error: authError?.message ?? null };
-    } catch (e) {
-      result.auth = { error: `crash: ${String(e)}` };
-    }
+    // 1. 인증된 사용자 확인
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const userId = user?.id ?? null;
+    result.auth = { userId, error: authError?.message ?? null };
 
     if (!userId) {
       return NextResponse.json(result);
     }
 
-    // 3. payments 테이블 조회
+    // 2. payments 테이블 조회
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from("payments")
         .select("*")
         .eq("user_id", userId)
@@ -38,9 +31,9 @@ export async function GET() {
       result.payments = { error: `crash: ${String(e)}` };
     }
 
-    // 4. profiles plan 컬럼 확인
+    // 3. profiles plan 컬럼 확인
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
@@ -50,15 +43,14 @@ export async function GET() {
       result.profile = { error: `crash: ${String(e)}` };
     }
 
-    // 5. 테스트 insert
+    // 4. 테스트 insert
     try {
-      const { error } = await supabaseAdmin
+      const { error } = await supabase
         .from("payments")
         .insert({ user_id: userId, plan: "debug-test", amount: 0, status: "test" });
       result.testInsert = { success: !error, error: error?.message ?? null };
-      // cleanup
       if (!error) {
-        await supabaseAdmin.from("payments").delete().eq("status", "test").eq("user_id", userId);
+        await supabase.from("payments").delete().eq("status", "test").eq("user_id", userId);
       }
     } catch (e) {
       result.testInsert = { error: `crash: ${String(e)}` };

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
@@ -54,11 +54,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* ── 3. payments 테이블에 결제 내역 저장 (admin: RLS 우회) ── */
+    /* ── 3. payments 테이블에 결제 내역 저장 (인증된 클라이언트 + RLS) ── */
     const plan = parsePlan(orderId);
 
     // 이미 저장된 결제인지 확인 (중복 방지)
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await supabase
       .from("payments")
       .select("id")
       .eq("user_id", user.id)
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (!existing || existing.length === 0) {
-      const { error: insertError } = await supabaseAdmin.from("payments").insert({
+      const { error: insertError } = await supabase.from("payments").insert({
         user_id: user.id,
         plan,
         amount: Number(amount),
@@ -84,8 +84,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    /* ── 4. profiles 테이블의 plan 필드 업데이트 (admin: RLS 우회) ── */
-    await supabaseAdmin
+    /* ── 4. profiles 테이블의 plan 필드 업데이트 ── */
+    await supabase
       .from("profiles")
       .update({ plan })
       .eq("id", user.id)
