@@ -4,48 +4,69 @@ import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase-server
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const result: Record<string, unknown> = {};
+
   try {
-    // 1. 인증된 사용자 확인
-    const supabase = await createSupabaseServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // 1. supabaseAdmin 존재 확인
+    result.adminExists = !!supabaseAdmin;
 
-    if (authError || !user) {
-      return NextResponse.json({ step: "auth", error: authError?.message ?? "no user" });
+    // 2. 인증된 사용자 확인
+    let userId: string | null = null;
+    try {
+      const supabase = await createSupabaseServerClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      userId = user?.id ?? null;
+      result.auth = { userId, error: authError?.message ?? null };
+    } catch (e) {
+      result.auth = { error: `crash: ${String(e)}` };
     }
 
-    // 2. payments 테이블 조회 (admin)
-    const { data: payments, error: payError } = await supabaseAdmin
-      .from("payments")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    // 3. profiles 테이블 조회 (admin)
-    const { data: profile, error: profError } = await supabaseAdmin
-      .from("profiles")
-      .select("id, plan")
-      .eq("id", user.id)
-      .single();
-
-    // 4. 테스트 insert 후 삭제
-    const testId = `debug-${Date.now()}`;
-    const { error: testInsertError } = await supabaseAdmin
-      .from("payments")
-      .insert({ user_id: user.id, plan: "debug-test", amount: 0, status: "test" });
-
-    // 삭제
-    if (!testInsertError) {
-      await supabaseAdmin.from("payments").delete().eq("status", "test").eq("user_id", user.id);
+    if (!userId) {
+      return NextResponse.json(result);
     }
 
-    return NextResponse.json({
-      userId: user.id,
-      payments: { data: payments, error: payError?.message ?? null },
-      profile: { data: profile, error: profError?.message ?? null },
-      testInsert: { success: !testInsertError, error: testInsertError?.message ?? null },
-    });
+    // 3. payments 테이블 조회
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("payments")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      result.payments = { count: data?.length ?? 0, data, error: error?.message ?? null };
+    } catch (e) {
+      result.payments = { error: `crash: ${String(e)}` };
+    }
+
+    // 4. profiles plan 컬럼 확인
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+      result.profile = { data, error: error?.message ?? null };
+    } catch (e) {
+      result.profile = { error: `crash: ${String(e)}` };
+    }
+
+    // 5. 테스트 insert
+    try {
+      const { error } = await supabaseAdmin
+        .from("payments")
+        .insert({ user_id: userId, plan: "debug-test", amount: 0, status: "test" });
+      result.testInsert = { success: !error, error: error?.message ?? null };
+      // cleanup
+      if (!error) {
+        await supabaseAdmin.from("payments").delete().eq("status", "test").eq("user_id", userId);
+      }
+    } catch (e) {
+      result.testInsert = { error: `crash: ${String(e)}` };
+    }
+
   } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+    result.fatalError = String(e);
   }
+
+  return NextResponse.json(result);
 }
