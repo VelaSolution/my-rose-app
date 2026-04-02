@@ -1200,7 +1200,7 @@ function Over({s, onMenu, onRestart}:{s:S; onMenu:()=>void; onRestart:()=>void})
             {topRanks.map((r,i)=>{
               const isMe = r.nickname === nick && r.score === sc;
               return (
-                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderTop:i>0?"1px solid "+G100:"none",background:isMe?"#EBF3FF":"transparent",borderRadius:isMe?8:0,margin:isMe?"-4px -8px":0,padding:isMe?"8px 8px":"8px 0"}}>
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,borderTop:i>0?"1px solid "+G100:"none",background:isMe?"#EBF3FF":"transparent",borderRadius:isMe?8:0,margin:isMe?"-4px -8px":"0",padding:isMe?"8px 8px":"8px 0"}}>
                   <span style={{width:24,textAlign:"center",fontSize:i<3?16:13,fontWeight:700,color:i===0?"#F59E0B":i===1?"#9CA3AF":i===2?"#CD7F32":G400}}>
                     {i<3?["🥇","🥈","🥉"][i]:`${i+1}`}
                   </span>
