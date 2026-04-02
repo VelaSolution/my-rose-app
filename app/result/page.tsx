@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import PlanGate from "@/components/PlanGate";
+import { usePlan } from "@/lib/usePlan";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import {
@@ -328,17 +329,46 @@ function TagBadge({ label }: { label: string }) {
 }
 
 // ─── AI 브리핑 ─────────────────────────────────────────────────
-function AIBriefingSection({ form, result }: { form: FullForm; result: ReturnType<typeof calcResult> }) {
+const BRIEFING_KEY = "vela-briefing-usage";
+const FREE_BRIEFING_LIMIT = 3;
+
+function getBriefingUsage(): { count: number; month: string } {
+  if (typeof window === "undefined") return { count: 0, month: "" };
+  try {
+    const raw = localStorage.getItem(BRIEFING_KEY);
+    if (!raw) return { count: 0, month: "" };
+    return JSON.parse(raw);
+  } catch { return { count: 0, month: "" }; }
+}
+
+function incrementBriefingUsage() {
+  const now = new Date();
+  const month = `${now.getFullYear()}-${now.getMonth() + 1}`;
+  const usage = getBriefingUsage();
+  const count = usage.month === month ? usage.count + 1 : 1;
+  localStorage.setItem(BRIEFING_KEY, JSON.stringify({ count, month }));
+}
+
+function AIBriefingSection({ form, result, plan }: { form: FullForm; result: ReturnType<typeof calcResult>; plan: string }) {
   const [briefing, setBriefing] = useState<Briefing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${now.getMonth() + 1}`;
+  const usage = getBriefingUsage();
+  const usedThisMonth = usage.month === currentMonth ? usage.count : 0;
+  const isLimited = plan === "free" && usedThisMonth >= FREE_BRIEFING_LIMIT;
+  const remaining = FREE_BRIEFING_LIMIT - usedThisMonth;
+
   const fetchBriefing = async () => {
+    if (isLimited) return;
     setLoading(true); setError("");
     try {
       const res = await fetch("/api/briefing", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ form, result }) });
       if (!res.ok) throw new Error("API 오류");
       setBriefing(await res.json());
+      if (plan === "free") incrementBriefingUsage();
     } catch (e) { setError("AI 분석 중 오류가 발생했습니다. 다시 시도해주세요."); console.error(e); }
     finally { setLoading(false); }
   };
@@ -348,11 +378,20 @@ function AIBriefingSection({ form, result }: { form: FullForm; result: ReturnTyp
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900">AI 브리핑</h2>
-          <p className="mt-1 text-sm text-slate-500">현재 수치를 기반으로 AI가 실시간 경영 조언을 생성합니다.</p>
+          <p className="mt-1 text-sm text-slate-500">
+            현재 수치를 기반으로 AI가 실시간 경영 조언을 생성합니다.
+            {plan === "free" && <span className="ml-2 text-blue-500 font-semibold">(월 {remaining > 0 ? `${remaining}회 남음` : "한도 소진"})</span>}
+          </p>
         </div>
         <div className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">VELA AI</div>
       </div>
-      {!briefing && !loading && (
+      {isLimited && !briefing && (
+        <div className="rounded-2xl bg-slate-50 p-5 text-center">
+          <p className="text-sm text-slate-600 mb-3">이번 달 무료 AI 브리핑 횟수를 모두 사용했어요.</p>
+          <a href="/pricing" className="inline-block rounded-xl bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 hover:bg-blue-700 transition">업그레이드하면 무제한 →</a>
+        </div>
+      )}
+      {!isLimited && !briefing && !loading && (
         <button onClick={fetchBriefing} className="w-full rounded-2xl bg-slate-900 py-4 text-sm font-semibold text-white transition hover:bg-slate-700">AI 브리핑 생성하기</button>
       )}
       {loading && (
@@ -467,6 +506,7 @@ function ResultContent() {
   const [cloudSaveTitle, setCloudSaveTitle] = useState("");
   const [cloudSaving, setCloudSaving] = useState(false);
   const autoSavedRef = React.useRef(false);
+  const { plan } = usePlan();
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -490,17 +530,34 @@ function ResultContent() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   // 자동 클라우드 저장 (로그인 시 시뮬레이션 실행마다 자동 저장)
+  // 무료: 최대 3개, 스탠다드/프로: 무제한
+  const FREE_HISTORY_LIMIT = 3;
   useEffect(() => {
     if (!userId || autoSavedRef.current) return;
     autoSavedRef.current = true;
     const supabase = createSupabaseBrowserClient();
-    const now = new Date();
-    const label = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} (자동저장)`;
-    supabase.from("simulation_history").insert({
-      user_id: userId, label, form,
-      result: { totalSales: result.totalSales, profit: result.profit, netProfit: result.netProfit, netMargin: result.netMargin, bep: result.bep, recoveryMonthsActual: result.recoveryMonthsActual, cogsRate: form.cogsRate, laborRate: result.laborCost > 0 ? Math.round((result.laborCost / result.totalSales) * 100) : 0 },
-    }).then(() => {});
-  }, [userId, form, result]);
+
+    // 무료 플랜이면 저장 개수 확인
+    if (plan === "free") {
+      supabase.from("simulation_history").select("id", { count: "exact" }).eq("user_id", userId)
+        .then(({ count }) => {
+          if ((count ?? 0) >= FREE_HISTORY_LIMIT) return; // 한도 초과 시 저장 안 함
+          const now = new Date();
+          const label = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} (자동저장)`;
+          supabase.from("simulation_history").insert({
+            user_id: userId, label, form,
+            result: { totalSales: result.totalSales, profit: result.profit, netProfit: result.netProfit, netMargin: result.netMargin, bep: result.bep, recoveryMonthsActual: result.recoveryMonthsActual, cogsRate: form.cogsRate, laborRate: result.laborCost > 0 ? Math.round((result.laborCost / result.totalSales) * 100) : 0 },
+          }).then(() => {});
+        });
+    } else {
+      const now = new Date();
+      const label = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} (자동저장)`;
+      supabase.from("simulation_history").insert({
+        user_id: userId, label, form,
+        result: { totalSales: result.totalSales, profit: result.profit, netProfit: result.netProfit, netMargin: result.netMargin, bep: result.bep, recoveryMonthsActual: result.recoveryMonthsActual, cogsRate: form.cogsRate, laborRate: result.laborCost > 0 ? Math.round((result.laborCost / result.totalSales) * 100) : 0 },
+      }).then(() => {});
+    }
+  }, [userId, form, result, plan]);
 
   const saveToCloud = async (title?: string) => {
     if (!userId) { router.push("/login"); return; }
@@ -894,8 +951,8 @@ function ResultContent() {
           </div>
         </section>
 
-        {/* AI 브리핑 — 무료: 월3회, 유료: 무제한 (PlanGate로 차단하지 않고 접근 허용) */}
-        <AIBriefingSection form={form} result={result} />
+        {/* AI 브리핑 — 무료: 월3회, 유료: 무제한 */}
+        <AIBriefingSection form={form} result={result} plan={plan} />
 
         {/* 비용 상세 + 추천 전략 */}
         <section className="grid gap-6 lg:grid-cols-2">

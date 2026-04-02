@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import { usePlan } from "@/lib/usePlan";
 import {
   INDUSTRY_CONFIG,
   VALID_INDUSTRIES,
@@ -198,8 +199,10 @@ type PosResult = {
 function PosUploader({
   industry,
   onApply,
+  plan,
 }: {
   industry: string;
+  plan: string;
   onApply: (data: Partial<Record<string, unknown>>) => void;
 }) {
   const [status, setStatus] = useState<"idle" | "parsing" | "analyzing" | "done" | "error">("idle");
@@ -276,6 +279,24 @@ function PosUploader({
     }
     onApply(updates);
   };
+
+  if (plan === "free") {
+    return (
+      <div className="rounded-[28px] bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-100">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="rounded-full bg-slate-400 px-2 py-0.5 text-xs font-semibold text-white">🔒 POS 연동</span>
+            <p className="text-sm font-semibold text-slate-900">매출 파일 불러오기</p>
+          </div>
+          <p className="text-xs text-slate-400">POS에서 내보낸 Excel 파일을 업로드하면 AI가 자동으로 분석해 폼에 반영합니다.</p>
+        </div>
+        <div className="p-6 text-center">
+          <p className="text-sm text-slate-500 mb-3">POS 파일 분석은 스탠다드 플랜부터 사용 가능해요.</p>
+          <a href="/pricing" className="inline-block rounded-xl bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 hover:bg-blue-700 transition">업그레이드하기 →</a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-[28px] bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden">
@@ -719,12 +740,14 @@ function Step1({
   errors,
   loadIndustryDefaults,
   applyPosResult,
+  plan,
 }: {
   form: FullForm;
   update: (k: keyof FullForm, v: unknown) => void;
   errors: Partial<Record<keyof FullForm, string>>;
   loadIndustryDefaults: () => void;
   applyPosResult: (data: Partial<Record<string, unknown>>) => void;
+  plan: string;
 }) {
   const config = INDUSTRY_CONFIG[form.industry];
   const ratioSum = form.lunchRatio + form.dinnerRatio + form.nightRatio;
@@ -732,7 +755,7 @@ function Step1({
   return (
     <div className="space-y-6">
       {/* POS 파일 업로드 */}
-      <PosUploader industry={form.industry} onApply={applyPosResult} />
+      <PosUploader industry={form.industry} onApply={applyPosResult} plan={plan} />
 
       <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
         <h2 className="mb-1 text-xl font-bold text-slate-900">업종 선택</h2>
@@ -1684,6 +1707,7 @@ function buildQuery(form: FullForm) {
 
 export default function Page() {
   const router = useRouter();
+  const { plan } = usePlan();
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FullForm>(createEmptyForm("restaurant"));
@@ -1939,7 +1963,7 @@ export default function Page() {
         <div className="lg:grid lg:grid-cols-[1fr_440px] lg:gap-6 lg:items-start">
 
           <div className="space-y-6">
-            {step === 1 && <Step1 form={form} update={update} errors={step1Errors} loadIndustryDefaults={loadIndustryDefaults} applyPosResult={applyPosResult} />}
+            {step === 1 && <Step1 form={form} update={update} errors={step1Errors} loadIndustryDefaults={loadIndustryDefaults} applyPosResult={applyPosResult} plan={plan} />}
             {step === 2 && <Step2 form={form} update={update} errors={step2Errors} />}
             {step === 3 && <Step3 form={form} update={update} errors={step3Errors} />}
 
