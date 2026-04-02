@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { usePlan } from "@/lib/usePlan";
+import UpgradeModal from "@/components/UpgradeModal";
 import {
   INDUSTRY_CONFIG,
   VALID_INDUSTRIES,
@@ -280,9 +281,17 @@ function PosUploader({
     onApply(updates);
   };
 
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
   if (plan === "free") {
     return (
       <div className="rounded-[28px] bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden">
+        <UpgradeModal
+          open={showUpgrade}
+          onClose={() => setShowUpgrade(false)}
+          title="POS 분석은 유료 기능이에요"
+          description="POS에서 내보낸 매출 파일을 AI가 자동 분석합니다. 스탠다드 플랜으로 업그레이드하면 바로 이용 가능합니다."
+        />
         <div className="p-5 border-b border-slate-100">
           <div className="flex items-center gap-2 mb-1">
             <span className="rounded-full bg-slate-400 px-2 py-0.5 text-xs font-semibold text-white">🔒 POS 연동</span>
@@ -292,7 +301,7 @@ function PosUploader({
         </div>
         <div className="p-6 text-center">
           <p className="text-sm text-slate-500 mb-3">POS 파일 분석은 스탠다드 플랜부터 사용 가능해요.</p>
-          <a href="/pricing" className="inline-block rounded-xl bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 hover:bg-blue-700 transition">업그레이드하기 →</a>
+          <button onClick={() => setShowUpgrade(true)} className="inline-block rounded-xl bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 hover:bg-blue-700 transition">업그레이드하기 →</button>
         </div>
       </div>
     );

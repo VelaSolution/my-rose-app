@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import PlanGate from "@/components/PlanGate";
+import UpgradeModal from "@/components/UpgradeModal";
 import { usePlan } from "@/lib/usePlan";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
@@ -176,17 +177,20 @@ const CATEGORY_STYLE: Record<string, string> = {
 };
 
 function AIStrategySection({
-  form, result, strategies,
+  form, result, strategies, plan,
 }: {
   form: FullForm;
   result: ReturnType<typeof calcResult>;
   strategies: ReturnType<typeof calcStrategies>;
+  plan: string;
 }) {
   const [aiStrategies, setAiStrategies] = useState<AIStrategy[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const fetchStrategies = async () => {
+    if (plan === "free") { setShowUpgrade(true); return; }
     setLoading(true);
     setError("");
     try {
@@ -208,11 +212,18 @@ function AIStrategySection({
 
   return (
     <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <UpgradeModal
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        title="AI 전략 추천은 유료 기능이에요"
+        description="AI가 매장 상황에 맞는 맞춤 전략을 제안합니다. 스탠다드 플랜으로 업그레이드하면 무제한 이용 가능합니다."
+      />
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900">AI 추천 전략</h2>
           <p className="mt-1 text-sm text-slate-500">
             수치 시뮬레이션 외에 AI가 운영 방식·마케팅·메뉴 관점에서 새로운 전략을 제안합니다.
+            {plan === "free" && <span className="ml-2 text-blue-500 font-semibold">(유료 전용)</span>}
           </p>
         </div>
         <div className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">VELA AI</div>
@@ -353,6 +364,7 @@ function AIBriefingSection({ form, result, plan }: { form: FullForm; result: Ret
   const [briefing, setBriefing] = useState<Briefing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${now.getMonth() + 1}`;
@@ -362,7 +374,7 @@ function AIBriefingSection({ form, result, plan }: { form: FullForm; result: Ret
   const remaining = FREE_BRIEFING_LIMIT - usedThisMonth;
 
   const fetchBriefing = async () => {
-    if (isLimited) return;
+    if (isLimited) { setShowUpgrade(true); return; }
     setLoading(true); setError("");
     try {
       const res = await fetch("/api/briefing", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ form, result }) });
@@ -385,11 +397,16 @@ function AIBriefingSection({ form, result, plan }: { form: FullForm; result: Ret
         </div>
         <div className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">VELA AI</div>
       </div>
+      <UpgradeModal
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        title="AI 브리핑 한도를 다 사용했어요"
+        description="무료 플랜은 월 3회까지 AI 브리핑을 생성할 수 있어요. 스탠다드 플랜으로 업그레이드하면 무제한으로 이용 가능합니다."
+      />
       {isLimited && !briefing && (
-        <div className="rounded-2xl bg-slate-50 p-5 text-center">
-          <p className="text-sm text-slate-600 mb-3">이번 달 무료 AI 브리핑 횟수를 모두 사용했어요.</p>
-          <a href="/pricing" className="inline-block rounded-xl bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 hover:bg-blue-700 transition">업그레이드하면 무제한 →</a>
-        </div>
+        <button onClick={() => setShowUpgrade(true)} className="w-full rounded-2xl bg-slate-100 py-4 text-sm font-semibold text-slate-500 transition hover:bg-slate-200">
+          이번 달 무료 한도 소진 · 업그레이드하기
+        </button>
       )}
       {!isLimited && !briefing && !loading && (
         <button onClick={fetchBriefing} className="w-full rounded-2xl bg-slate-900 py-4 text-sm font-semibold text-white transition hover:bg-slate-700">AI 브리핑 생성하기</button>
@@ -998,9 +1015,7 @@ function ResultContent() {
         </section>
 
         {/* AI 추천 전략 — 유료 전용 */}
-        <PlanGate>
-          <AIStrategySection form={form} result={result} strategies={strategies} />
-        </PlanGate>
+        <AIStrategySection form={form} result={result} strategies={strategies} plan={plan} />
 
         {/* 초기비용 & 부채 현황 */}
         {result.totalInitialCost > 0 && (
