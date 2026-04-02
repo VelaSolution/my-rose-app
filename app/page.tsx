@@ -407,6 +407,29 @@ function LandingContent() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section id="faq">
+        <div className="section-inner">
+          <FadeIn><span className="section-tag">FAQ</span><h2 className="section-title">자주 묻는 질문</h2></FadeIn>
+          <div style={{ maxWidth: 700, margin: "40px auto 0", display: "flex", flexDirection: "column", gap: 12 }}>
+            {[
+              { q: "VELA는 어떤 서비스인가요?", a: "VELA는 외식업 사장님을 위한 AI 기반 경영 분석 도구입니다. 수익 시뮬레이션, AI 브리핑, 메뉴 원가 분석 등 매장 운영에 필요한 핵심 기능을 제공합니다." },
+              { q: "무료 플랜에서 유료로 전환하면 데이터가 유지되나요?", a: "네, 기존에 저장한 시뮬레이션 데이터는 모두 유지됩니다. 플랜 변경 후 추가 기능이 즉시 활성화됩니다." },
+              { q: "언제든지 구독을 취소할 수 있나요?", a: "네, 구독은 언제든 취소 가능합니다. 취소 후에도 결제된 기간 동안은 유료 기능을 계속 사용하실 수 있습니다." },
+              { q: "결제는 어떤 방법으로 가능한가요?", a: "신용카드, 체크카드 등 토스페이먼츠를 통한 다양한 결제 방법을 지원합니다." },
+              { q: "팀 플랜은 어떻게 사용하나요?", a: "프로 플랜에서 팀 멤버를 초대하면 같은 매장 데이터를 공유하며 함께 분석할 수 있습니다. 초대받은 멤버는 별도 요금이 없습니다." },
+            ].map((faq) => (
+              <FadeIn key={faq.q}>
+                <div style={{ background: "#fff", border: "1px solid var(--gray-200)", borderRadius: 16, padding: "20px 24px" }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--gray-900)", marginBottom: 8 }}>Q. {faq.q}</div>
+                  <div style={{ fontSize: 14, color: "var(--gray-600)", lineHeight: 1.7 }}>{faq.a}</div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CONTACT */}
       <section id="contact">
         <div className="section-inner">
@@ -459,6 +482,7 @@ function LandingContent() {
               <Link href="/community">커뮤니티</Link>
               <Link href="/game">게임</Link>
               <a href="#pricing">요금제</a>
+              <a href="#faq">FAQ</a>
               <a href="#contact">문의</a>
             </div>
           </div>
