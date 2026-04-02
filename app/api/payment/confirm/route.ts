@@ -72,6 +72,8 @@ export async function POST(req: NextRequest) {
         plan,
         amount: Number(amount),
         status: "done",
+        order_id: orderId,
+        payment_key: paymentKey,
       });
 
       if (insertError) {

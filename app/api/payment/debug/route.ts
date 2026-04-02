@@ -47,7 +47,7 @@ export async function GET() {
     try {
       const { error } = await supabase
         .from("payments")
-        .insert({ user_id: userId, plan: "debug-test", amount: 0, status: "test" });
+        .insert({ user_id: userId, plan: "debug-test", amount: 0, status: "test", order_id: `debug-${Date.now()}`, payment_key: "debug" });
       result.testInsert = { success: !error, error: error?.message ?? null };
       if (!error) {
         await supabase.from("payments").delete().eq("status", "test").eq("user_id", userId);
