@@ -666,7 +666,8 @@ function ResultContent() {
           <div className="mt-5 flex flex-wrap gap-3 print:hidden">
             <button onClick={() => router.push("/simulator")} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">← 입력으로 돌아가기</button>
             <button onClick={() => window.print()} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">PDF로 저장</button>
-            <button onClick={() => navigator.clipboard.writeText(window.location.href).catch(console.error)} className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500">링크 공유</button>
+            <button onClick={() => navigator.clipboard.writeText(window.location.href).then(() => setSaveMsg("링크 복사됨!")).catch(console.error)} className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500">링크 복사</button>
+            <button onClick={() => { const url = encodeURIComponent(window.location.href); const text = encodeURIComponent(`[VELA] ${config.label} 수익 분석 결과\n월매출 ${fmt(result.totalSales)}원 / 순이익 ${fmt(result.netProfit)}원`); window.open(`https://sharer.kakao.com/talk/friends/picker/link?url=${url}&text=${text}`, "_blank", "width=500,height=600"); }} className="rounded-2xl bg-yellow-400 px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-yellow-300">💬 카카오톡 공유</button>
             <button onClick={() => { if (!userId) { router.push("/login"); return; } setShareTitle(`${config.label} 분석 결과 공유`); setShowShareModal(true); }} className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-500">
               👥 커뮤니티에 공유
             </button>

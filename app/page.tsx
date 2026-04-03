@@ -638,6 +638,18 @@ function MemberHome() {
             <h1 className="text-2xl font-bold text-slate-900 mt-1">{greeting}, {name}님! 👋</h1>
           </div>
 
+          {/* 가입 환영 배너 (첫 방문 시) */}
+          {typeof window !== "undefined" && new URLSearchParams(window.location.search).get("signup") === "success" && (
+            <div className="rounded-2xl bg-blue-600 px-5 py-4 flex items-center gap-3">
+              <span className="text-2xl">🎉</span>
+              <div>
+                <p className="text-white font-bold text-sm">환영합니다! VELA에 가입되었어요.</p>
+                <p className="text-blue-200 text-xs mt-0.5">시뮬레이터로 내 매장을 분석해보세요. 3분이면 충분합니다.</p>
+              </div>
+              <Link href="/simulator" className="ml-auto flex-shrink-0 rounded-xl bg-white text-blue-600 text-xs font-bold px-4 py-2">시작하기 →</Link>
+            </div>
+          )}
+
           {/* 빠른 실행 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
