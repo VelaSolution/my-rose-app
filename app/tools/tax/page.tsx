@@ -6,6 +6,9 @@ import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 import SendToSimulator from "@/components/SendToSimulator";
+import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+
+type MonthSnap = { month: string; monthly_sales: number; profit: number; industry: string };
 
 function num(v: string) { const n = Number(v.replace(/,/g, "")); return isNaN(n) ? 0 : n; }
 function fmt(v: number) { return v.toLocaleString("ko-KR"); }
@@ -65,6 +68,8 @@ export default function TaxPage() {
   const [isDualBiz, setIsDualBiz] = useState(false);
   const [meatCostRatio, setMeatCostRatio] = useState("40");
 
+  const [monthlySnaps, setMonthlySnaps] = useState<MonthSnap[]>([]);
+
   // 시뮬레이터 데이터 자동 입력
   useEffect(() => {
     if (!simData) return;
@@ -72,6 +77,30 @@ export default function TaxPage() {
     setAnnualProfit(String(Math.max(0, simData.profit * 12)));
     if (simData.industry === "gogi") setIsDualBiz(true);
   }, [simData]);
+
+  // 월별 매출 데이터 불러오기
+  useEffect(() => {
+    const sb = createSupabaseBrowserClient();
+    sb.auth.getUser().then(({ data: { user } }: { data: { user: { id: string } | null } }) => {
+      if (!user) return;
+      sb.from("monthly_snapshots").select("month,monthly_sales,profit,industry")
+        .eq("user_id", user.id).order("month", { ascending: false }).limit(12)
+        .then(({ data }: { data: MonthSnap[] | null }) => {
+          if (data) setMonthlySnaps(data);
+        });
+    });
+  }, []);
+
+  const loadFromMonthly = (months: MonthSnap[]) => {
+    if (months.length === 0) return;
+    const totalSales = months.reduce((s, m) => s + m.monthly_sales, 0);
+    const totalProfit = months.reduce((s, m) => s + m.profit, 0);
+    // 12개월 미만이면 연환산
+    const factor = months.length < 12 ? 12 / months.length : 1;
+    setAnnualSales(String(Math.round(totalSales * factor)));
+    setAnnualProfit(String(Math.max(0, Math.round(totalProfit * factor))));
+    if (months.some(m => m.industry === "gogi")) setIsDualBiz(true);
+  };
 
   const sales = num(annualSales);
   const profit = num(annualProfit);
@@ -133,8 +162,36 @@ export default function TaxPage() {
             <p className="text-slate-500 text-sm">연 매출과 순이익을 입력하면 부가세·종합소득세 예상액을 계산합니다.</p>
           </div>
 
-          {/* 시뮬레이터 연계 배너 */}
-          {simData ? (
+          {/* 데이터 불러오기 */}
+          <div className="rounded-3xl bg-white ring-1 ring-slate-200 p-5 mb-4">
+            <h3 className="text-sm font-bold text-slate-900 mb-3">📂 데이터 불러오기</h3>
+            <div className="flex gap-2 flex-wrap">
+              {simData && (
+                <button
+                  onClick={() => { setAnnualSales(String(simData.totalSales * 12)); setAnnualProfit(String(Math.max(0, simData.profit * 12))); if (simData.industry === "gogi") setIsDualBiz(true); }}
+                  className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-2.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
+                >
+                  🧮 시뮬레이터 (월 {fmt(simData.totalSales)}원 × 12)
+                </button>
+              )}
+              {monthlySnaps.length > 0 && (
+                <button
+                  onClick={() => loadFromMonthly(monthlySnaps)}
+                  className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
+                >
+                  📈 월별 매출 ({monthlySnaps.length}개월 합산{monthlySnaps.length < 12 ? " → 연환산" : ""})
+                </button>
+              )}
+              {!simData && monthlySnaps.length === 0 && (
+                <div className="flex items-center gap-3 w-full">
+                  <span className="text-slate-400 text-xs">💡 시뮬레이터 또는 월별 매출을 등록하면 자동으로 불러올 수 있어요.</span>
+                  <Link href="/simulator" className="ml-auto text-xs font-semibold text-blue-500 flex-shrink-0">시뮬레이터 →</Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {simData && (
             <div className="rounded-2xl bg-slate-900 px-4 py-3 mb-4 flex items-center gap-3">
               <span className="text-lg">🔗</span>
               <div className="flex-1">
@@ -147,7 +204,8 @@ export default function TaxPage() {
               </div>
               <span className="text-xs text-slate-500">자동 반영됨</span>
             </div>
-          ) : (
+          )}
+          {!simData && monthlySnaps.length === 0 && (
             <div className="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 mb-4 flex items-center gap-3">
               <span className="text-slate-400 text-sm">💡 시뮬레이터를 실행하면 매출·이익이 자동으로 입력됩니다.</span>
               <Link href="/simulator" className="ml-auto text-xs font-semibold text-blue-500">시뮬레이터 →</Link>
