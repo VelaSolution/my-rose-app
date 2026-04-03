@@ -10,6 +10,8 @@ import PlanGate from "@/components/PlanGate";
 
 type Tone = "warm" | "trendy" | "professional" | "fun";
 type Platform = "instagram" | "naver-blog" | "kakao";
+type DataSource = "none" | "simulator" | "monthly";
+type MonthSnap = { month: string; total_sales: number; net_profit: number; industry?: string };
 
 const TONES: { id: Tone; label: string; desc: string }[] = [
   { id: "warm", label: "따뜻한", desc: "친근하고 감성적인 톤" },
@@ -47,7 +49,25 @@ export default function SnsContentPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [copied, setCopied] = useState(false);
-  const [useSimData, setUseSimData] = useState(true);
+  const [dataSource, setDataSource] = useState<DataSource>(simData ? "simulator" : "none");
+  const [monthlySnaps, setMonthlySnaps] = useState<MonthSnap[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+
+  // 월별 매출 데이터 불러오기
+  useEffect(() => {
+    const sb = createSupabaseBrowserClient();
+    sb.auth.getUser().then(({ data: { user } }: { data: { user: { id: string } | null } }) => {
+      if (!user) return;
+      sb.from("monthly_snapshots").select("month,total_sales,net_profit,industry")
+        .eq("user_id", user.id).order("month", { ascending: false }).limit(12)
+        .then(({ data }: { data: MonthSnap[] | null }) => {
+          if (data && data.length > 0) {
+            setMonthlySnaps(data);
+            setSelectedMonth(data[0].month);
+          }
+        });
+    });
+  }, []);
 
   const toneLabels: Record<Tone, string> = {
     warm: "따뜻하고 감성적인",
@@ -64,10 +84,15 @@ export default function SnsContentPage() {
 
   const fmt = (n: number) => n.toLocaleString("ko-KR");
 
-  // 시뮬레이터 데이터 컨텍스트 (토글 ON일 때만)
-  const simContext = simData && useSimData
-    ? `\n[매장 정보 (시뮬레이터 연동)]\n업종: ${INDUSTRY_LABEL[simData.industry] ?? simData.industry}\n월 매출: ${fmt(simData.totalSales)}원 / 객단가: ${fmt(simData.avgSpend)}원\n순이익률: ${simData.netMargin}%\n이 매장의 가격대와 타겟 고객층에 맞는 콘텐츠를 작성하세요. 객단가가 ${simData.avgSpend > 15000 ? "높은 편이므로 프리미엄·품질 중심 톤" : simData.avgSpend > 8000 ? "보통이므로 가성비·일상 톤" : "낮은 편이므로 접근성·가벼운 톤"}으로 작성하세요.\n`
-    : "";
+  // 데이터 소스에 따른 컨텍스트
+  const selectedSnap = monthlySnaps.find((s) => s.month === selectedMonth);
+  let dataContext = "";
+  if (dataSource === "simulator" && simData) {
+    dataContext = `\n[매장 정보 (시뮬레이터 데이터)]\n업종: ${INDUSTRY_LABEL[simData.industry] ?? simData.industry}\n월 매출: ${fmt(simData.totalSales)}원 / 객단가: ${fmt(simData.avgSpend)}원\n순이익률: ${simData.netMargin}%\n이 매장의 가격대와 타겟 고객층에 맞는 콘텐츠를 작성하세요. 객단가가 ${simData.avgSpend > 15000 ? "높은 편이므로 프리미엄·품질 중심 톤" : simData.avgSpend > 8000 ? "보통이므로 가성비·일상 톤" : "낮은 편이므로 접근성·가벼운 톤"}으로 작성하세요.\n`;
+  } else if (dataSource === "monthly" && selectedSnap) {
+    const margin = selectedSnap.total_sales > 0 ? ((selectedSnap.net_profit / selectedSnap.total_sales) * 100).toFixed(1) : "0";
+    dataContext = `\n[매장 정보 (${selectedSnap.month} 실제 매출)]\n업종: ${INDUSTRY_LABEL[selectedSnap.industry ?? ""] ?? "외식업"}\n월 매출: ${fmt(selectedSnap.total_sales)}원\n순이익: ${fmt(selectedSnap.net_profit)}원 (순이익률 ${margin}%)\n실제 운영 데이터 기반이므로 현실적인 톤으로 콘텐츠를 작성하세요.\n`;
+  }
 
   async function generate() {
     if (!menuName && !description) return;
@@ -80,7 +105,7 @@ export default function SnsContentPage() {
 
     const prompt = `당신은 외식업 전문 SNS 마케터입니다.
 아래 정보를 바탕으로 ${platformLabels[platform]} 플랫폼에 최적화된 게시글을 작성하세요.
-${simContext}
+${dataContext}
 [콘텐츠 정보]
 콘텐츠 유형: ${contentType}
 메뉴/이벤트명: ${menuName || "(없음)"}
@@ -141,55 +166,83 @@ ${simContext}
             <p className="text-slate-500 text-sm">메뉴·이벤트 정보를 입력하면 AI가 맞춤 SNS 게시글을 작성해드립니다.</p>
           </div>
 
-          {/* 시뮬레이터 연동 배너 */}
-          {simData ? (
-            <div className={`rounded-2xl px-5 py-4 mb-6 ${useSimData ? "bg-slate-900" : "bg-slate-100"} transition-colors`}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{useSimData ? "🔗" : "🔓"}</span>
-                  <p className={`text-sm font-bold ${useSimData ? "text-white" : "text-slate-700"}`}>
-                    시뮬레이터 데이터 연동
-                  </p>
+          {/* 데이터 소스 선택 */}
+          <div className="rounded-3xl bg-white ring-1 ring-slate-200 p-5 mb-6">
+            <h2 className="font-bold text-slate-900 mb-3">📊 매장 데이터 연동</h2>
+            <p className="text-xs text-slate-500 mb-4">데이터를 연동하면 내 매장 객단가·업종·매출에 맞는 맞춤 콘텐츠가 생성됩니다.</p>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <button
+                onClick={() => setDataSource("none")}
+                className={`rounded-2xl py-3 text-center transition border-2 ${
+                  dataSource === "none" ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                }`}
+              >
+                <div className="text-lg mb-1">✏️</div>
+                <div className="text-xs font-semibold">직접 입력</div>
+              </button>
+              <button
+                onClick={() => simData ? setDataSource("simulator") : undefined}
+                className={`rounded-2xl py-3 text-center transition border-2 ${
+                  dataSource === "simulator" ? "border-blue-500 bg-blue-50 text-blue-700" : simData ? "border-slate-200 bg-white text-slate-500 hover:bg-slate-50" : "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
+                }`}
+              >
+                <div className="text-lg mb-1">🧮</div>
+                <div className="text-xs font-semibold">시뮬레이터</div>
+                {!simData && <div className="text-[10px] text-slate-400 mt-0.5">데이터 없음</div>}
+              </button>
+              <button
+                onClick={() => monthlySnaps.length > 0 ? setDataSource("monthly") : undefined}
+                className={`rounded-2xl py-3 text-center transition border-2 ${
+                  dataSource === "monthly" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : monthlySnaps.length > 0 ? "border-slate-200 bg-white text-slate-500 hover:bg-slate-50" : "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
+                }`}
+              >
+                <div className="text-lg mb-1">📈</div>
+                <div className="text-xs font-semibold">월별 매출</div>
+                {monthlySnaps.length === 0 && <div className="text-[10px] text-slate-400 mt-0.5">데이터 없음</div>}
+              </button>
+            </div>
+
+            {/* 선택된 소스의 상세 정보 */}
+            {dataSource === "simulator" && simData && (
+              <div className="rounded-2xl bg-blue-50 px-4 py-3">
+                <div className="flex gap-3 flex-wrap text-xs">
+                  <span className="text-blue-600 font-semibold">{INDUSTRY_LABEL[simData.industry] ?? simData.industry}</span>
+                  <span className="text-blue-800">월매출 {fmt(simData.totalSales)}원</span>
+                  <span className="text-blue-800">객단가 {fmt(simData.avgSpend)}원</span>
+                  <span className="text-blue-800">순이익률 {simData.netMargin}%</span>
                 </div>
-                <button
-                  onClick={() => setUseSimData(!useSimData)}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${useSimData ? "bg-blue-500" : "bg-slate-300"}`}
+              </div>
+            )}
+            {dataSource === "monthly" && monthlySnaps.length > 0 && (
+              <div className="space-y-2">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 >
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${useSimData ? "translate-x-5" : ""}`} />
-                </button>
-              </div>
-              {useSimData ? (
-                <>
-                  <div className="flex gap-3 flex-wrap mb-2">
-                    <span className="text-xs text-slate-400">{INDUSTRY_LABEL[simData.industry] ?? simData.industry}</span>
-                    <span className="text-xs text-blue-300">월매출 {fmt(simData.totalSales)}원</span>
-                    <span className="text-xs text-slate-300">객단가 {fmt(simData.avgSpend)}원</span>
-                    <span className="text-xs text-emerald-300">순이익률 {simData.netMargin}%</span>
+                  {monthlySnaps.map((s) => (
+                    <option key={s.month} value={s.month}>
+                      {s.month} — 매출 {fmt(s.total_sales)}원 / 순이익 {fmt(s.net_profit)}원
+                    </option>
+                  ))}
+                </select>
+                {selectedSnap && (
+                  <div className="rounded-2xl bg-emerald-50 px-4 py-3">
+                    <div className="flex gap-3 flex-wrap text-xs">
+                      <span className="text-emerald-600 font-semibold">{selectedSnap.month} 실제 데이터</span>
+                      <span className="text-emerald-800">매출 {fmt(selectedSnap.total_sales)}원</span>
+                      <span className="text-emerald-800">순이익 {fmt(selectedSnap.net_profit)}원</span>
+                    </div>
                   </div>
-                  <div className="rounded-xl bg-white/10 px-3 py-2">
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      <b className="text-blue-300">연동 시 차이점:</b> 객단가·업종에 맞는 톤 자동 조절, 타겟 고객층에 맞는 문구, 가격대에 맞는 키워드가 AI에 반영됩니다.
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <p className="text-xs text-slate-500">OFF — 일반적인 외식업 콘텐츠로 생성됩니다. 켜면 내 매장 데이터에 최적화된 콘텐츠가 생성돼요.</p>
-              )}
-            </div>
-          ) : (
-            <div className="rounded-2xl bg-slate-50 border border-slate-200 px-5 py-4 mb-6">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">💡</span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-700">시뮬레이터를 먼저 실행해보세요</p>
-                  <p className="text-xs text-slate-500 mt-0.5">매장 데이터를 연동하면 객단가·업종에 맞는 맞춤 콘텐츠가 생성됩니다.</p>
-                </div>
-                <Link href="/simulator" className="flex-shrink-0 rounded-xl bg-slate-900 text-white text-xs font-semibold px-4 py-2">
-                  시뮬레이터 →
-                </Link>
+                )}
               </div>
-            </div>
-          )}
+            )}
+            {dataSource === "none" && (
+              <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                <p className="text-xs text-slate-500">데이터 없이 일반적인 외식업 콘텐츠로 생성합니다.</p>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 입력 */}
