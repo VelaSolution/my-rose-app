@@ -47,6 +47,7 @@ export default function SnsContentPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [copied, setCopied] = useState(false);
+  const [useSimData, setUseSimData] = useState(true);
 
   const toneLabels: Record<Tone, string> = {
     warm: "따뜻하고 감성적인",
@@ -63,9 +64,9 @@ export default function SnsContentPage() {
 
   const fmt = (n: number) => n.toLocaleString("ko-KR");
 
-  // 시뮬레이터 데이터 컨텍스트
-  const simContext = simData
-    ? `\n[매장 정보 (시뮬레이터 연동)]\n업종: ${INDUSTRY_LABEL[simData.industry] ?? simData.industry}\n월 매출: ${fmt(simData.totalSales)}원 / 객단가: ${fmt(simData.avgSpend)}원\n순이익률: ${simData.netMargin}%\n`
+  // 시뮬레이터 데이터 컨텍스트 (토글 ON일 때만)
+  const simContext = simData && useSimData
+    ? `\n[매장 정보 (시뮬레이터 연동)]\n업종: ${INDUSTRY_LABEL[simData.industry] ?? simData.industry}\n월 매출: ${fmt(simData.totalSales)}원 / 객단가: ${fmt(simData.avgSpend)}원\n순이익률: ${simData.netMargin}%\n이 매장의 가격대와 타겟 고객층에 맞는 콘텐츠를 작성하세요. 객단가가 ${simData.avgSpend > 15000 ? "높은 편이므로 프리미엄·품질 중심 톤" : simData.avgSpend > 8000 ? "보통이므로 가성비·일상 톤" : "낮은 편이므로 접근성·가벼운 톤"}으로 작성하세요.\n`
     : "";
 
   async function generate() {
@@ -140,28 +141,53 @@ ${simContext}
             <p className="text-slate-500 text-sm">메뉴·이벤트 정보를 입력하면 AI가 맞춤 SNS 게시글을 작성해드립니다.</p>
           </div>
 
-          {/* 시뮬레이터 연계 배너 */}
+          {/* 시뮬레이터 연동 배너 */}
           {simData ? (
-            <div className="rounded-2xl bg-slate-900 px-4 py-3 mb-6 flex items-center gap-3">
-              <span className="text-lg">🔗</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-400">시뮬레이터 연동 · {INDUSTRY_LABEL[simData.industry] ?? simData.industry}</p>
-                <p className="text-white text-xs mt-0.5">
-                  월매출 <b className="text-blue-300">{fmt(simData.totalSales)}원</b>
-                  <span className="mx-2 text-slate-600">·</span>
-                  객단가 <b className="text-slate-300">{fmt(simData.avgSpend)}원</b>
-                  <span className="mx-2 text-slate-600">·</span>
-                  순이익률 <b className="text-emerald-300">{simData.netMargin}%</b>
-                </p>
+            <div className={`rounded-2xl px-5 py-4 mb-6 ${useSimData ? "bg-slate-900" : "bg-slate-100"} transition-colors`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{useSimData ? "🔗" : "🔓"}</span>
+                  <p className={`text-sm font-bold ${useSimData ? "text-white" : "text-slate-700"}`}>
+                    시뮬레이터 데이터 연동
+                  </p>
+                </div>
+                <button
+                  onClick={() => setUseSimData(!useSimData)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${useSimData ? "bg-blue-500" : "bg-slate-300"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${useSimData ? "translate-x-5" : ""}`} />
+                </button>
               </div>
-              <span className="text-xs text-slate-500 flex-shrink-0">AI 프롬프트에 자동 반영</span>
+              {useSimData ? (
+                <>
+                  <div className="flex gap-3 flex-wrap mb-2">
+                    <span className="text-xs text-slate-400">{INDUSTRY_LABEL[simData.industry] ?? simData.industry}</span>
+                    <span className="text-xs text-blue-300">월매출 {fmt(simData.totalSales)}원</span>
+                    <span className="text-xs text-slate-300">객단가 {fmt(simData.avgSpend)}원</span>
+                    <span className="text-xs text-emerald-300">순이익률 {simData.netMargin}%</span>
+                  </div>
+                  <div className="rounded-xl bg-white/10 px-3 py-2">
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      <b className="text-blue-300">연동 시 차이점:</b> 객단가·업종에 맞는 톤 자동 조절, 타겟 고객층에 맞는 문구, 가격대에 맞는 키워드가 AI에 반영됩니다.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-slate-500">OFF — 일반적인 외식업 콘텐츠로 생성됩니다. 켜면 내 매장 데이터에 최적화된 콘텐츠가 생성돼요.</p>
+              )}
             </div>
           ) : (
-            <div className="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 mb-6 flex items-center gap-3">
-              <span className="text-slate-400 text-sm">💡 시뮬레이터 데이터를 연동하면 더 정확한 콘텐츠를 생성합니다.</span>
-              <Link href="/simulator" className="ml-auto flex-shrink-0 text-xs font-semibold text-blue-500 hover:text-blue-600">
-                시뮬레이터 →
-              </Link>
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 px-5 py-4 mb-6">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">💡</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-700">시뮬레이터를 먼저 실행해보세요</p>
+                  <p className="text-xs text-slate-500 mt-0.5">매장 데이터를 연동하면 객단가·업종에 맞는 맞춤 콘텐츠가 생성됩니다.</p>
+                </div>
+                <Link href="/simulator" className="flex-shrink-0 rounded-xl bg-slate-900 text-white text-xs font-semibold px-4 py-2">
+                  시뮬레이터 →
+                </Link>
+              </div>
             </div>
           )}
 
