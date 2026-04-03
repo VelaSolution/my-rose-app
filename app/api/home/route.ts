@@ -43,8 +43,8 @@ async function getNews() {
         model: "claude-opus-4-6",
         max_tokens: 1000,
         tools: [{ type: "web_search_20250305", name: "web_search" }],
-        system: `Today is ${today}. Search for 5 latest Korean news articles. Include a mix of: food service industry news, small business/self-employed news, AND general Korean economic news (interest rates, inflation, consumer spending, employment). Respond ONLY with a JSON array: [{"title":"Korean title","summary":"Korean summary under 30 chars","source":"media name","url":"article URL"}]. No markdown, no extra text.`,
-        messages: [{ role: "user", content: `${today} 외식업 소상공인 경제 금리 물가 고용 최신 뉴스 5개` }],
+        system: `Today is ${today}. Search for 6 latest Korean news articles. Include a mix of: food service industry news (2), small business/self-employed news (2), AND general Korean economic news like interest rates, inflation, consumer spending, employment (2). For each article, add a "tag" field with one of: "외식업", "소상공인", "경제". Also add an "insight" field: a one-sentence practical tip for a restaurant owner based on this news (under 40 chars, in Korean). Respond ONLY with a JSON array: [{"title":"Korean title","summary":"Korean summary under 30 chars","source":"media name","url":"article URL","tag":"category","insight":"사장님 한줄 인사이트"}]. No markdown, no extra text.`,
+        messages: [{ role: "user", content: `${today} 외식업 소상공인 경제 금리 물가 고용 최신 뉴스 6개` }],
       }),
     });
     const json = await res.json();

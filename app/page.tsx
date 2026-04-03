@@ -462,7 +462,7 @@ const TOOLS_HOME = [
   { icon:"💬", label:"리뷰 답변",      href:"/tools/review-reply" },
   { icon:"🗺️", label:"상권 분석",     href:"/tools/area-analysis" },
 ];
-type NewsItem = { title:string; summary:string; source:string; url:string };
+type NewsItem = { title:string; summary:string; source:string; url:string; tag?:string; insight?:string };
 import type { User } from "@supabase/supabase-js";
 
 type IndexData = { price:string; date:string } | null;
@@ -508,6 +508,79 @@ function StockTicker() {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+const NEWS_TAGS = [
+  { key: "all", label: "전체", color: "bg-slate-900 text-white" },
+  { key: "외식업", label: "🍽️ 외식업", color: "bg-orange-500 text-white" },
+  { key: "소상공인", label: "🏪 소상공인", color: "bg-emerald-500 text-white" },
+  { key: "경제", label: "📈 경제", color: "bg-blue-500 text-white" },
+];
+const TAG_COLORS: Record<string, string> = {
+  "외식업": "bg-orange-100 text-orange-700",
+  "소상공인": "bg-emerald-100 text-emerald-700",
+  "경제": "bg-blue-100 text-blue-700",
+};
+
+function NewsSection({ news, loading }: { news: NewsItem[]; loading: boolean }) {
+  const [filter, setFilter] = useState("all");
+  const filtered = filter === "all" ? news : news.filter(n => n.tag === filter);
+
+  return (
+    <div className="sm:col-span-2 rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-bold text-slate-900">📰 오늘의 뉴스</h2>
+          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">AI 요약</span>
+        </div>
+      </div>
+
+      {/* 카테고리 탭 */}
+      <div className="flex gap-1.5 mb-4 overflow-x-auto">
+        {NEWS_TAGS.map(t => (
+          <button key={t.key} onClick={() => setFilter(t.key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+              filter === t.key ? t.color : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+            }`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">
+          {[1,2,3].map(i=><div key={i} className="animate-pulse space-y-1"><div className="h-4 bg-slate-100 rounded w-3/4"/><div className="h-3 bg-slate-100 rounded w-1/2"/></div>)}
+          <p className="text-xs text-slate-400 mt-2">오늘 뉴스 불러오는 중...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-6">해당 카테고리 뉴스가 없어요.</p>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((n,i)=>(
+            <a key={i} href={n.url||"#"} target="_blank" rel="noopener noreferrer"
+              className="block rounded-2xl border border-slate-100 p-4 hover:bg-slate-50 hover:border-slate-200 transition group">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    {n.tag && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TAG_COLORS[n.tag] ?? "bg-slate-100 text-slate-600"}`}>{n.tag}</span>}
+                    <span className="text-[11px] text-slate-400">{n.source}</span>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-900 leading-snug group-hover:text-blue-600 transition">{n.title}</p>
+                  <p className="text-xs text-slate-500 mt-1">{n.summary}</p>
+                  {n.insight && (
+                    <div className="mt-2 rounded-lg bg-amber-50 px-3 py-1.5">
+                      <p className="text-xs text-amber-800">💡 <b>사장님 인사이트:</b> {n.insight}</p>
+                    </div>
+                  )}
+                </div>
+                <span className="text-xs text-blue-400 group-hover:text-blue-600 flex-shrink-0 mt-1">보기 →</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -709,36 +782,7 @@ function MemberHome() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {/* 뉴스 */}
-            <div className="sm:col-span-2 rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-              <div className="flex items-center gap-2 mb-5">
-                <h2 className="text-base font-bold text-slate-900">📰 오늘의 경제·외식업 뉴스</h2>
-                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">AI 요약</span>
-              </div>
-              {newsLoad ? (
-                <div className="space-y-3">
-                  {[1,2,3].map(i=><div key={i} className="animate-pulse space-y-1"><div className="h-4 bg-slate-100 rounded w-3/4"/><div className="h-3 bg-slate-100 rounded w-1/2"/></div>)}
-                  <p className="text-xs text-slate-400 mt-2">오늘 뉴스 불러오는 중...</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {news.map((n,i)=>(
-                    <a key={i} href={n.url||"#"} target="_blank" rel="noopener noreferrer"
-                      className="flex gap-3 pb-3 border-b border-slate-100 last:border-0 last:pb-0 hover:bg-slate-50 rounded-xl px-2 -mx-2 transition group">
-                      <span className="text-base flex-shrink-0 mt-0.5">📌</span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-slate-900 leading-snug group-hover:text-blue-600 transition">{n.title}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{n.summary}</p>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <p className="text-xs text-slate-400">{n.source}</p>
-                          <span className="text-xs text-slate-300">·</span>
-                          <p className="text-xs text-blue-400 group-hover:text-blue-600">원문 보기 →</p>
-                        </div>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
+            <NewsSection news={news} loading={newsLoad} />
             {/* 도구 */}
             <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
               <h2 className="text-base font-bold text-slate-900 mb-4">🛠️ 도구</h2>
