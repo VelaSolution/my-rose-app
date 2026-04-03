@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import OnboardingModal from "@/components/OnboardingModal";
+import MonthlyReminder from "@/components/MonthlyReminder";
 
 function useInView() {
   const ref = useRef<HTMLDivElement>(null);
@@ -669,6 +670,9 @@ function MemberHome() {
 
           {/* 지수 티커 */}
           <StockTicker />
+
+          {/* 월초 매출 등록 리마인더 */}
+          {thisSnap === null && <MonthlyReminder />}
 
           {/* 이번달 매출 알림 */}
           {thisSnap === null && (

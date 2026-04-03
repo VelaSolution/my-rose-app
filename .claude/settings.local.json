@@ -24,7 +24,12 @@
       "Bash(gh api:*)",
       "Bash(git rm:*)",
       "WebFetch(domain:velaanalytics.com)",
-      "Bash(xargs wc:*)"
+      "Bash(xargs wc:*)",
+      "Bash(xargs ls:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git checkout:*)",
+      "Bash(git reset:*)",
+      "Bash(cp C:/Users/user/Vela/Vela/public/VELA_마케팅전략.md C:/Users/user/Desktop/VELA_마케팅전략.md)"
     ]
   }
 }

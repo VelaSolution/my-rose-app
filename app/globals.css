@@ -78,3 +78,57 @@ main,
 html, body {
   background: #F9FAFB !important;
 }
+
+/* ── Dark Mode ─────────────────────────────────────── */
+html.dark, html.dark body {
+  background: #0F172A !important;
+  color: #E2E8F0 !important;
+}
+
+html.dark .bg-white { background-color: #1E293B !important; }
+html.dark .bg-slate-50 { background-color: #0F172A !important; }
+html.dark .bg-slate-100 { background-color: #1E293B !important; }
+html.dark .bg-gray-50 { background-color: #0F172A !important; }
+html.dark .bg-gray-100 { background-color: #1E293B !important; }
+
+html.dark .text-slate-900 { color: #F1F5F9 !important; }
+html.dark .text-slate-800 { color: #E2E8F0 !important; }
+html.dark .text-slate-700 { color: #CBD5E1 !important; }
+html.dark .text-slate-600 { color: #94A3B8 !important; }
+html.dark .text-gray-900 { color: #F1F5F9 !important; }
+html.dark .text-gray-800 { color: #E2E8F0 !important; }
+html.dark .text-gray-700 { color: #CBD5E1 !important; }
+html.dark .text-gray-600 { color: #94A3B8 !important; }
+
+html.dark .border-slate-200 { border-color: #334155 !important; }
+html.dark .border-slate-300 { border-color: #334155 !important; }
+html.dark .border-gray-200 { border-color: #334155 !important; }
+html.dark .border-gray-300 { border-color: #334155 !important; }
+html.dark .ring-slate-200 { --tw-ring-color: #334155 !important; }
+
+html.dark input, html.dark textarea, html.dark select {
+  background-color: #1E293B !important;
+  color: #E2E8F0 !important;
+  border-color: #334155 !important;
+}
+
+html.dark .vela-nav { background: rgba(15, 23, 42, 0.92) !important; border-bottom-color: #334155 !important; }
+html.dark .vela-nav-logo { color: #F1F5F9 !important; }
+html.dark .vela-nav-links a { color: #94A3B8 !important; }
+html.dark .vela-nav-links a:hover { color: #F1F5F9 !important; }
+html.dark .vela-dropdown-btn { color: #94A3B8 !important; }
+html.dark .vela-dropdown-btn:hover { color: #F1F5F9 !important; }
+html.dark .vela-dropdown-menu { background: #1E293B !important; border-color: #334155 !important; }
+html.dark .vela-dropdown-item:hover { background: #334155 !important; }
+html.dark .vela-dropdown-label { color: #F1F5F9 !important; }
+html.dark .vela-dropdown-desc { color: #64748B !important; }
+html.dark .vela-btn-dashboard { background: #334155 !important; color: #E2E8F0 !important; }
+html.dark .vela-btn-dashboard:hover { background: #475569 !important; }
+html.dark .vela-btn-logout { border-color: #334155 !important; color: #94A3B8 !important; }
+html.dark .vela-btn-logout:hover { border-color: #E2E8F0 !important; color: #F1F5F9 !important; }
+html.dark .vela-btn-login { color: #94A3B8 !important; }
+html.dark .vela-btn-login:hover { color: #F1F5F9 !important; }
+html.dark .vela-user-name { color: #E2E8F0 !important; }
+html.dark .vela-mobile-menu { background: #1E293B !important; border-bottom-color: #334155 !important; }
+html.dark .vela-mobile-link { color: #E2E8F0 !important; border-bottom-color: #334155 !important; }
+html.dark .vela-hamburger span { background: #E2E8F0 !important; }
