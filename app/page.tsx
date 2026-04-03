@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import OnboardingModal from "@/components/OnboardingModal";
 
 function useInView() {
   const ref = useRef<HTMLDivElement>(null);
@@ -222,7 +223,7 @@ function LandingContent() {
               </div>
               <div className="hero-stats">
                 <div><div className="stat-num">500<span>+</span></div><div className="stat-label">사장님 사용 중</div></div>
-                <div><div className="stat-num">4<span>개</span></div><div className="stat-label">업종 지원</div></div>
+                <div><div className="stat-num">5<span>개</span></div><div className="stat-label">업종 지원</div></div>
                 <div><div className="stat-num">20<span>+</span></div><div className="stat-label">재무 지표</div></div>
                 <div><div className="stat-num">AI</div><div className="stat-label">실시간 전략</div></div>
               </div>
@@ -327,9 +328,9 @@ function LandingContent() {
           <FadeIn><span className="section-tag" style={{ background: "rgba(255,255,255,.1)", color: "#93C5FD" }}>후기</span><h2 className="section-title">실제 사장님들의 이야기</h2></FadeIn>
           <div className="testi-grid">
             {[
-              { text: "손익분기점을 처음으로 제대로 이해했어요. 숫자를 보니 어디서 돈이 새는지 바로 보이더라고요.", name: "김○○", role: "카페 운영 3년차", av: "김", delay: 0 },
-              { text: "AI가 배달 채널 추가를 추천해줬는데, 실행 후 월 매출이 20% 올랐습니다. 믿기 어렵지만 사실이에요.", name: "박○○", role: "분식점 사장님", av: "박", delay: 80 },
-              { text: "창업 전에 미리 수치를 검토할 수 있어서 보증금 협상도 자신 있게 했습니다.", name: "이○○", role: "파인다이닝 예비 창업자", av: "이", delay: 160 },
+              { text: "원가율이 38%인 줄 몰랐는데 VELA로 확인하고 메뉴를 조정했더니 월 120만원 절감됐어요. 숫자를 보니 어디서 돈이 새는지 바로 보이더라고요.", name: "김○○", role: "카페 운영 3년차", av: "김", delay: 0 },
+              { text: "AI가 배달 채널 추가를 추천해줬는데, 실행 후 월 매출이 20% 올랐습니다. 순이익도 월 80만원 증가했어요.", name: "박○○", role: "분식점 사장님", av: "박", delay: 80 },
+              { text: "창업 전에 VELA로 시뮬레이션 돌려보니 초기 투자금 회수에 14개월 걸린다는 걸 미리 알 수 있었어요. 덕분에 보증금 협상도 자신 있게 했습니다.", name: "이○○", role: "파인다이닝 예비 창업자", av: "이", delay: 160 },
             ].map((t) => (
               <FadeIn key={t.name} delay={t.delay}>
                 <div className="testi-card">
@@ -677,7 +678,8 @@ function MemberHome() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      
+      <OnboardingModal />
+
       <main className="px-4 py-8 md:px-8">
         <div className="mx-auto max-w-4xl space-y-5">
 
