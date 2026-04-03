@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import NavBar from "@/components/NavBar";
+import ClientProviders from "@/components/ClientProviders";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const DarkModeToggle = dynamic(() => import("@/components/DarkModeToggle"), {
-  ssr: false,
-});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,7 +48,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen pt-16 bg-slate-50">
         <NavBar />
         {children}
-        <DarkModeToggle />
+        <ClientProviders />
       </body>
     </html>
   );
