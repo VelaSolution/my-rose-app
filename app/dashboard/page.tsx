@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { User } from "@supabase/supabase-js";
+import { NotesWidget } from "@/app/notes/page";
 
 const fmt = (n: number) => Math.round(n).toLocaleString("ko-KR");
 const IND: Record<string, string> = { cafe:"☕", restaurant:"🍽️", bar:"🍺", finedining:"✨", gogi:"🥩" };
@@ -280,15 +281,13 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          {/* 게임 배너 */}
-          <div className="rounded-3xl bg-slate-900 p-6 flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-white font-bold text-lg">🎮 경영 시뮬레이션 게임</p>
-              <p className="text-slate-400 text-sm mt-1">90일간 내 가게를 운영해보세요. 실제 데이터로 시작할 수 있어요!</p>
+          {/* 노트 */}
+          <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-slate-900">📝 노트</h2>
+              <Link href="/notes" className="text-xs text-blue-500 font-semibold hover:text-blue-700">전체보기 →</Link>
             </div>
-            <Link href="/game" className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 transition flex-shrink-0">
-              게임 시작 →
-            </Link>
+            <NotesWidget />
           </div>
 
         </div>

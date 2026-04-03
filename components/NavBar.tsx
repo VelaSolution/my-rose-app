@@ -59,7 +59,7 @@ export default function NavBar() {
             </div>
             <Link href="/community">커뮤니티</Link>
             <Link href="/guide">가이드</Link>
-            <Link href="/notes">노트</Link>
+            <Link href="/dashboard">노트</Link>
             <Link href="/game">🎮 게임</Link>
             <Link href="/pricing">요금제</Link>
             <a href="/#contact">문의</a>
@@ -102,7 +102,7 @@ export default function NavBar() {
         </div>
         <Link href="/community" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>커뮤니티</Link>
         <Link href="/guide" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>📖 가이드</Link>
-        <Link href="/notes" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>📝 노트</Link>
+        <Link href="/dashboard" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>📝 노트</Link>
         <Link href="/game" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>🎮 게임</Link>
         <Link href="/pricing" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>요금제</Link>
         <a href="/#contact" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>문의</a>

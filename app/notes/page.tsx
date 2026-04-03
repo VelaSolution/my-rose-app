@@ -53,7 +53,7 @@ function loadData(): NotesData {
   return { journal: [], todos: [], memo: "" };
 }
 
-export default function NotesPage() {
+export function NotesWidget() {
   const [data, setData] = useState<NotesData>({ journal: [], todos: [], memo: "" });
   const [tab, setTab] = useState<TabKey>("journal");
   const [toast, setToast] = useState(false);
@@ -114,9 +114,7 @@ export default function NotesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "Pretendard, sans-serif" }}>
-      <NavBar />
-
+    <div>
       {/* toast */}
       <div
         className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white text-sm px-4 py-2 rounded-full shadow-lg transition-all duration-300 ${
@@ -125,11 +123,6 @@ export default function NotesPage() {
       >
         저장됨
       </div>
-
-      <main className="max-w-2xl mx-auto px-4 pt-24 pb-32">
-        {/* header */}
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">노트</h1>
-        <p className="text-sm text-slate-500 mb-6">매장 운영에 필요한 기록을 한곳에서 관리하세요.</p>
 
         {/* tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto">
@@ -297,6 +290,18 @@ export default function NotesPage() {
             </div>
           </section>
         )}
+    </div>
+  );
+}
+
+export default function NotesPage() {
+  return (
+    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "Pretendard, sans-serif" }}>
+      <NavBar />
+      <main className="max-w-2xl mx-auto px-4 pt-24 pb-32">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">노트</h1>
+        <p className="text-sm text-slate-500 mb-6">매장 운영에 필요한 기록을 한곳에서 관리하세요.</p>
+        <NotesWidget />
       </main>
     </div>
   );
