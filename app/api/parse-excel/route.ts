@@ -22,7 +22,7 @@ function truncateCsvSafely(csvText: string): { text: string; truncated: boolean 
 export async function POST(req: NextRequest) {
   try {
   const body = await req.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: "입력값 누락" }, { status: 400 });
+  if (!body) return new Response(JSON.stringify({ error: "입력값 누락" }), { status: 400, headers: { "Content-Type": "application/json" } });
   const { csvText, fileName, industry } = body;
 
   if (!csvText || typeof csvText !== "string") {
