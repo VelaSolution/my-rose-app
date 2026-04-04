@@ -29,6 +29,77 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
   );
 }
 
+function HeroMiniSim() {
+  const [seats, setSeats] = useState(20);
+  const [spend, setSpend] = useState(12000);
+  const [turn, setTurn] = useState(2.0);
+  const sales = Math.round(seats * spend * turn * 26);
+  const cost = Math.round(sales * 0.32 + 3500000 + 1500000 + 500000);
+  const profit = sales - cost;
+  const margin = sales > 0 ? ((profit / sales) * 100).toFixed(1) : "0";
+  const fmt = (n: number) => Math.abs(n).toLocaleString("ko-KR");
+
+  return (
+    <div style={{background:"#fff",borderRadius:24,padding:28,boxShadow:"0 20px 60px rgba(0,0,0,0.08)",border:"1px solid #E5E8EB",position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",top:0,right:0,width:120,height:120,background:"radial-gradient(circle,rgba(49,130,246,0.08),transparent)",borderRadius:"0 0 0 120px"}} />
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>🔮 실시간 미리보기</span>
+        </div>
+        <span style={{fontSize:11,color:"#9EA6B3",background:"#F2F4F6",padding:"3px 10px",borderRadius:100,fontWeight:600}}>드래그해서 조절</span>
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:20}}>
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>좌석 수</span>
+            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{seats}석</span>
+          </div>
+          <input type="range" min={5} max={80} value={seats} onChange={e=>setSeats(Number(e.target.value))}
+            style={{width:"100%",accentColor:"#3182F6",height:6}} />
+        </div>
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>객단가</span>
+            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{spend.toLocaleString()}원</span>
+          </div>
+          <input type="range" min={3000} max={100000} step={1000} value={spend} onChange={e=>setSpend(Number(e.target.value))}
+            style={{width:"100%",accentColor:"#3182F6",height:6}} />
+        </div>
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>일 회전율</span>
+            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{turn.toFixed(1)}회</span>
+          </div>
+          <input type="range" min={0.5} max={6} step={0.1} value={turn} onChange={e=>setTurn(Number(e.target.value))}
+            style={{width:"100%",accentColor:"#3182F6",height:6}} />
+        </div>
+      </div>
+
+      <div style={{background:"#F9FAFB",borderRadius:16,padding:16,marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <span style={{fontSize:12,color:"#9EA6B3",fontWeight:600}}>월 예상 매출</span>
+          <span style={{fontSize:20,fontWeight:800,color:"#191F28",letterSpacing:-1}}>{fmt(sales)}원</span>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:12,color:"#9EA6B3",fontWeight:600}}>예상 순이익</span>
+          <span style={{fontSize:22,fontWeight:800,color:profit>=0?"#059669":"#EF4444",letterSpacing:-1}}>{profit>=0?"+":"-"}{fmt(profit)}원</span>
+        </div>
+        <div style={{marginTop:8,height:4,borderRadius:4,background:"#E5E8EB",overflow:"hidden"}}>
+          <div style={{height:"100%",borderRadius:4,background:profit>=0?"#059669":"#EF4444",width:`${Math.min(Math.max(Number(margin),0),100)}%`,transition:"width 0.3s"}} />
+        </div>
+        <div style={{textAlign:"right",marginTop:4}}>
+          <span style={{fontSize:11,color:profit>=0?"#059669":"#EF4444",fontWeight:600}}>순이익률 {margin}%</span>
+        </div>
+      </div>
+
+      <Link href="/simulator" style={{display:"block",width:"100%",textAlign:"center",background:"#3182F6",color:"#fff",padding:"13px 0",borderRadius:12,fontSize:14,fontWeight:700,textDecoration:"none",transition:"background 0.15s"}}>
+        상세 분석하기 →
+      </Link>
+    </div>
+  );
+}
+
 function LandingContent() {
   const formMsgRef = useRef<HTMLParagraphElement>(null);
   const submitBtnRef = useRef<HTMLButtonElement>(null);
@@ -101,6 +172,7 @@ function LandingContent() {
         @keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(49,130,246,0.4)}50%{box-shadow:0 0 0 8px rgba(49,130,246,0)}}
         .fade-init{opacity:0;animation:fadeUp .7s ease forwards}
         .d1{animation-delay:.1s}.d2{animation-delay:.25s}.d3{animation-delay:.4s}.d4{animation-delay:.55s}
+        .step-card-hover:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(0,0,0,.08);border-color:transparent}
         .hero{min-height:100vh;display:flex;align-items:center;padding:120px 24px 80px;position:relative;overflow:hidden}
         .hero-bg{position:absolute;top:-200px;right:-200px;width:800px;height:800px;background:radial-gradient(ellipse,rgba(49,130,246,0.08) 0%,transparent 70%);pointer-events:none;filter:blur(40px)}
         .hero-bg2{position:absolute;bottom:-100px;left:-100px;width:500px;height:500px;background:radial-gradient(ellipse,rgba(99,102,241,0.06) 0%,transparent 70%);pointer-events:none;filter:blur(40px)}
@@ -237,19 +309,7 @@ function LandingContent() {
             </div>
           </div>
           <div className="fade-init d2">
-            <div className="hero-card">
-              <div className="hero-card-header">
-                <span className="hero-card-title">☕ 카페 · 운영 중</span>
-                <span className="hero-card-badge">흑자</span>
-              </div>
-              <div className="hero-metric-label">이번 달 세전 순이익</div>
-              <div className={`hero-metric-value green`}>+3,420,000원</div>
-              <div className="hero-bar-wrap"><div className="hero-bar" /></div>
-              <div className="hero-row"><span className="hero-row-label">월 총 매출</span><span className="hero-row-value">28,500,000원</span></div>
-              <div className="hero-row"><span className="hero-row-label">손익분기점</span><span className="hero-row-value">22,100,000원 ✓</span></div>
-              <div className="hero-row"><span className="hero-row-label">투자금 회수</span><span className="hero-row-value">18개월 예상</span></div>
-              <div className="hero-row"><span className="hero-row-label">순이익률</span><span className="hero-row-value" style={{ color: "#3182F6" }}>12.0%</span></div>
-            </div>
+            <HeroMiniSim />
           </div>
         </div>
       </section>
@@ -290,14 +350,18 @@ function LandingContent() {
           <FadeIn><div style={{ textAlign: "center" }}><span className="section-tag">사용 방법</span><h2 className="section-title" style={{ textAlign: "center" }}>3단계로 끝납니다</h2></div></FadeIn>
           <div className="steps-grid">
             {[
-              { num: "1", title: "정보 입력", desc: "업종·좌석·객단가·비용 구조를 3단계로 간단하게 입력합니다. POS 파일이 있으면 바로 업로드해도 됩니다.", delay: 0 },
-              { num: "2", title: "AI 분석", desc: "입력 즉시 20개 이상의 재무 지표가 계산되고 AI가 현재 상태를 진단합니다.", delay: 100 },
-              { num: "3", title: "전략 실행", desc: "AI 추천 전략을 확인하고 채팅으로 추가 질문하며 바로 실행 계획을 세웁니다.", delay: 200 },
+              { num: "1", icon: "📝", title: "3분 만에 입력", desc: "업종·좌석·객단가·비용 구조를 3단계로 간단하게 입력합니다. POS 파일이 있으면 바로 업로드해도 됩니다.", delay: 0, accent: "#3182F6" },
+              { num: "2", icon: "🤖", title: "AI가 즉시 분석", desc: "입력 즉시 20개 이상의 재무 지표가 계산되고 AI가 현재 상태를 진단합니다.", delay: 100, accent: "#7C3AED" },
+              { num: "3", icon: "🚀", title: "바로 실행", desc: "AI 추천 전략을 확인하고 채팅으로 추가 질문하며 바로 실행 계획을 세웁니다.", delay: 200, accent: "#059669" },
             ].map((s) => (
               <FadeIn key={s.num} delay={s.delay}>
-                <div className="step-num">{s.num}</div>
-                <div className="step-title">{s.title}</div>
-                <div className="step-desc">{s.desc}</div>
+                <div style={{background:"#fff",borderRadius:24,padding:"36px 28px",border:"2px solid #E5E8EB",transition:"all 0.25s",position:"relative",overflow:"hidden"}} className="step-card-hover">
+                  <div style={{position:"absolute",top:0,left:0,width:"100%",height:4,background:s.accent}} />
+                  <div style={{fontSize:40,marginBottom:12}}>{s.icon}</div>
+                  <div style={{display:"inline-block",background:s.accent+"18",color:s.accent,fontSize:12,fontWeight:700,padding:"4px 12px",borderRadius:100,marginBottom:12}}>STEP {s.num}</div>
+                  <div className="step-title">{s.title}</div>
+                  <div className="step-desc">{s.desc}</div>
+                </div>
               </FadeIn>
             ))}
           </div>
