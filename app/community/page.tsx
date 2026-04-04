@@ -758,7 +758,7 @@ export default function CommunityPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const ADMIN_EMAILS = ["mnhyuk@velaanalytics.com", "mnhyuk0213@gmail.com"];
+  const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "").split(",").map(e => e.trim().toLowerCase());
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
