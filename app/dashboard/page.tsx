@@ -132,7 +132,8 @@ export default function DashboardHome() {
                     {snapshots.length > 0 && (
                       <button onClick={() => {
                         const header = "월,매출,순이익,순이익률\n";
-                        const rows = snapshots.map((s:{month:string;total_sales:number;net_profit:number;net_margin:number}) => `${s.month},${s.total_sales},${s.net_profit},${s.net_margin ?? 0}`).join("\n");
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const rows = snapshots.map((s:any) => `${s.month},${s.total_sales},${s.net_profit},${s.net_margin ?? 0}`).join("\n");
                         const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
                         const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "VELA_월별매출.csv"; a.click();
                       }} className="text-xs text-slate-400 font-semibold hover:text-slate-600">CSV ↓</button>

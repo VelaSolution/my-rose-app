@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/newsletter
  * 월간 리포트 이메일 발송 (관리자 전용)
