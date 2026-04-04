@@ -14,18 +14,46 @@ function ResetForm() {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
-  // Supabase는 리셋 링크 클릭 시 자동으로 세션을 설정함
-  // URL에 access_token이 hash로 올 수도 있음
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    // hash fragment에서 토큰 처리 (Supabase 기본 동작)
+
+    // 방법 1: URL hash에서 토큰 추출 (Supabase PKCE flow)
     const hash = window.location.hash;
-    if (hash.includes("access_token")) {
-      // Supabase 클라이언트가 자동으로 세션을 처리함
+    if (hash) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+          .then(() => setReady(true));
+        return;
+      }
     }
+
+    // 방법 2: URL query에서 code 추출 (Supabase 최신 flow)
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code)
+        .then(() => setReady(true))
+        .catch(() => setError("세션 만료. 비밀번호 재설정 이메일을 다시 요청해주세요."));
+      return;
+    }
+
+    // 방법 3: 이미 세션이 있는 경우
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setReady(true);
+      else setError("세션이 없습니다. 비밀번호 재설정 이메일을 다시 요청해주세요.");
+    });
   }, []);
 
   const handleReset = async () => {
+    if (!ready) {
+      setError("세션이 준비되지 않았습니다. 페이지를 새로고침하거나 재설정 이메일을 다시 요청해주세요.");
+      return;
+    }
     if (!password || password.length < 6) {
       setError("비밀번호는 6자 이상이어야 합니다.");
       return;
