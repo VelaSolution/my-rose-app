@@ -30,6 +30,9 @@ const TOOL_SECTIONS = [
     tools: [
       { href: "/tools/sns-content", emoji: "📱", label: "SNS 콘텐츠 생성기" },
       { href: "/tools/review-reply", emoji: "💬", label: "리뷰 답변 생성기" },
+      { href: "/tools/delivery-menu", emoji: "🛵", label: "배달앱 메뉴 최적화" },
+      { href: "/tools/promo-generator", emoji: "📣", label: "프로모션 문구 생성기" },
+      { href: "/tools/naver-place", emoji: "🟢", label: "네이버 플레이스 최적화" },
     ],
   },
 ];
