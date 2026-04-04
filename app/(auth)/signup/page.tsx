@@ -124,60 +124,28 @@ function SignUpForm() {
                 <p className="text-sm text-slate-400">VELA 계정을 만들어보세요</p>
               </div>
 
-              {/* 소셜 로그인 */}
-              <div className="space-y-2">
-                {[
-                  { provider: "kakao", label: "카카오로 시작하기", bg: "#FEE500", color: "#191919", emoji: "💛" },
-                ].map(({ provider, label, bg, color, emoji }) => (
-                  <button key={provider}
-                    onClick={async () => {
-                      const supabase = createSupabaseBrowserClient();
-                      await supabase.auth.signInWithOAuth({
-                        provider: provider as "kakao",
-                        options: { redirectTo: `${window.location.origin}/auth/callback?next=/` },
-                      });
-                    }}
-                    className="w-full flex items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:brightness-95"
-                    style={{ background: bg, color }}
-                  >
-                    <span className="font-black">{emoji}</span>
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
-                <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-slate-400">또는 이메일로</span></div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">이름</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="홍길동"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">이메일</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">비밀번호</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="8자 이상"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">비밀번호 확인</label>
-                <input type="password" value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)} placeholder="다시 입력"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
-              </div>
+              {/* 카카오 ���입 */}
+              <button
+                onClick={async () => {
+                  const supabase = createSupabaseBrowserClient();
+                  await supabase.auth.signInWithOAuth({
+                    provider: "kakao" as "kakao",
+                    options: { redirectTo: `${window.location.origin}/auth/callback?next=/?signup=success` },
+                  });
+                }}
+                className="w-full flex items-center justify-center gap-3 rounded-2xl bg-[#FEE500] px-4 py-4 text-base font-bold text-[#191919] transition hover:brightness-95"
+              >
+                <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 1.5C4.86 1.5 1.5 4.19 1.5 7.5c0 2.12 1.29 3.98 3.24 5.1l-.83 3.07c-.07.27.22.49.46.34L8.1 13.9c.29.04.59.06.9.06 4.14 0 7.5-2.69 7.5-6S13.14 1.5 9 1.5z" fill="#191919" />
+                </svg>
+                카카오로 3초 만에 시작하기
+              </button>
 
               {error && <p className="text-xs text-red-500 bg-red-50 rounded-xl px-4 py-3">{error}</p>}
 
-              <button onClick={() => { if (validateStep1()) setStep(2); }}
-                className="w-full rounded-2xl bg-slate-900 py-3.5 text-sm font-semibold text-white hover:bg-slate-700 transition">
-                다음 →
-              </button>
+              <p className="text-center text-xs text-slate-400">
+                카카오 계정으로 간편하게 가입됩니다.<br />별도 비밀번호 설정이 필요 없습니다.
+              </p>
             </div>
           )}
 
