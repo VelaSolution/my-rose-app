@@ -6,15 +6,25 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { User } from "@supabase/supabase-js";
 
 const TOOLS = [
+  // 경영 분석
   { icon:"🧮", label:"메뉴별 원가 계산기", desc:"원가율·건당 순익 자동 계산",       href:"/tools/menu-cost" },
   { icon:"👥", label:"인건비 스케줄러",     desc:"주간·월간 인건비 예측",             href:"/tools/labor" },
   { icon:"🧾", label:"세금 계산기",         desc:"부가세·소득세 예상액 산출",         href:"/tools/tax" },
   { icon:"📄", label:"손익계산서 PDF",      desc:"월별 P&L 리포트 PDF 출력",         href:"/tools/pl-report" },
-  { icon:"✅", label:"창업 체크리스트",     desc:"인허가·준비물 단계별 가이드",       href:"/tools/startup-checklist" },
+  { icon:"📊", label:"경쟁 매장 비교",      desc:"업계 평균 대비 내 매장 분석",       href:"/benchmark" },
+  // AI 도구
   { icon:"📱", label:"SNS 콘텐츠 생성기",  desc:"인스타 캡션 AI 자동 생성",         href:"/tools/sns-content" },
   { icon:"💬", label:"리뷰 답변 생성기",    desc:"AI 맞춤 답변 초안 작성",           href:"/tools/review-reply" },
   { icon:"🗺️", label:"상권 분석 도우미",   desc:"AI 상권 적합도 평가 리포트",       href:"/tools/area-analysis" },
-  { icon:"🎮", label:"경영 시뮬레이션 게임", desc:"90일 가상 매장 운영 체험",      href:"/game" },
+  { icon:"🛵", label:"배달앱 메뉴 최적화",  desc:"배민·쿠팡이츠 메뉴 설명 AI 생성",  href:"/tools/delivery-menu" },
+  { icon:"🎉", label:"프로모션 문구 생성기", desc:"전단지·SNS·문자 문구 AI 생성",    href:"/tools/promo-generator" },
+  // 마케팅·운영
+  { icon:"🔍", label:"네이버 플레이스 최적화", desc:"검색 노출 15가지 체크리스트",    href:"/tools/naver-place" },
+  { icon:"📅", label:"시즌 마케팅 캘린더",  desc:"월별 이벤트 + 마케팅 전략",        href:"/tools/marketing-calendar" },
+  { icon:"📋", label:"매장 일일 체크리스트", desc:"오픈·마감 체크 (날짜별 저장)",     href:"/checklist" },
+  { icon:"🥬", label:"식재료 가격 트래커",  desc:"식재료 가격 기록·변동 추이",       href:"/ingredient-tracker" },
+  { icon:"✅", label:"창업 체크리스트",     desc:"인허가·준비물 단계별 가이드",       href:"/tools/startup-checklist" },
+  { icon:"🎮", label:"경영 시뮬레이션 게임", desc:"90일 가상 매장 운영 체험",        href:"/game" },
 ] as const;
 
 export default function NavBar() {
