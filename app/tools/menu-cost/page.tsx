@@ -118,13 +118,11 @@ function MenuCard({
   onUpdate,
   onDelete,
   onSave,
-  industry,
 }: {
   item: MenuItem;
   onUpdate: (id: string, updated: Partial<MenuItem>) => void;
   onDelete: (id: string) => void;
   onSave: (item: MenuItem) => Promise<void>;
-  industry: string;
 }) {
   const [expanded, setExpanded] = useState(true);
   const [saving, setSaving] = useState<"idle" | "saving" | "done" | "error" | "noname" | "noprice">("idle");
@@ -565,30 +563,32 @@ export default function MenuCostPage() {
     };
   }
 
-  async function saveOneMenu(m: MenuItem) {
+  async function getAuthUser() {
     const supabase = createSupabaseBrowserClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       window.location.href = "/login?next=/tools/menu-cost";
-      throw new Error("로그인이 필요합니다.");
+      return null;
     }
-    const row = buildMenuRow(m, user.id);
-    const { error } = await supabase.from("menu_costs").insert(row);
+    return { supabase, user };
+  }
+
+  async function saveOneMenu(m: MenuItem) {
+    const auth = await getAuthUser();
+    if (!auth) throw new Error("로그인이 필요합니다.");
+    const row = buildMenuRow(m, auth.user.id);
+    const { error } = await auth.supabase.from("menu_costs").insert(row);
     if (error) throw error;
   }
 
   async function saveAllMenus() {
     setSaveStatus("saving");
-    const supabase = createSupabaseBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      window.location.href = "/login?next=/tools/menu-cost";
-      return;
-    }
+    const auth = await getAuthUser();
+    if (!auth) return;
 
     const toSave = menus
       .filter(m => num(m.price) > 0 && m.name.trim())
-      .map(m => buildMenuRow(m, user.id));
+      .map(m => buildMenuRow(m, auth.user.id));
 
     if (toSave.length === 0) {
       setSaveStatus("error");
@@ -596,7 +596,7 @@ export default function MenuCostPage() {
       return;
     }
 
-    const { error } = await supabase.from("menu_costs").insert(toSave);
+    const { error } = await auth.supabase.from("menu_costs").insert(toSave);
     if (error) {
       setSaveStatus("error");
     } else {
@@ -848,7 +848,6 @@ export default function MenuCostPage() {
                 onUpdate={updateMenu}
                 onDelete={deleteMenu}
                 onSave={saveOneMenu}
-                industry={industry}
               />
             ))}
           </div>

@@ -25,7 +25,6 @@ export default function AdminPage() {
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [signupChart, setSignupChart] = useState<any[]>([]);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
-  const [feedbackCount, setFeedbackCount] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -68,12 +67,7 @@ export default function AdminPage() {
 
       setRecentUsers(recentUsersData ?? []);
 
-      // 이벤트 피드백 조회
-      const { count: fbCount } = await supabase
-        .from("event_feedback")
-        .select("*", { count: "exact", head: true });
-      setFeedbackCount(fbCount ?? 0);
-
+      // 이벤트 피드백 조회 (단일 쿼리)
       const { data: fbData } = await supabase
         .from("event_feedback")
         .select("*")
@@ -115,7 +109,7 @@ export default function AdminPage() {
               { label: "오늘 시뮬레이션", value: stats.todaySimulations, unit: "회", emoji: "📈", color: "text-emerald-600" },
               { label: "저장된 메뉴", value: stats.totalMenuCosts, unit: "개", emoji: "🧮", color: "text-orange-600" },
               { label: "월별 스냅샷", value: stats.totalSnapshots, unit: "건", emoji: "📅", color: "text-purple-600" },
-              { label: "이벤트 피드백", value: feedbackCount, unit: "건", emoji: "📋", color: "text-pink-600" },
+              { label: "이벤트 피드백", value: feedbacks.length, unit: "건", emoji: "📋", color: "text-pink-600" },
             ].map(card => (
               <div key={card.label} className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 p-4">
                 <p className="text-xs text-slate-400 mb-2">{card.emoji} {card.label}</p>
@@ -165,8 +159,8 @@ export default function AdminPage() {
           {/* 이벤트 피드백 */}
           <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="font-extrabold text-slate-900">이벤트 피드백 ({feedbackCount}건)</h2>
-              {feedbackCount > 0 && (
+              <h2 className="font-extrabold text-slate-900">이벤트 피드백 ({feedbacks.length}건)</h2>
+              {feedbacks.length > 0 && (
                 <span className="text-xs text-slate-400">
                   평균 결제 의향: {(feedbacks.reduce((s, f) => s + (f.pay_intent || 0), 0) / feedbacks.length).toFixed(1)}점
                 </span>
