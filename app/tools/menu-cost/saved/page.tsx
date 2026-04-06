@@ -55,13 +55,7 @@ export default function MenuCostSavedPage() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      // cogs_rate, margin이 DB에 없을 수 있으므로 클라이언트에서 계산
-      const enriched = (data ?? []).map((m: any) => ({
-        ...m,
-        cogs_rate: m.cogs_rate ?? (m.sell_price > 0 ? (m.cost / m.sell_price) * 100 : 0),
-        margin: m.margin ?? (m.sell_price - m.cost),
-      }));
-      setMenus(enriched);
+      setMenus(data ?? []);
       setLoading(false);
     }
     load();

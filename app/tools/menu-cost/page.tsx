@@ -555,6 +555,7 @@ export default function MenuCostPage() {
   function buildMenuRow(m: MenuItem, userId: string) {
     const totalCost = m.ingredients.reduce((s, i) => s + (parseInt(i.cost) || 0), 0);
     const sellPrice = num(m.price);
+    const cogsRate = sellPrice > 0 ? (totalCost / sellPrice) * 100 : 0;
     return {
       user_id: userId,
       name: m.name,
@@ -562,6 +563,9 @@ export default function MenuCostPage() {
       industry,
       sell_price: sellPrice,
       cost: totalCost,
+      cogs_rate: parseFloat(cogsRate.toFixed(2)),
+      margin: sellPrice - totalCost,
+      ingredients: m.ingredients.map(i => ({ name: i.name, amount: "", cost: parseInt(i.cost) || 0 })),
       memo: "",
     };
   }
