@@ -8,6 +8,7 @@ import { PLANS } from "@/lib/plans";
 import MonthlyReminder from "@/components/MonthlyReminder";
 import PromoModal from "@/components/PromoModal";
 import EventBanner from "@/components/EventBanner";
+import EventPopup from "@/components/EventPopup";
 import { useTranslation } from "@/lib/i18n";
 
 function useInView() {
@@ -318,6 +319,13 @@ function LandingContent() {
           </div>
         </div>
       </section>
+
+      {/* 이벤트 배너 — 랜딩 */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
+        <FadeIn>
+          <EventBanner />
+        </FadeIn>
+      </div>
 
       {/* FEATURES */}
       <section id="features" className="features-bg">
@@ -903,7 +911,7 @@ export default function HomePage() {
   const hasHash = typeof window !== "undefined" && window.location.hash.length > 0;
   return (
     <>
-      <PromoModal />
+      <EventPopup />
       {hasHash ? <LandingContent /> : loggedIn ? <MemberHome /> : <LandingContent />}
     </>
   );

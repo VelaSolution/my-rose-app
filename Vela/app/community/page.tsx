@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fmt, pct, INDUSTRY_BENCHMARK } from "@/lib/vela";
+import EventBanner from "@/components/EventBanner";
 
 // ─── 타입 ──────────────────────────────────────────────────────
 type Tab = "feed" | "board" | "benchmark";
@@ -77,7 +78,7 @@ function FeedTab({ userId, isAdmin }: { userId: string | null; isAdmin: boolean 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     const sb = createSupabaseBrowserClient();
-    let q = sb.from("simulation_shares").select("id,nickname,industry,title,net_profit,total_sales,likes,created_at").order(sort, { ascending: false }).limit(30);
+    let q = sb.from("simulation_shares").select("*").order(sort, { ascending: false }).limit(30);
     if (filter !== "all") q = q.eq("industry", filter);
     const { data } = await q;
     setPosts(data ?? []);
@@ -260,7 +261,7 @@ function BoardTab({ userId, isAdmin }: { userId: string | null; isAdmin: boolean
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     const sb = createSupabaseBrowserClient();
-    let q = sb.from("posts").select("id,title,content,category,author,user_id,created_at,comment_count").order("created_at", { ascending: false }).limit(50);
+    let q = sb.from("posts").select("*").order("created_at", { ascending: false }).limit(50);
     if (category !== "all") q = q.eq("category", category);
     const { data } = await q;
     setPosts(data ?? []);
@@ -467,7 +468,7 @@ function AnonymousTab({ userId, isAdmin }: { userId: string | null; isAdmin: boo
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     const sb = createSupabaseBrowserClient();
-    const { data } = await sb.from("anonymous_posts").select("id,title,content,industry,user_id,created_at,comment_count").order("created_at", { ascending: false }).limit(50);
+    const { data } = await sb.from("anonymous_posts").select("*").order("created_at", { ascending: false }).limit(50);
     setPosts(data ?? []);
     setLoading(false);
   }, []);
@@ -780,6 +781,11 @@ export default function CommunityPage() {
       
       <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-8">
         <div className="mx-auto max-w-4xl">
+
+          {/* 이벤트 배너 */}
+          <div className="mb-6">
+            <EventBanner />
+          </div>
 
           {/* 헤더 */}
           <div className="mb-8">

@@ -25,7 +25,7 @@ const TOOLS = [
 
 type Snapshot   = { id:string; month:string; industry:string; total_sales:number; net_profit:number; cogs:number; };
 type SimHistory = { id:string; label:string; created_at:string; result:{totalSales:number;netProfit:number;netMargin:number}; form:{industry:string}; };
-type MenuCost   = { id:string; name:string; cost_rate:number; margin:number; price:number; };
+type MenuCost   = { id:string; name:string; sell_price:number; cost:number; cogs_rate:number; margin:number; };
 type FeedPost   = { id:string; nickname:string; industry:string; title:string; net_profit:number; total_sales:number; };
 
 export default function DashboardHome() {
@@ -51,12 +51,16 @@ export default function DashboardHome() {
       const [{ data: snaps }, { data: simData }, { data: menuData }, { data: posts }] = await Promise.all([
         sb.from("monthly_snapshots").select("id,month,industry,total_sales,net_profit,cogs").eq("user_id", user.id).order("month", { ascending: false }).limit(6),
         sb.from("simulation_history").select("id,label,created_at,result,form").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
-        sb.from("menu_costs").select("id,name,cost_rate,margin,price").eq("user_id", user.id).order("cost_rate", { ascending: false }).limit(5),
+        sb.from("menu_costs").select("id,name,sell_price,cost").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
         sb.from("simulation_shares").select("id,nickname,industry,title,net_profit,total_sales").order("created_at", { ascending: false }).limit(4),
       ]);
       setSnapshots((snaps ?? []) as Snapshot[]);
       setSims((simData ?? []) as SimHistory[]);
-      setMenus((menuData ?? []) as MenuCost[]);
+      setMenus((menuData ?? []).map((m: any) => ({
+        ...m,
+        cogs_rate: m.sell_price > 0 ? (m.cost / m.sell_price) * 100 : 0,
+        margin: (m.sell_price || 0) - (m.cost || 0),
+      })) as MenuCost[]);
       setFeed((posts ?? []) as FeedPost[]);
       setLoading(false);
     });
@@ -167,7 +171,7 @@ export default function DashboardHome() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "좋은 아침이에요" : hour < 18 ? "안녕하세요" : "오늘도 수고하셨어요";
   const latestSnap = snapshots[0];
-  const avgCostRate = menus.length > 0 ? menus.reduce((a, m) => a + (m.cost_rate || 0), 0) / menus.length : 0;
+  const avgCostRate = menus.length > 0 ? menus.reduce((a, m) => a + (m.cogs_rate || 0), 0) / menus.length : 0;
   const totalRevenue = snapshots.reduce((a, s) => a + s.total_sales, 0);
   const maxSales = Math.max(...[...snapshots].reverse().map(s => s.total_sales), 1);
 
@@ -557,11 +561,11 @@ export default function DashboardHome() {
                       <div key={m.id} className="flex items-center gap-2">
                         <span className="text-sm text-slate-700 truncate flex-1 min-w-0">{m.name}</span>
                         <div className="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden flex-shrink-0">
-                          <div className={`h-full rounded-full ${m.cost_rate > 40 ? "bg-red-400" : m.cost_rate > 30 ? "bg-amber-400" : "bg-emerald-400"}`}
-                            style={{ width:`${Math.min(m.cost_rate * 2, 100)}%` }} />
+                          <div className={`h-full rounded-full ${m.cogs_rate > 40 ? "bg-red-400" : m.cogs_rate > 30 ? "bg-amber-400" : "bg-emerald-400"}`}
+                            style={{ width:`${Math.min(m.cogs_rate * 2, 100)}%` }} />
                         </div>
-                        <span className={`text-xs font-bold w-9 text-right flex-shrink-0 ${m.cost_rate > 40 ? "text-red-500" : "text-emerald-600"}`}>
-                          {m.cost_rate?.toFixed(0)}%
+                        <span className={`text-xs font-bold w-9 text-right flex-shrink-0 ${m.cogs_rate > 40 ? "text-red-500" : "text-emerald-600"}`}>
+                          {m.cogs_rate?.toFixed(0)}%
                         </span>
                       </div>
                     ))}

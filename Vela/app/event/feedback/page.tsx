@@ -23,6 +23,7 @@ export default function EventFeedbackPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [simUsed, setSimUsed] = useState(false);
 
   // 폼 상태
   const [nickname, setNickname] = useState("");
@@ -38,11 +39,22 @@ export default function EventFeedbackPage() {
   const [testimonial, setTestimonial] = useState("");
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }: any) => {
-      setUser(data.user ?? null);
+    async function init() {
+      const supabase = createSupabaseBrowserClient();
+      const { data } = await supabase.auth.getUser();
+      const u = data.user ?? null;
+      setUser(u as any);
+
+      if (u) {
+        const { count } = await supabase
+          .from("simulation_history")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", u.id);
+        setSimUsed((count ?? 0) > 0);
+      }
       setLoading(false);
-    });
+    }
+    init();
   }, []);
 
   function toggleFeature(f: string) {
@@ -150,6 +162,15 @@ export default function EventFeedbackPage() {
               <p>로그인 후 참여하시면 스탠다드 플랜이 자동으로 활성화됩니다.</p>
               <Link href="/login" className="fb-btn fb-btn-blue" style={{ display: "inline-block", marginTop: 12 }}>
                 로그인하기
+              </Link>
+            </div>
+          )}
+
+          {user && !simUsed && (
+            <div className="fb-login-notice" style={{ background: "#FFF3E0", borderColor: "#FFB74D" }}>
+              <p>수익 시뮬레이터를 <b>1회 이상 사용</b>해야 참여할 수 있습니다.</p>
+              <Link href="/simulator" className="fb-btn fb-btn-blue" style={{ display: "inline-block", marginTop: 12 }}>
+                시뮬레이터 사용하러 가기
               </Link>
             </div>
           )}
@@ -263,8 +284,8 @@ export default function EventFeedbackPage() {
                 ))}
               </div>
               <div className="fb-scale-labels">
-                <span>전혀 없다</span>
-                <span>바로 결제하겠다</span>
+                <span>1: 전혀 없다</span>
+                <span>5: 바로 결제하겠다</span>
               </div>
             </div>
 
@@ -336,10 +357,10 @@ export default function EventFeedbackPage() {
             <button
               type="submit"
               className="fb-submit"
-              disabled={submitting}
-              style={{ opacity: submitting ? 0.7 : 1 }}
+              disabled={submitting || (!!user && !simUsed)}
+              style={{ opacity: (submitting || (!!user && !simUsed)) ? 0.5 : 1 }}
             >
-              {submitting ? "제출 중..." : "피드백 제출하고 스탠다드 체험 받기"}
+              {!user ? "피드백 제출하기" : !simUsed ? "시뮬레이터 사용 후 제출 가능" : submitting ? "제출 중..." : "피드백 제출하고 스탠다드 체험 받기"}
             </button>
           </form>
         </div>
@@ -388,7 +409,7 @@ const baseStyle = `
   .fb-scale-btn{width:48px;height:48px;border:1.5px solid #E5E8EB;border-radius:12px;background:#fff;font-size:18px;font-weight:700;color:#6B7684;cursor:pointer;font-family:'Pretendard',sans-serif;transition:all .15s}
   .fb-scale-btn:hover{border-color:#3182F6;color:#3182F6}
   .fb-scale-btn.active{background:#3182F6;color:#fff;border-color:#3182F6}
-  .fb-scale-labels{display:flex;justify-content:space-between;font-size:12px;color:#9EA6B3;margin-top:4px}
+  .fb-scale-labels{display:flex;justify-content:space-between;font-size:12px;color:#9EA6B3;margin-top:4px;padding:0 2px}
 
   .fb-divider{display:flex;align-items:center;gap:16px;margin:8px 0;color:#B0B8C1;font-size:13px;font-weight:500}
   .fb-divider::before,.fb-divider::after{content:'';flex:1;height:1px;background:#E5E8EB}

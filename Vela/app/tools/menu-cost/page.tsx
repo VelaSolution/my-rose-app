@@ -117,13 +117,41 @@ function MenuCard({
   item,
   onUpdate,
   onDelete,
+  onSave,
+  industry,
 }: {
   item: MenuItem;
   onUpdate: (id: string, updated: Partial<MenuItem>) => void;
   onDelete: (id: string) => void;
+  onSave: (item: MenuItem) => Promise<void>;
+  industry: string;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const [saving, setSaving] = useState<string>("idle");
   const { price, costTotal, profit, costRatio, profitRatio } = calcMenu(item);
+
+  async function handleSave() {
+    if (!item.name.trim()) {
+      setSaving("noname");
+      setTimeout(() => setSaving("idle"), 2000);
+      return;
+    }
+    if (price <= 0) {
+      setSaving("noprice");
+      setTimeout(() => setSaving("idle"), 2000);
+      return;
+    }
+    setSaving("saving");
+    try {
+      await onSave(item);
+      setSaving("done");
+    } catch (err: any) {
+      const msg = err?.message || err?.code || "알 수 없는 오류";
+      console.error("Menu save error:", err);
+      setSaving("err:" + msg);
+    }
+    setTimeout(() => setSaving("idle"), 4000);
+  }
 
   const addIngredient = () => {
     onUpdate(item.id, {
@@ -200,6 +228,24 @@ function MenuCard({
         </div>
 
         <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+          <button
+            onClick={handleSave}
+            disabled={saving === "saving"}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              saving === "done" ? "bg-emerald-100 text-emerald-600" :
+              saving.startsWith("err:") || saving === "noname" || saving === "noprice" ? "bg-red-100 text-red-500" :
+              saving === "saving" ? "bg-slate-100 text-slate-400" :
+              price > 0 && item.name.trim() ? "bg-blue-50 text-blue-500 hover:bg-blue-100" : "bg-slate-50 text-slate-300"
+            }`}
+            title={saving.startsWith("err:") ? saving.slice(4) : price <= 0 ? "판매가를 입력해주세요" : "이 메뉴 저장"}
+          >
+            {saving === "saving" ? "저장 중..." :
+             saving === "done" ? "✓ 저장됨" :
+             saving === "noname" ? "메뉴명 입력" :
+             saving === "noprice" ? "판매가 입력" :
+             saving.startsWith("err:") ? saving.slice(4, 30) :
+             "💾 저장"}
+          </button>
           <button
             onClick={() => setExpanded((v) => !v)}
             className="p-2 rounded-xl hover:bg-slate-100 transition text-slate-400"
@@ -506,6 +552,31 @@ export default function MenuCostPage() {
   const [filterCategory, setFilterCategory] = useState("전체");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
 
+  function buildMenuRow(m: MenuItem, userId: string) {
+    const totalCost = m.ingredients.reduce((s, i) => s + (parseInt(i.cost) || 0), 0);
+    const sellPrice = num(m.price);
+    return {
+      user_id: userId,
+      name: m.name,
+      category: m.category,
+      industry,
+      sell_price: sellPrice,
+      cost: totalCost,
+    };
+  }
+
+  async function saveOneMenu(m: MenuItem) {
+    const supabase = createSupabaseBrowserClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = "/login?next=/tools/menu-cost";
+      throw new Error("로그인이 필요합니다.");
+    }
+    const row = buildMenuRow(m, user.id);
+    const { error } = await supabase.from("menu_costs").upsert(row);
+    if (error) throw error;
+  }
+
   async function saveAllMenus() {
     setSaveStatus("saving");
     const supabase = createSupabaseBrowserClient();
@@ -516,24 +587,8 @@ export default function MenuCostPage() {
     }
 
     const toSave = menus
-      .filter(m => num(m.price) > 0)
-      .map(m => {
-        const totalCost = m.ingredients.reduce((s, i) => s + (parseInt(i.cost) || 0), 0);
-        const sellPrice = num(m.price);
-        const cogsRate = sellPrice > 0 ? (totalCost / sellPrice) * 100 : 0;
-        return {
-          user_id: user.id,
-          name: m.name,
-          category: m.category,
-          industry,
-          sell_price: sellPrice,
-          cost: totalCost,
-          cogs_rate: parseFloat(cogsRate.toFixed(2)),
-          margin: sellPrice - totalCost,
-          ingredients: m.ingredients.map(i => ({ name: i.name, cost: parseInt(i.cost) || 0 })),
-          memo: "",
-        };
-      });
+      .filter(m => num(m.price) > 0 && m.name.trim())
+      .map(m => buildMenuRow(m, user.id));
 
     if (toSave.length === 0) {
       setSaveStatus("error");
@@ -639,9 +694,9 @@ export default function MenuCostPage() {
                   "bg-slate-900 text-white hover:bg-slate-700"
                 }`}>
                 {saveStatus === "saving" ? "저장 중..." :
-                 saveStatus === "done" ? "✓ 저장 완료" :
-                 saveStatus === "error" ? "판매가 입력 필요" :
-                 "💾 현황 저장"}
+                 saveStatus === "done" ? "✓ 전체 저장 완료" :
+                 saveStatus === "error" ? "저장할 메뉴 없음" :
+                 "💾 전체 저장"}
               </button>
             </div>
           </div>
@@ -792,6 +847,8 @@ export default function MenuCostPage() {
                 item={item}
                 onUpdate={updateMenu}
                 onDelete={deleteMenu}
+                onSave={saveOneMenu}
+                industry={industry}
               />
             ))}
           </div>
