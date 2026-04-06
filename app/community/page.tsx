@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fmt, pct, INDUSTRY_BENCHMARK } from "@/lib/vela";
+import EventBanner from "@/components/EventBanner";
 
 // ─── 타입 ──────────────────────────────────────────────────────
 type Tab = "feed" | "board" | "benchmark";
@@ -780,6 +781,11 @@ export default function CommunityPage() {
       
       <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-8">
         <div className="mx-auto max-w-4xl">
+
+          {/* 이벤트 배너 */}
+          <div className="mb-6">
+            <EventBanner />
+          </div>
 
           {/* 헤더 */}
           <div className="mb-8">
