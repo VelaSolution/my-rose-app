@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import { useSimulatorData } from "@/lib/useSimulatorData";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 const TABS = ["개인 vs 법인", "설립 절차", "필요 서류", "비용 시뮬레이터"] as const;
 type Tab = (typeof TABS)[number];
@@ -67,22 +70,20 @@ export default function IncorporationPage() {
   const [tab, setTab] = useState<Tab>("개인 vs 법인");
   const [annualRevenue, setAnnualRevenue] = useState(0);
   const [annualProfit, setAnnualProfit] = useState(0);
-  const [ceoSalary, setCeoSalary] = useState(3600); // 만원
-  const [checks, setChecks] = useState<Record<string, boolean>>({});
-  const [docChecks, setDocChecks] = useState<Record<string, boolean>>({});
-  const [capitalAmount, setCapitalAmount] = useState(1000); // 만원
+  const [ceoSalary, setCeoSalary] = useState(3600);
+  const { data: incData, update: setIncData, status, userId } = useCloudSync<{ checks: Record<string, boolean>; docChecks: Record<string, boolean> }>(KEY, { checks: {}, docChecks: {} });
+  const checks = incData.checks;
+  const docChecks = incData.docChecks;
+  const setChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setIncData({ ...incData, checks: typeof fn === "function" ? fn(incData.checks) : fn });
+  const setDocChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setIncData({ ...incData, docChecks: typeof fn === "function" ? fn(incData.docChecks) : fn });
+  const [capitalAmount, setCapitalAmount] = useState(1000);
+  const simData = useSimulatorData();
 
-  useEffect(() => {
-    try {
-      const s = localStorage.getItem(KEY);
-      if (s) {
-        const d = JSON.parse(s);
-        if (d.checks) setChecks(d.checks);
-        if (d.docChecks) setDocChecks(d.docChecks);
-      }
-    } catch { /* noop */ }
-  }, []);
-  useEffect(() => { localStorage.setItem(KEY, JSON.stringify({ checks, docChecks })); }, [checks, docChecks]);
+  const applySimData = () => {
+    if (!simData) return;
+    setAnnualRevenue(Math.round(simData.totalSales * 12 / 10000));
+    setAnnualProfit(Math.round(simData.profit * 12 / 10000));
+  };
 
   const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-blue-400 focus:bg-white outline-none transition";
   const cardCls = "bg-white ring-1 ring-slate-200 rounded-3xl p-6 mb-4";
@@ -136,7 +137,15 @@ export default function IncorporationPage() {
               <span>🏢</span> 법인 설립 가이드
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">법인 설립 가이드</h1>
-            <p className="text-slate-500 text-sm">개인 vs 법인 비교부터 설립 절차, 비용까지 한 번에 확인하세요.</p>
+            <div className="flex items-center gap-2">
+              <p className="text-slate-500 text-sm">개인 vs 법인 비교부터 설립 절차, 비용까지 한 번에 확인하세요.</p>
+              <CloudSyncBadge status={status} userId={userId} />
+            </div>
+            {simData && (
+              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
+                🔗 시뮬레이터 데이터 불러오기 (연매출 {Math.round(simData.totalSales * 12 / 10000)}만원)
+              </button>
+            )}
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">

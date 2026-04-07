@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import { useSimulatorData } from "@/lib/useSimulatorData";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 const KEY = "vela-financial-sim";
 const fmt = (n: number) => n.toLocaleString("ko-KR");
@@ -45,14 +48,23 @@ function simulate(inputs: Inputs, growthOverride?: number) {
 }
 
 export default function FinancialSimPage() {
-  const [inputs, setInputs] = useState<Inputs>(defaults);
+  const { data: inputs, update: setInputs, status, userId } = useCloudSync<Inputs>(KEY, defaults);
+  const simData = useSimulatorData();
 
-  useEffect(() => {
-    try { const s = localStorage.getItem(KEY); if (s) setInputs(JSON.parse(s)); } catch { /* noop */ }
-  }, []);
-  useEffect(() => { localStorage.setItem(KEY, JSON.stringify(inputs)); }, [inputs]);
+  const up = <K extends keyof Inputs>(k: K, v: number) => setInputs({ ...inputs, [k]: v });
 
-  const up = <K extends keyof Inputs>(k: K, v: number) => setInputs(p => ({ ...p, [k]: v }));
+  const applySimData = () => {
+    if (!simData) return;
+    const monthly = Math.round(simData.totalSales / 10000);
+    const fixedCost = Math.round((simData.rent + simData.totalSales * simData.laborRatio / 100) / 10000);
+    setInputs({
+      ...inputs,
+      monthlyFixed: fixedCost,
+      variableRate: simData.cogsRatio,
+      firstRevenue: monthly,
+      targetRevenue: monthly,
+    });
+  };
 
   const result = useMemo(() => simulate(inputs), [inputs]);
   const scenarios = useMemo(() => ({
@@ -79,7 +91,15 @@ export default function FinancialSimPage() {
               <span>📈</span> 재무 시뮬레이션
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">재무 시뮬레이션</h1>
-            <p className="text-slate-500 text-sm">런웨이, 손익분기점, 현금 흐름을 시뮬레이션합니다.</p>
+            <div className="flex items-center gap-2">
+              <p className="text-slate-500 text-sm">런웨이, 손익분기점, 현금 흐름을 시뮬레이션합니다.</p>
+              <CloudSyncBadge status={status} userId={userId} />
+            </div>
+            {simData && (
+              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
+                🔗 시뮬레이터 데이터 불러오기 (월매출 {Math.round(simData.totalSales / 10000)}만원)
+              </button>
+            )}
           </div>
 
           {/* 입력 */}

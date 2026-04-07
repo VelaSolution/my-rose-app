@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import { useSimulatorData } from "@/lib/useSimulatorData";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 const TABS = ["사업 개요", "시장 분석", "메뉴 전략", "재무 계획", "마케팅 전략", "실행 일정"] as const;
 type Tab = (typeof TABS)[number];
@@ -43,15 +46,24 @@ const fmt = (n: number) => n.toLocaleString("ko-KR");
 
 export default function BusinessPlanPage() {
   const [tab, setTab] = useState<Tab>("사업 개요");
-  const [bp, setBp] = useState<BPlan>(empty);
+  const { data: bp, update: setBpCloud, status, userId } = useCloudSync<BPlan>(KEY, empty);
   const [preview, setPreview] = useState(false);
+  const simData = useSimulatorData();
 
-  useEffect(() => {
-    try { const s = localStorage.getItem(KEY); if (s) setBp(JSON.parse(s)); } catch { /* noop */ }
-  }, []);
-  useEffect(() => { localStorage.setItem(KEY, JSON.stringify(bp)); }, [bp]);
+  const up = <K extends keyof BPlan>(k: K, v: BPlan[K]) => setBpCloud({ ...bp, [k]: v });
 
-  const up = <K extends keyof BPlan>(k: K, v: BPlan[K]) => setBp(p => ({ ...p, [k]: v }));
+  const applySimData = () => {
+    if (!simData) return;
+    const industryMap: Record<string, string> = { cafe: "cafe", restaurant: "restaurant", bar: "bar", finedining: "finedining", gogi: "gogi" };
+    setBpCloud({
+      ...bp,
+      industry: industryMap[simData.industry] ?? bp.industry,
+      initInvest: 0,
+      monthlyFixed: Math.round(simData.rent + simData.totalSales * simData.laborRatio / 100),
+      variableRate: simData.cogsRatio,
+      targetRevenue: Math.round(simData.totalSales / 10000),
+    });
+  };
 
   const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-blue-400 focus:bg-white outline-none transition";
   const cardCls = "bg-white ring-1 ring-slate-200 rounded-3xl p-6 mb-4";
@@ -96,7 +108,15 @@ export default function BusinessPlanPage() {
               <span>📝</span> 사업계획서 도우미
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">사업계획서 작성 도우미</h1>
-            <p className="text-slate-500 text-sm">단계별로 작성하고 한 번에 미리보기 · 복사할 수 있습니다.</p>
+            <div className="flex items-center gap-2">
+              <p className="text-slate-500 text-sm">단계별로 작성하고 한 번에 미리보기 · 복사할 수 있습니다.</p>
+              <CloudSyncBadge status={status} userId={userId} />
+            </div>
+            {simData && (
+              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
+                🔗 시뮬레이터 데이터 불러오기
+              </button>
+            )}
           </div>
 
           {/* Tabs */}

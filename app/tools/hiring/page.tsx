@@ -4,6 +4,9 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import { useSimulatorData } from "@/lib/useSimulatorData";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 const TABS = ["급여 계산기", "근로계약서", "채용공고", "노동법 상식"] as const;
 type Tab = (typeof TABS)[number];
@@ -65,10 +68,13 @@ export default function HiringPage() {
   const [jobBenefits, setJobBenefits] = useState("식사 제공, 교통비 지원");
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  useEffect(() => {
-    try { const s = localStorage.getItem(KEY); if (s) { const d = JSON.parse(s); if (d.employees) setEmployees(d.employees); if (d.contract) setContract(d.contract); } } catch { /* noop */ }
-  }, []);
-  useEffect(() => { localStorage.setItem(KEY, JSON.stringify({ employees, contract })); }, [employees, contract]);
+  const { data: hiringData, update: setHiringData, status, userId } = useCloudSync<{ employees: Employee[]; contract: ContractForm }>(KEY, { employees: [{ ...defaultEmp }], contract: defaultContract });
+  const simData = useSimulatorData();
+
+  // Cloud sync로 employees/contract 동기화
+  useEffect(() => { setEmployees(hiringData.employees); setContract(hiringData.contract); }, [hiringData]);
+  const syncEmployees = (emps: Employee[]) => { setEmployees(emps); setHiringData({ ...hiringData, employees: emps }); };
+  const syncContract = (c: ContractForm) => { setContract(c); setHiringData({ ...hiringData, contract: c }); };
 
   const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-blue-400 focus:bg-white outline-none transition";
   const cardCls = "bg-white ring-1 ring-slate-200 rounded-3xl p-6 mb-4";
@@ -162,7 +168,10 @@ export default function HiringPage() {
               <span>👥</span> 인력 채용 도구
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">인력 채용 도구</h1>
-            <p className="text-slate-500 text-sm">급여 계산, 근로계약서, 채용공고까지 한 번에</p>
+            <div className="flex items-center gap-2">
+              <p className="text-slate-500 text-sm">급여 계산, 근로계약서, 채용공고까지 한 번에</p>
+              <CloudSyncBadge status={status} userId={userId} />
+            </div>
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">

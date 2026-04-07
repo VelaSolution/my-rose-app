@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import { useSimulatorData } from "@/lib/useSimulatorData";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 type Stage = "예비창업" | "1년미만" | "1~3년" | "3년이상";
 type Revenue = "없음" | "1억미만" | "1~3억" | "3~5억" | "5억이상";
@@ -74,16 +77,19 @@ const defaultProfile: Profile = {
 };
 
 export default function GovSupportPage() {
-  const [profile, setProfile] = useState<Profile>(defaultProfile);
+  const { data: profile, update: setProfileCloud, status, userId } = useCloudSync<Profile>(KEY, defaultProfile);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [tab, setTab] = useState<"result" | "calendar">("result");
+  const simData = useSimulatorData();
 
-  useEffect(() => {
-    try { const s = localStorage.getItem(KEY); if (s) setProfile(JSON.parse(s)); } catch { /* noop */ }
-  }, []);
-  useEffect(() => { localStorage.setItem(KEY, JSON.stringify(profile)); }, [profile]);
+  const up = <K extends keyof Profile>(k: K, v: Profile[K]) => setProfileCloud({ ...profile, [k]: v });
 
-  const up = <K extends keyof Profile>(k: K, v: Profile[K]) => setProfile(p => ({ ...p, [k]: v }));
+  const applySimData = () => {
+    if (!simData) return;
+    const rev = simData.totalSales * 12;
+    const revBucket = rev === 0 ? "없음" as const : rev < 10000_0000 ? "1억미만" as const : rev < 30000_0000 ? "1~3억" as const : rev < 50000_0000 ? "3~5억" as const : "5억이상" as const;
+    setProfileCloud({ ...profile, industry: simData.industry, revenue: revBucket });
+  };
 
   const matched = useMemo(() => {
     return PROGRAMS.map(prog => {
@@ -128,7 +134,15 @@ export default function GovSupportPage() {
               <span>🏛️</span> 정부 지원사업
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">정부 지원사업 매칭</h1>
-            <p className="text-slate-500 text-sm">내 조건에 맞는 정부 지원 프로그램을 찾아드립니다.</p>
+            <div className="flex items-center gap-2">
+              <p className="text-slate-500 text-sm">내 조건에 맞는 정부 지원 프로그램을 찾아드립니다.</p>
+              <CloudSyncBadge status={status} userId={userId} />
+            </div>
+            {simData && (
+              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
+                🔗 시뮬레이터 데이터 불러오기
+              </button>
+            )}
           </div>
 
           {/* 조건 입력 */}

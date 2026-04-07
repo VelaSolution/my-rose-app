@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import { useSimulatorData } from "@/lib/useSimulatorData";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 const TABS = ["밸류에이션", "IR 덱 가이드", "투자 유형", "미팅 체크리스트"] as const;
 type Tab = (typeof TABS)[number];
@@ -90,17 +93,20 @@ export default function FundraisingPage() {
   const [industry, setIndustry] = useState("cafe");
   const [tangibleAssets, setTangibleAssets] = useState(0);
   const [investAmount, setInvestAmount] = useState(0);
-  const [irChecks, setIrChecks] = useState<Record<string, boolean>>({});
-  const [mtChecks, setMtChecks] = useState<Record<string, boolean>>({});
+  const { data: frData, update: setFrData, status, userId } = useCloudSync<{ irChecks: Record<string, boolean>; mtChecks: Record<string, boolean> }>(KEY, { irChecks: {}, mtChecks: {} });
+  const irChecks = frData.irChecks;
+  const mtChecks = frData.mtChecks;
+  const setIrChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setFrData({ ...frData, irChecks: typeof fn === "function" ? fn(frData.irChecks) : fn });
+  const setMtChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setFrData({ ...frData, mtChecks: typeof fn === "function" ? fn(frData.mtChecks) : fn });
   const [expandedType, setExpandedType] = useState<string | null>(null);
+  const simData = useSimulatorData();
 
-  useEffect(() => {
-    try {
-      const s = localStorage.getItem(KEY);
-      if (s) { const d = JSON.parse(s); setIrChecks(d.irChecks ?? {}); setMtChecks(d.mtChecks ?? {}); }
-    } catch { /* noop */ }
-  }, []);
-  useEffect(() => { localStorage.setItem(KEY, JSON.stringify({ irChecks, mtChecks })); }, [irChecks, mtChecks]);
+  const applySimData = () => {
+    if (!simData) return;
+    setAnnualRev(Math.round(simData.totalSales * 12 / 10000));
+    setAnnualProfit(Math.round(simData.profit * 12 / 10000));
+    setIndustry(simData.industry);
+  };
 
   const multiples: Record<string, [number, number]> = { cafe: [1.5, 3], restaurant: [2, 4], bar: [1.5, 3], finedining: [2.5, 5], gogi: [2, 4] };
   const [mLow, mHigh] = multiples[industry] ?? [2, 4];
@@ -133,7 +139,15 @@ export default function FundraisingPage() {
               <span>💎</span> 투자 유치 도구
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">투자 유치 도구</h1>
-            <p className="text-slate-500 text-sm">밸류에이션, IR 덱, 투자자 미팅까지 한 번에 준비하세요.</p>
+            <div className="flex items-center gap-2">
+              <p className="text-slate-500 text-sm">밸류에이션, IR 덱, 투자자 미팅까지 한 번에 준비하세요.</p>
+              <CloudSyncBadge status={status} userId={userId} />
+            </div>
+            {simData && (
+              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
+                🔗 시뮬레이터 데이터 불러오기 (연매출 {Math.round(simData.totalSales * 12 / 10000)}만원)
+              </button>
+            )}
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">
