@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import ToolNav from "@/components/ToolNav";
 
 type ReviewResult = {
   overall: "positive" | "neutral" | "negative";
@@ -60,6 +61,8 @@ JSON 형식:
   const sentimentBg = { positive: "bg-emerald-50", neutral: "bg-slate-50", negative: "bg-red-50" };
 
   return (
+    <>
+    <ToolNav />
     <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
       <div className="mx-auto max-w-2xl">
         <Link href="/tools" className="text-sm text-slate-400 hover:text-slate-700 transition">← 도구 목록</Link>
@@ -139,5 +142,6 @@ JSON 형식:
         )}
       </div>
     </main>
+    </>
   );
 }

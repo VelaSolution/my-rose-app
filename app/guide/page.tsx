@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 
 const SECTIONS = [
   {
@@ -81,7 +80,6 @@ const TEMPLATES = [
 export default function GuidePage() {
   return (
     <>
-      <NavBar />
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
         <div className="mx-auto max-w-3xl">
           <div className="mt-6 mb-10">

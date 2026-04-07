@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 import { INDUSTRY_BENCHMARK, type IndustryKey } from "@/lib/vela";
 
@@ -97,11 +96,6 @@ export default function BenchmarkPage() {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
-        body{font-family:'Pretendard',-apple-system,sans-serif}
-      `}</style>
-      <NavBar />
 
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
         <div className="mx-auto max-w-2xl">

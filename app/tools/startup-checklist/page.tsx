@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
@@ -215,8 +214,6 @@ export default function StartupChecklistPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
-        body{font-family:'Pretendard',-apple-system,sans-serif}
         @media print {
           .no-print { display: none !important; }
           nav, aside { display: none !important; }
@@ -227,7 +224,6 @@ export default function StartupChecklistPage() {
           @page { margin: 15mm; size: A4; }
         }
       `}</style>
-      <NavBar />
       <ToolNav />
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">

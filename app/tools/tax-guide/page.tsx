@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
@@ -145,7 +144,6 @@ export default function TaxGuidePage() {
 
   return (
     <>
-      <NavBar />
       <ToolNav />
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
         <div className="mx-auto max-w-3xl">

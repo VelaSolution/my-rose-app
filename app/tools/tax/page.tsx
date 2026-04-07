@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 import SendToSimulator from "@/components/SendToSimulator";
@@ -142,11 +141,6 @@ export default function TaxPage() {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
-        body{font-family:'Pretendard',-apple-system,sans-serif}
-      `}</style>
-      <NavBar />
       <ToolNav />
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">

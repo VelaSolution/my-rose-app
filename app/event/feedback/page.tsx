@@ -370,9 +370,7 @@ export default function EventFeedbackPage() {
 }
 
 const baseStyle = `
-  @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Pretendard',-apple-system,sans-serif;background:#F9FAFB;color:#191F28;line-height:1.6}
 
   .fb-page{min-height:100vh;padding:120px 24px 80px}
   .fb-inner{max-width:640px;margin:0 auto}

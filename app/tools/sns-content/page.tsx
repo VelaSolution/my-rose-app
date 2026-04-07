@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
@@ -169,7 +168,6 @@ ${dataContext}
 
   return (
     <>
-      <NavBar />
       <ToolNav />
       <PlanGate>
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">

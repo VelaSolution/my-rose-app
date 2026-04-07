@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import NavBar from "@/components/NavBar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis,
@@ -87,7 +86,6 @@ export default function AdminPage() {
 
   return (
     <>
-      <NavBar />
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:px-8">
         <div className="mx-auto max-w-5xl space-y-6">
 

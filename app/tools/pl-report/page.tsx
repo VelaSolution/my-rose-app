@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import PlanGate from "@/components/PlanGate";
@@ -182,8 +181,6 @@ export default function PLReportPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
-        body{font-family:'Pretendard',-apple-system,sans-serif}
         @media print {
           .no-print{display:none!important}
           .print-page{background:white!important;padding:40px!important;max-width:100%!important}
@@ -191,7 +188,6 @@ export default function PLReportPage() {
           .print-shadow{box-shadow:none!important;border:1px solid #e5e7eb!important}
         }
       `}</style>
-      <div className="no-print"><NavBar /></div>
       <ToolNav />
       <PlanGate>
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">

@@ -1,7 +1,7 @@
 "use client";
 
-import NavBar from "@/components/NavBar";
 import Link from "next/link";
+import ToolNav from "@/components/ToolNav";
 
 const CALENDAR = [
   { month: 1, title: "신년 시즌", events: ["신년 이벤트 (1/1~1/3)", "신정 연휴 프로모션"], tips: ["연초 메뉴 리뉴얼 발표", "신년 한정 메뉴 출시", "직장인 연초 모임 단체 예약 유도"], color: "#3B82F6" },
@@ -24,7 +24,7 @@ export default function MarketingCalendarPage() {
 
   return (
     <>
-      <NavBar />
+      <ToolNav />
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3 mb-8 mt-4">

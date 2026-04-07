@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/vela";
+import ToolNav from "@/components/ToolNav";
 
 // 2026년 기준 (예상)
 const MIN_WAGE = 10620; // 최저시급
@@ -68,6 +69,8 @@ export default function LaborLawPage() {
   };
 
   return (
+    <>
+    <ToolNav />
     <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
       <div className="mx-auto max-w-3xl">
         <Link href="/tools" className="text-sm text-slate-400 hover:text-slate-700 transition">← 도구 목록</Link>
@@ -151,5 +154,6 @@ export default function LaborLawPage() {
         </button>
       </div>
     </main>
+    </>
   );
 }

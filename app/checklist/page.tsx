@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
 /* ── 체크리스트 항목 ── */
@@ -122,12 +121,9 @@ export default function ChecklistPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
-        body{font-family:'Pretendard',-apple-system,sans-serif}
         @keyframes confetti{0%{transform:scale(0.8) rotate(0deg);opacity:0}50%{transform:scale(1.1) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
         .celebrate-enter{animation:confetti 0.5s ease-out}
       `}</style>
-      <NavBar />
 
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
         <div className="mx-auto max-w-2xl">

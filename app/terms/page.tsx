@@ -4,9 +4,7 @@ export default function TermsPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Pretendard',-apple-system,sans-serif;background:#F9FAFB;color:#191F28;line-height:1.7}
         .terms-wrap{max-width:760px;margin:0 auto;padding:120px 24px 80px}
         .terms-back{display:inline-flex;align-items:center;gap:8px;color:#6B7684;font-size:14px;text-decoration:none;margin-bottom:40px;transition:color .15s}
         .terms-back:hover{color:#191F28}

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import { fmt } from "@/lib/vela";
 
 const STORAGE_KEY = "vela-ingredient-prices";
@@ -98,7 +97,6 @@ export default function IngredientTrackerPage() {
 
   return (
     <>
-      <NavBar />
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3 mb-8 mt-4">

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/vela";
+import ToolNav from "@/components/ToolNav";
 
 type PriceResult = {
   recommendedPrice: number;
@@ -57,6 +58,8 @@ JSON 형식: {"recommendedPrice":number,"minPrice":number,"maxPrice":number,"tar
   };
 
   return (
+    <>
+    <ToolNav />
     <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
       <div className="mx-auto max-w-2xl">
         <Link href="/tools" className="text-sm text-slate-400 hover:text-slate-700 transition">← 도구 목록</Link>
@@ -141,5 +144,6 @@ JSON 형식: {"recommendedPrice":number,"minPrice":number,"maxPrice":number,"tar
         )}
       </div>
     </main>
+    </>
   );
 }

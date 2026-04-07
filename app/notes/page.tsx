@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import NavBar from "@/components/NavBar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
 /* ── types ── */
@@ -332,7 +331,6 @@ export function NotesWidget() {
 export default function NotesPage() {
   return (
     <div className="min-h-screen bg-slate-50" style={{ fontFamily: "Pretendard, sans-serif" }}>
-      <NavBar />
       <main className="max-w-2xl mx-auto px-4 pt-24 pb-32">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">노트</h1>
         <p className="text-sm text-slate-500 mb-6">매장 운영에 필요한 기록을 한곳에서 관리하세요.</p>

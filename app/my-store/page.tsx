@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import NavBar from "@/components/NavBar";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, LineChart, Line, ReferenceLine,
@@ -137,7 +136,6 @@ export default function MyStorePage() {
 
   return (
     <>
-      <NavBar />
       <main className="min-h-screen bg-slate-50 px-4 pt-20 pb-12 md:px-8">
         <div className="mx-auto max-w-5xl space-y-6">
 

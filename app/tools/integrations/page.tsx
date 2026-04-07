@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import ToolNav from "@/components/ToolNav";
 
 const INTEGRATIONS = [
   {
@@ -65,6 +66,8 @@ export default function IntegrationsPage() {
   };
 
   return (
+    <>
+    <ToolNav />
     <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
       <div className="mx-auto max-w-2xl">
         <Link href="/tools" className="text-sm text-slate-400 hover:text-slate-700 transition">← 도구 목록</Link>
@@ -130,5 +133,6 @@ export default function IntegrationsPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }
