@@ -424,4 +424,29 @@ const baseStyle = `
   .fb-btn-blue:hover{background:#1B64DA}
   .fb-btn-gray{background:#F2F4F6;color:#333D4B}
   .fb-btn-gray:hover{background:#E5E8EB}
+
+  /* Dark mode */
+  html.dark .fb-page{background:#0F172A}
+  html.dark .fb-title{color:#F1F5F9}
+  html.dark .fb-subtitle{color:#94A3B8}
+  html.dark .fb-label{color:#E2E8F0}
+  html.dark .fb-hint{color:#64748B}
+  html.dark .fb-char-count{color:#64748B}
+  html.dark .fb-input,html.dark .fb-textarea{background:#1E293B;color:#E2E8F0;border-color:#334155}
+  html.dark .fb-input::placeholder,html.dark .fb-textarea::placeholder{color:#64748B}
+  html.dark .fb-input:focus,html.dark .fb-textarea:focus{border-color:#3B82F6}
+  html.dark .fb-chip{background:#1E293B;color:#94A3B8;border-color:#334155}
+  html.dark .fb-chip:hover{border-color:#3B82F6;color:#93C5FD}
+  html.dark .fb-chip.active{background:#3B82F6;color:#fff;border-color:#3B82F6}
+  html.dark .fb-scale-btn{background:#1E293B;color:#94A3B8;border-color:#334155}
+  html.dark .fb-scale-btn:hover{border-color:#3B82F6;color:#93C5FD}
+  html.dark .fb-scale-btn.active{background:#3B82F6;color:#fff;border-color:#3B82F6}
+  html.dark .fb-scale-labels{color:#64748B}
+  html.dark .fb-divider{color:#64748B}
+  html.dark .fb-divider::before,html.dark .fb-divider::after{background:#334155}
+  html.dark .fb-login-notice{background:rgba(234,179,8,0.1);border-color:#92400E;color:#FDE047}
+  html.dark .fb-error{background:rgba(239,68,68,0.1);border-color:#7F1D1D;color:#FCA5A5}
+  html.dark .fb-tag{background:rgba(59,130,246,0.15);color:#93C5FD}
+  html.dark .fb-btn-gray{background:#334155;color:#E2E8F0}
+  html.dark .fb-btn-gray:hover{background:#475569}
 `;
