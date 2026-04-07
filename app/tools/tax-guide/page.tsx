@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
-import { useSimulatorData } from "@/lib/useSimulatorData";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 const TABS = ["세금 캘린더", "부가세", "종합소득세", "4대보험", "절세 전략"] as const;
 type Tab = (typeof TABS)[number];
@@ -79,13 +80,16 @@ const TAX_TIPS = [
 export default function TaxGuidePage() {
   const [tab, setTab] = useState<Tab>("세금 캘린더");
   const [expanded, setExpanded] = useState<string | null>(null);
-  const simData = useSimulatorData();
 
-  const applySimData = () => {
-    if (!simData) return;
-    setVatSales(Math.round(simData.totalSales / 10000));
-    setVatPurchase(Math.round(simData.totalSales * simData.cogsRatio / 100 / 10000));
-    setRevenue(Math.round(simData.totalSales * 12 / 10000));
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "vatSales", label: "월 매출 (부가세용)", value: `${Math.round(sim.totalSales / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales / 10000) },
+    { key: "vatPurchase", label: "월 매입 (부가세용)", value: `${Math.round(sim.totalSales * sim.cogsRatio / 100 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales * sim.cogsRatio / 100 / 10000) },
+    { key: "revenue", label: "연 매출 (소득세용)", value: `${Math.round(sim.totalSales * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales * 12 / 10000) },
+  ];
+  const applySimSelected = (selected: Record<string, number | string>) => {
+    if (selected.vatSales !== undefined) setVatSales(selected.vatSales as number);
+    if (selected.vatPurchase !== undefined) setVatPurchase(selected.vatPurchase as number);
+    if (selected.revenue !== undefined) setRevenue(selected.revenue as number);
   };
   // 부가세 계산기
   const [vatType, setVatType] = useState<"일반" | "간이">("일반");
@@ -154,11 +158,7 @@ export default function TaxGuidePage() {
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">세무·회계 가이드</h1>
             <p className="text-slate-500 text-sm">외식업 사장님을 위한 세금·회계 실무 가이드</p>
-            {simData && (
-              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
-                🔗 시뮬레이터 데이터로 계산기 채우기
-              </button>
-            )}
+            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">

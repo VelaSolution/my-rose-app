@@ -4,41 +4,17 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
-import { useSimulatorData } from "@/lib/useSimulatorData";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 const TABS = ["개인 vs 법인", "설립 절차", "필요 서류", "비용 시뮬레이터"] as const;
 type Tab = (typeof TABS)[number];
 
+import { calcProgressiveTax, compareTax, INCOME_TAX_BRACKETS, CORP_TAX_BRACKETS } from "@/lib/tax";
+
 const KEY = "vela-incorporation";
 const fmt = (n: number) => n.toLocaleString("ko-KR");
-
-/* 종합소득세 세율표 2024 */
-const INCOME_TAX_BRACKETS = [
-  { limit: 1400, rate: 0.06, deduction: 0 },
-  { limit: 5000, rate: 0.15, deduction: 126 },
-  { limit: 8800, rate: 0.24, deduction: 576 },
-  { limit: 15000, rate: 0.35, deduction: 1544 },
-  { limit: 30000, rate: 0.38, deduction: 1994 },
-  { limit: 50000, rate: 0.40, deduction: 2594 },
-  { limit: 100000, rate: 0.42, deduction: 3594 },
-  { limit: Infinity, rate: 0.45, deduction: 6594 },
-];
-
-/* 법인세 세율표 2024 */
-const CORP_TAX_BRACKETS = [
-  { limit: 20000, rate: 0.09, deduction: 0 },
-  { limit: 200000, rate: 0.19, deduction: 2000 },
-  { limit: 300000, rate: 0.21, deduction: 6000 },
-  { limit: Infinity, rate: 0.24, deduction: 15000 },
-];
-
-function calcProgressiveTax(income: number, brackets: typeof INCOME_TAX_BRACKETS) {
-  for (const b of brackets) {
-    if (income <= b.limit) return Math.max(0, Math.round(income * b.rate - b.deduction));
-  }
-  return 0;
-}
 
 const STEPS = [
   { id: "name", label: "상호 결정 및 중복 확인", desc: "인터넷등기소(iros.go.kr)에서 상호 검색. 동일 관할 구역 내 동일 상호 불가.", cost: "무료" },
@@ -76,12 +52,14 @@ export default function IncorporationPage() {
   const setChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setIncData({ ...incData, checks: typeof fn === "function" ? fn(incData.checks) : fn });
   const setDocChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setIncData({ ...incData, docChecks: typeof fn === "function" ? fn(incData.docChecks) : fn });
   const [capitalAmount, setCapitalAmount] = useState(1000);
-  const simData = useSimulatorData();
 
-  const applySimData = () => {
-    if (!simData) return;
-    setAnnualRevenue(Math.round(simData.totalSales * 12 / 10000));
-    setAnnualProfit(Math.round(simData.profit * 12 / 10000));
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "annualRevenue", label: "예상 연매출", value: `${Math.round(sim.totalSales * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales * 12 / 10000) },
+    { key: "annualProfit", label: "예상 연순이익", value: `${Math.round(sim.profit * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.profit * 12 / 10000) },
+  ];
+  const applySimSelected = (selected: Record<string, number | string>) => {
+    if (selected.annualRevenue !== undefined) setAnnualRevenue(selected.annualRevenue as number);
+    if (selected.annualProfit !== undefined) setAnnualProfit(selected.annualProfit as number);
   };
 
   const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-blue-400 focus:bg-white outline-none transition";
@@ -89,28 +67,7 @@ export default function IncorporationPage() {
   const labelCls = "block text-xs font-semibold text-slate-500 mb-1.5";
 
   /* 개인 vs 법인 비교 계산 */
-  const comparison = useMemo(() => {
-    // 개인사업자
-    const personalIncomeTax = calcProgressiveTax(annualProfit, INCOME_TAX_BRACKETS);
-    const personalLocalTax = Math.round(personalIncomeTax * 0.1);
-    const personalHealthIns = Math.round(annualProfit * 0.0709);
-    const personalTotal = personalIncomeTax + personalLocalTax + personalHealthIns;
-
-    // 법인사업자
-    const corpProfit = annualProfit - ceoSalary;
-    const corpTax = calcProgressiveTax(Math.max(0, corpProfit), CORP_TAX_BRACKETS);
-    const corpLocalTax = Math.round(corpTax * 0.1);
-    const ceoIncomeTax = calcProgressiveTax(ceoSalary, INCOME_TAX_BRACKETS);
-    const ceoLocalTax = Math.round(ceoIncomeTax * 0.1);
-    const ceo4Insurance = Math.round(ceoSalary * 0.09); // 간이 계산
-    const corpTotal = corpTax + corpLocalTax + ceoIncomeTax + ceoLocalTax + ceo4Insurance;
-
-    return {
-      personal: { incomeTax: personalIncomeTax, localTax: personalLocalTax, healthIns: personalHealthIns, total: personalTotal },
-      corp: { corpTax, corpLocalTax, ceoIncomeTax, ceoLocalTax, ceo4Insurance, total: corpTotal },
-      saving: personalTotal - corpTotal,
-    };
-  }, [annualProfit, ceoSalary]);
+  const comparison = useMemo(() => compareTax(annualProfit, ceoSalary), [annualProfit, ceoSalary]);
 
   /* 비용 시뮬레이터 */
   const costSim = useMemo(() => {
@@ -139,11 +96,7 @@ export default function IncorporationPage() {
               <p className="text-slate-500 text-sm">개인 vs 법인 비교부터 설립 절차, 비용까지 한 번에 확인하세요.</p>
               <CloudSyncBadge status={status} userId={userId} />
             </div>
-            {simData && (
-              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
-                🔗 시뮬레이터 데이터 불러오기 (연매출 {Math.round(simData.totalSales * 12 / 10000)}만원)
-              </button>
-            )}
+            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">

@@ -4,66 +4,30 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
-import { useSimulatorData } from "@/lib/useSimulatorData";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 import { exportCSV } from "@/lib/exportCSV";
+import { simulate, type SimInputs as Inputs } from "@/lib/simulate";
 
 const KEY = "vela-financial-sim";
 const fmt = (n: number) => n.toLocaleString("ko-KR");
 
-interface Inputs {
-  cash: number;       // 보유 현금 (만원)
-  initInvest: number; // 초기 투자금
-  monthlyFixed: number;
-  variableRate: number; // %
-  firstRevenue: number;
-  growthRate: number;   // %
-  targetRevenue: number;
-}
-
 const defaults: Inputs = { cash: 10000, initInvest: 5000, monthlyFixed: 500, variableRate: 35, firstRevenue: 800, growthRate: 5, targetRevenue: 2000 };
-
-function simulate(inputs: Inputs, growthOverride?: number) {
-  const { cash, initInvest, monthlyFixed, variableRate, firstRevenue, targetRevenue } = inputs;
-  const growth = growthOverride ?? inputs.growthRate;
-  let balance = cash - initInvest;
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const rev = Math.round(firstRevenue * Math.pow(1 + growth / 100, i));
-    const variable = Math.round(rev * variableRate / 100);
-    const profit = rev - monthlyFixed - variable;
-    balance += profit;
-    return { month: i + 1, rev, fixed: monthlyFixed, variable, profit, balance };
-  });
-  const bepRevenue = variableRate < 100 ? Math.round(monthlyFixed / (1 - variableRate / 100)) : 0;
-  const bepMonth = months.find(m => m.rev >= bepRevenue)?.month ?? null;
-  const runwayMonth = months.find(m => m.balance <= 0)?.month ?? null;
-  const totalRevenue = months.reduce((s, m) => s + m.rev, 0);
-  const totalProfit = months.reduce((s, m) => s + m.profit, 0);
-  const paybackMonth = (() => {
-    let cum = -(cash - (cash - initInvest)); // = initInvest
-    for (const m of months) { cum -= m.profit; if (cum <= 0) return m.month; }
-    return null;
-  })();
-  return { months, bepRevenue, bepMonth, runwayMonth, totalRevenue, totalProfit, finalBalance: months[11]?.balance ?? 0, paybackMonth };
-}
 
 export default function FinancialSimPage() {
   const { data: inputs, update: setInputs, status, userId } = useCloudSync<Inputs>(KEY, defaults);
-  const simData = useSimulatorData();
 
   const up = <K extends keyof Inputs>(k: K, v: number) => setInputs({ ...inputs, [k]: v });
 
-  const applySimData = () => {
-    if (!simData) return;
-    const monthly = Math.round(simData.totalSales / 10000);
-    const fixedCost = Math.round((simData.rent + simData.totalSales * simData.laborRatio / 100) / 10000);
-    setInputs({
-      ...inputs,
-      monthlyFixed: fixedCost,
-      variableRate: simData.cogsRatio,
-      firstRevenue: monthly,
-      targetRevenue: monthly,
-    });
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "monthlyFixed", label: "월 고정비", value: `${Math.round((sim.rent + sim.totalSales * sim.laborRatio / 100) / 10000).toLocaleString()}만원`, rawValue: Math.round((sim.rent + sim.totalSales * sim.laborRatio / 100) / 10000) },
+    { key: "variableRate", label: "변동비율", value: `${sim.cogsRatio}%`, rawValue: sim.cogsRatio },
+    { key: "firstRevenue", label: "1개월차 매출", value: `${Math.round(sim.totalSales / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales / 10000) },
+    { key: "targetRevenue", label: "목표 월매출", value: `${Math.round(sim.totalSales / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales / 10000) },
+  ];
+  const applySimSelected = (selected: Record<string, number | string>) => {
+    setInputs({ ...inputs, ...(selected as Partial<Inputs>) });
   };
 
   const result = useMemo(() => simulate(inputs), [inputs]);
@@ -104,11 +68,7 @@ export default function FinancialSimPage() {
               </button>
               <CloudSyncBadge status={status} userId={userId} />
             </div>
-            {simData && (
-              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
-                🔗 시뮬레이터 데이터 불러오기 (월매출 {Math.round(simData.totalSales / 10000)}만원)
-              </button>
-            )}
+            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           {/* 입력 */}

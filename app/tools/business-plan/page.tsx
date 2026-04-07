@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
-import { useSimulatorData } from "@/lib/useSimulatorData";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 const TABS = ["사업 개요", "시장 분석", "메뉴 전략", "재무 계획", "마케팅 전략", "실행 일정"] as const;
 type Tab = (typeof TABS)[number];
@@ -47,21 +48,17 @@ export default function BusinessPlanPage() {
   const [tab, setTab] = useState<Tab>("사업 개요");
   const { data: bp, update: setBpCloud, status, userId } = useCloudSync<BPlan>(KEY, empty);
   const [preview, setPreview] = useState(false);
-  const simData = useSimulatorData();
 
   const up = <K extends keyof BPlan>(k: K, v: BPlan[K]) => setBpCloud({ ...bp, [k]: v });
 
-  const applySimData = () => {
-    if (!simData) return;
-    const industryMap: Record<string, string> = { cafe: "cafe", restaurant: "restaurant", bar: "bar", finedining: "finedining", gogi: "gogi" };
-    setBpCloud({
-      ...bp,
-      industry: industryMap[simData.industry] ?? bp.industry,
-      initInvest: 0,
-      monthlyFixed: Math.round(simData.rent + simData.totalSales * simData.laborRatio / 100),
-      variableRate: simData.cogsRatio,
-      targetRevenue: Math.round(simData.totalSales / 10000),
-    });
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "industry", label: "업종", value: sim.industry, rawValue: sim.industry },
+    { key: "monthlyFixed", label: "월 고정비", value: `${Math.round(sim.rent + sim.totalSales * sim.laborRatio / 100).toLocaleString()}원`, rawValue: Math.round(sim.rent + sim.totalSales * sim.laborRatio / 100) },
+    { key: "variableRate", label: "변동비율", value: `${sim.cogsRatio}%`, rawValue: sim.cogsRatio },
+    { key: "targetRevenue", label: "목표 월매출", value: `${Math.round(sim.totalSales / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales / 10000) },
+  ];
+  const applySimSelected = (selected: Record<string, number | string>) => {
+    setBpCloud({ ...bp, ...selected });
   };
 
   const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-blue-400 focus:bg-white outline-none transition";
@@ -110,11 +107,7 @@ export default function BusinessPlanPage() {
               <p className="text-slate-500 text-sm">단계별로 작성하고 한 번에 미리보기 · 복사할 수 있습니다.</p>
               <CloudSyncBadge status={status} userId={userId} />
             </div>
-            {simData && (
-              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
-                🔗 시뮬레이터 데이터 불러오기
-              </button>
-            )}
+            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           {/* Tabs */}

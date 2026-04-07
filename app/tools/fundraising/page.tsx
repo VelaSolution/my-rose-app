@@ -4,8 +4,9 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
-import { useSimulatorData } from "@/lib/useSimulatorData";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 const TABS = ["밸류에이션", "IR 덱 가이드", "투자 유형", "미팅 체크리스트"] as const;
 type Tab = (typeof TABS)[number];
@@ -98,13 +99,16 @@ export default function FundraisingPage() {
   const setIrChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setFrData({ ...frData, irChecks: typeof fn === "function" ? fn(frData.irChecks) : fn });
   const setMtChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setFrData({ ...frData, mtChecks: typeof fn === "function" ? fn(frData.mtChecks) : fn });
   const [expandedType, setExpandedType] = useState<string | null>(null);
-  const simData = useSimulatorData();
 
-  const applySimData = () => {
-    if (!simData) return;
-    setAnnualRev(Math.round(simData.totalSales * 12 / 10000));
-    setAnnualProfit(Math.round(simData.profit * 12 / 10000));
-    setIndustry(simData.industry);
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "annualRev", label: "연 매출", value: `${Math.round(sim.totalSales * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales * 12 / 10000) },
+    { key: "annualProfit", label: "연 순이익", value: `${Math.round(sim.profit * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.profit * 12 / 10000) },
+    { key: "industry", label: "업종", value: sim.industry, rawValue: sim.industry },
+  ];
+  const applySimSelected = (selected: Record<string, number | string>) => {
+    if (selected.annualRev !== undefined) setAnnualRev(selected.annualRev as number);
+    if (selected.annualProfit !== undefined) setAnnualProfit(selected.annualProfit as number);
+    if (selected.industry !== undefined) setIndustry(selected.industry as string);
   };
 
   const multiples: Record<string, [number, number]> = { cafe: [1.5, 3], restaurant: [2, 4], bar: [1.5, 3], finedining: [2.5, 5], gogi: [2, 4] };
@@ -141,11 +145,7 @@ export default function FundraisingPage() {
               <p className="text-slate-500 text-sm">밸류에이션, IR 덱, 투자자 미팅까지 한 번에 준비하세요.</p>
               <CloudSyncBadge status={status} userId={userId} />
             </div>
-            {simData && (
-              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
-                🔗 시뮬레이터 데이터 불러오기 (연매출 {Math.round(simData.totalSales * 12 / 10000)}만원)
-              </button>
-            )}
+            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">

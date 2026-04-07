@@ -4,8 +4,9 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
-import { useSimulatorData } from "@/lib/useSimulatorData";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 type Stage = "예비창업" | "1년미만" | "1~3년" | "3년이상";
 type Revenue = "없음" | "1억미만" | "1~3억" | "3~5억" | "5억이상";
@@ -79,15 +80,19 @@ export default function GovSupportPage() {
   const { data: profile, update: setProfileCloud, status, userId } = useCloudSync<Profile>(KEY, defaultProfile);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [tab, setTab] = useState<"result" | "calendar">("result");
-  const simData = useSimulatorData();
 
   const up = <K extends keyof Profile>(k: K, v: Profile[K]) => setProfileCloud({ ...profile, [k]: v });
 
-  const applySimData = () => {
-    if (!simData) return;
-    const rev = simData.totalSales * 12;
-    const revBucket = rev === 0 ? "없음" as const : rev < 10000_0000 ? "1억미만" as const : rev < 30000_0000 ? "1~3억" as const : rev < 50000_0000 ? "3~5억" as const : "5억이상" as const;
-    setProfileCloud({ ...profile, industry: simData.industry, revenue: revBucket });
+  const simFields = (sim: SimulatorSnapshot) => {
+    const rev = sim.totalSales * 12;
+    const revBucket = rev === 0 ? "없음" : rev < 10000_0000 ? "1억미만" : rev < 30000_0000 ? "1~3억" : rev < 50000_0000 ? "3~5억" : "5억이상";
+    return [
+      { key: "industry", label: "업종", value: sim.industry, rawValue: sim.industry },
+      { key: "revenue", label: "연 매출 구간", value: revBucket, rawValue: revBucket },
+    ];
+  };
+  const applySimSelected = (selected: Record<string, number | string>) => {
+    setProfileCloud({ ...profile, ...selected });
   };
 
   const matched = useMemo(() => {
@@ -136,11 +141,7 @@ export default function GovSupportPage() {
               <p className="text-slate-500 text-sm">내 조건에 맞는 정부 지원 프로그램을 찾아드립니다.</p>
               <CloudSyncBadge status={status} userId={userId} />
             </div>
-            {simData && (
-              <button onClick={applySimData} className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
-                🔗 시뮬레이터 데이터 불러오기
-              </button>
-            )}
+            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           {/* 조건 입력 */}
