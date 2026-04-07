@@ -288,6 +288,120 @@ const EVENTS: Ev[] = [
 ];
 
 
+// ── 업적 시스템 ──────────────────────────────────────────────
+interface Achievement { id:string; icon:string; title:string; desc:string; check:(s:S)=>boolean }
+const ACHIEVEMENTS: Achievement[] = [
+  { id:"first_profit", icon:"💰", title:"첫 흑자!", desc:"첫 흑자를 달성했어요", check:s=>s.logs.some(l=>l.profit>0) },
+  { id:"million_day", icon:"🤑", title:"대박의 날", desc:"하루 순이익 100만원 돌파", check:s=>s.best>=1000000 },
+  { id:"streak5", icon:"🔥", title:"5일 연속 흑자", desc:"5일 연속 흑자 달성", check:s=>s.streak>=5 },
+  { id:"streak10", icon:"🔥🔥", title:"10일 연속 흑자", desc:"10일 연속 흑자!", check:s=>s.streak>=10 },
+  { id:"streak30", icon:"🔥🔥🔥", title:"한 달 무적", desc:"30일 연속 흑자 대기록!", check:s=>s.streak>=30 },
+  { id:"rep90", icon:"⭐", title:"동네 명소", desc:"평판 90점 이상 달성", check:s=>s.rep>=90 },
+  { id:"rep100", icon:"👑", title:"전설의 맛집", desc:"평판 100점 만점 달성!", check:s=>s.rep>=100 },
+  { id:"survive30", icon:"🛡️", title:"한 달 생존", desc:"30일간 살아남았어요", check:s=>s.day>=30 },
+  { id:"survive60", icon:"🛡️🛡️", title:"두 달 생존", desc:"60일간 살아남았어요", check:s=>s.day>=60 },
+  { id:"survive90", icon:"🏆", title:"풀 클리어", desc:"90일 전체 완주!", check:s=>s.day>=90 },
+  { id:"cash10m", icon:"🏦", title:"천만장자", desc:"잔고 1천만원 돌파", check:s=>s.cash>=10000000 },
+  { id:"cash50m", icon:"💎", title:"오천만장자", desc:"잔고 5천만원 돌파", check:s=>s.cash>=50000000 },
+  { id:"total100m", icon:"📊", title:"매출 1억", desc:"누적 매출 1억원 돌파", check:s=>s.totalRev>=100000000 },
+  { id:"event10", icon:"🎲", title:"이벤트 마스터", desc:"이벤트를 10번 겪었어요", check:s=>s.logs.filter(l=>l.event).length>=10 },
+  { id:"lv5", icon:"⚡", title:"프로 사장님", desc:"레벨 5 달성", check:s=>getLv(s.exp)>=5 },
+];
+
+// ── 고용 가능 직원 풀 ──────────────────────────────────────
+const HIRE_POOL: Record<Industry, Staff[]> = {
+  cafe: [
+    {id:"h1",name:"정에스",role:"바리스타",emoji:"👩‍🍳",wage:85000,mood:80,skill:75,absent:false},
+    {id:"h2",name:"한아르",role:"서버",emoji:"🧑",wage:60000,mood:85,skill:55,absent:false},
+    {id:"h3",name:"윤파트",role:"파트타임",emoji:"👧",wage:45000,mood:90,skill:40,absent:false},
+  ],
+  restaurant: [
+    {id:"h1",name:"김부셰",role:"부주방장",emoji:"👨‍🍳",wage:120000,mood:75,skill:78,absent:false},
+    {id:"h2",name:"이서버",role:"홀서버",emoji:"🧑‍🦱",wage:68000,mood:80,skill:60,absent:false},
+    {id:"h3",name:"박알바",role:"설거지",emoji:"🧒",wage:50000,mood:85,skill:35,absent:false},
+  ],
+  bar: [
+    {id:"h1",name:"최믹스",role:"바텐더",emoji:"🧑‍🍳",wage:95000,mood:78,skill:82,absent:false},
+    {id:"h2",name:"강서버",role:"서버",emoji:"👩",wage:65000,mood:80,skill:58,absent:false},
+    {id:"h3",name:"임디제",role:"DJ",emoji:"🎧",wage:110000,mood:85,skill:70,absent:false},
+  ],
+  finedining: [
+    {id:"h1",name:"김패티",role:"패티셰",emoji:"🧁",wage:180000,mood:72,skill:90,absent:false},
+    {id:"h2",name:"박서버",role:"웨이터",emoji:"🤵",wage:90000,mood:80,skill:75,absent:false},
+    {id:"h3",name:"이소믈",role:"소믈리에",emoji:"🍷",wage:130000,mood:78,skill:82,absent:false},
+  ],
+  gogi: [
+    {id:"h1",name:"송불판",role:"화로 담당",emoji:"🔥",wage:90000,mood:75,skill:72,absent:false},
+    {id:"h2",name:"한서버",role:"홀서버",emoji:"🧑‍🦱",wage:68000,mood:80,skill:60,absent:false},
+    {id:"h3",name:"유알바",role:"알바",emoji:"🧒",wage:50000,mood:85,skill:38,absent:false},
+  ],
+};
+
+// ── 추가 이벤트 ──────────────────────────────────────────────
+const EXTRA_EVENTS: Ev[] = [
+  {id:"food_truck",type:"opportunity",icon:"🚚",char:"🧑‍🍳",charName:"푸드트럭 사장",
+   title:"푸드트럭 콜라보 제안!",desc:"인기 푸드트럭에서 합동 이벤트를 제안했어요.",
+   choices:[
+     {label:"콜라보 수락",desc:"비용 15만원, 손님 +40% 5일",cost:150000,apply:s=>({rep:Math.min(s.rep+10,100),efx:[{type:"customers",value:0.4,duration:5,label:"푸드트럭 콜라보"}]})},
+     {label:"정중히 거절",desc:"변화 없음",apply:(_s:S)=>({})},
+   ]},
+  {id:"cooking_class",type:"opportunity",icon:"👨‍🏫",char:"📚",charName:"요리학원",
+   title:"요리 클래스 제안!",desc:"매장에서 주말 쿠킹 클래스를 열면 홍보 효과가 있을 거예요.",
+   choices:[
+     {label:"클래스 개설",desc:"비용 10만원, 평판 +12",cost:100000,apply:s=>({rep:Math.min(s.rep+12,100),efx:[{type:"customers",value:0.15,duration:14,label:"쿠킹 클래스 효과"}]})},
+     {label:"패스",desc:"변화 없음",apply:(_s:S)=>({})},
+   ]},
+  {id:"michelin",type:"opportunity",icon:"⭐",char:"🕵️",charName:"미식 평론가",
+   title:"미식 평론가 방문!",desc:"유명 미식 블로거가 몰래 방문해 리뷰를 남겼어요!",
+   choices:[
+     {label:"리뷰 공유 홍보",desc:"평판 +20, 손님 +45% 2주",apply:s=>({rep:Math.min(s.rep+20,100),efx:[{type:"customers",value:0.45,duration:14,label:"미식 평론 효과"}]})},
+   ]},
+  {id:"tax_audit",type:"crisis",icon:"📋",char:"👔",charName:"세무조사관",
+   title:"세무 조사 통보!",desc:"국세청에서 세무 조사를 나오겠다고 합니다.",
+   choices:[
+     {label:"세무사 고용 대응",desc:"비용 100만원, 무사 통과",cost:1000000,apply:(_s:S)=>({})},
+     {label:"자체 대응",desc:"50% 확률 추징금 200만원",apply:s=>Math.random()>0.5?{}:{cash:s.cash-2000000}},
+   ]},
+  {id:"pest",type:"crisis",icon:"🪳",char:"😱",charName:"직원",
+   title:"해충 발견!",desc:"주방에서 바퀴벌레가 발견됐어요!",
+   choices:[
+     {label:"즉시 방역 처리",desc:"비용 30만원, 1일 휴업",cost:300000,apply:(_s:S)=>({efx:[{type:"customers",value:-1.0,duration:1,label:"방역 휴업"}]})},
+     {label:"야간 방역만",desc:"비용 15만원, 손님 -20% 3일",cost:150000,apply:(_s:S)=>({efx:[{type:"customers",value:-0.2,duration:3,label:"방역 중"}]})},
+     {label:"무시",desc:"평판 -20, 위생 리스크",apply:s=>({rep:Math.max(s.rep-20,0),efx:[{type:"customers",value:-0.15,duration:7,label:"위생 문제"}]})},
+   ]},
+  {id:"local_event",type:"opportunity",icon:"🎪",char:"📢",charName:"구청 담당자",
+   title:"지역 축제 부스 참여!",desc:"구청에서 지역 축제 푸드 부스 참여를 요청했어요.",
+   choices:[
+     {label:"참여",desc:"비용 30만원, 평판 +15, 손님 +35% 일주일",cost:300000,apply:s=>({rep:Math.min(s.rep+15,100),efx:[{type:"customers",value:0.35,duration:7,label:"지역 축제"}]})},
+     {label:"거절",desc:"변화 없음",apply:(_s:S)=>({})},
+   ]},
+  {id:"staff_talent",type:"random",icon:"🌟",char:"💪",charName:"직원",
+   title:"직원 성장!",desc:"열심히 일하던 직원의 실력이 확 늘었어요!",
+   choices:[
+     {label:"칭찬과 격려",desc:"스킬 +15, 사기 +20",apply:s=>({staff:s.staff.map((st,i)=>i===0?{...st,skill:Math.min(st.skill+15,100),mood:Math.min(st.mood+20,100)}:st)})},
+   ]},
+  {id:"supply_chain",type:"crisis",icon:"🚛",char:"📦",charName:"물류 회사",
+   title:"물류 대란!",desc:"공급망 문제로 식재료 배송이 3일간 지연됩니다.",
+   choices:[
+     {label:"대체 업체 긴급 수배",desc:"비용 40만원, 정상 영업",cost:400000,apply:(_s:S)=>({})},
+     {label:"축소 영업",desc:"메뉴 제한, 손님 -30% 3일",apply:(_s:S)=>({efx:[{type:"customers",value:-0.3,duration:3,label:"메뉴 제한"}]})},
+   ]},
+  {id:"loyalty_program",type:"random",icon:"💳",char:"😊",charName:"단골 손님들",
+   title:"단골 고객 증가!",desc:"꾸준한 서비스 덕분에 단골이 늘고 있어요!",
+   choices:[
+     {label:"멤버십 도입",desc:"비용 5만원, 손님 +10% 30일",cost:50000,apply:s=>({rep:Math.min(s.rep+5,100),efx:[{type:"customers",value:0.1,duration:30,label:"멤버십 효과"}]})},
+     {label:"자연스럽게",desc:"손님 +5% 2주",apply:(_s:S)=>({efx:[{type:"customers",value:0.05,duration:14,label:"단골 증가"}]})},
+   ]},
+  {id:"renovation",type:"random",icon:"🔨",char:"🏗️",charName:"인테리어 업체",
+   title:"리모델링 기회!",desc:"인테리어 업체에서 할인 견적을 보내왔어요.",
+   choices:[
+     {label:"부분 리모델링",desc:"비용 200만원, 평판 +15, 손님 +20% 한달",cost:2000000,apply:s=>({rep:Math.min(s.rep+15,100),efx:[{type:"customers",value:0.2,duration:30,label:"새 인테리어"}]})},
+     {label:"다음에",desc:"변화 없음",apply:(_s:S)=>({})},
+   ]},
+];
+
+const ALL_EVENTS = [...EVENTS, ...EXTRA_EVENTS];
+
 // Utils
 const fmt = (n: number) => {
   const a = Math.abs(n);
@@ -883,9 +997,12 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
 // ── 게임 플레이 ─────────────────────────────────────────────
 function Play({s, setS, onOver}:{s:S; setS:React.Dispatch<React.SetStateAction<S|null>>; onOver:()=>void}) {
   const [floats, setFloats] = useState<Float[]>([]);
+  const [showPanel, setShowPanel] = useState<"none"|"staff"|"price"|"stats"|"achievements">("none");
   const fid = useRef(0);
   const cfg = IND[s.ind];
   const isWk = ((s.day-1)%7)>=5;
+  const earned = ACHIEVEMENTS.filter(a=>a.check(s));
+  const hirePool = HIRE_POOL[s.ind].filter(h=>!s.staff.some(st=>st.id===h.id));
 
   const addFloat = (text:string, color:string) => {
     const id = ++fid.current;
@@ -894,7 +1011,7 @@ function Play({s, setS, onOver}:{s:S; setS:React.Dispatch<React.SetStateAction<S
   };
 
   const openDay = useCallback(() => {
-    const ev = Math.random()<0.40 ? EVENTS[Math.floor(Math.random()*EVENTS.length)] : null;
+    const ev = Math.random()<0.40 ? ALL_EVENTS[Math.floor(Math.random()*ALL_EVENTS.length)] : null;
     if (ev) { setS(p=>p?{...p,ev,phase:"event"}:p); return; }
     const r = calcDay(s);
     const ne = s.efx.map(e=>({...e,duration:e.duration>0?e.duration-1:e.duration})).filter(e=>e.duration!==0);
@@ -1108,6 +1225,128 @@ function Play({s, setS, onOver}:{s:S; setS:React.Dispatch<React.SetStateAction<S
                 </div>
               ))}
             </div>
+            {/* 관리 버튼 */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:10}}>
+              {([["staff","👥","인사"],["price","💰","가격"],["stats","📊","통계"],["achievements","🏅","업적"]] as const).map(([id,icon,label])=>(
+                <button key={id} onClick={()=>setShowPanel(showPanel===id?"none":id)}
+                  style={{padding:"8px 4px",borderRadius:10,border:"1px solid "+(showPanel===id?cfg.color:G200),background:showPanel===id?cfg.color+"15":"#fff",color:showPanel===id?cfg.color:G600,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                  {icon} {label}{id==="achievements"&&earned.length>0?` (${earned.length})`:""}
+                </button>
+              ))}
+            </div>
+
+            {/* 직원 관리 패널 */}
+            {showPanel==="staff" && (
+              <div style={{background:G50,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+G200}}>
+                <p style={{fontSize:13,fontWeight:700,color:G900,margin:"0 0 8px"}}>👥 직원 관리</p>
+                {s.staff.map((st,i)=>(
+                  <div key={st.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:"1px solid "+G100}}>
+                    <span style={{fontSize:20}}>{st.emoji}</span>
+                    <div style={{flex:1}}>
+                      <p style={{fontSize:13,fontWeight:600,color:G900,margin:0}}>{st.name} <span style={{color:G400,fontWeight:400}}>({st.role})</span></p>
+                      <p style={{fontSize:11,color:G600,margin:0}}>일당 {st.wage.toLocaleString()}원 · 스킬 {st.skill} · 사기 {st.mood}</p>
+                    </div>
+                    {s.staff.length>1&&<button onClick={()=>{if(confirm(st.name+"을(를) 해고할까요?")){setS(p=>p?{...p,staff:p.staff.filter((_,j)=>j!==i)}:p);}}}
+                      style={{fontSize:11,color:RD,background:RDL,border:"none",borderRadius:6,padding:"4px 8px",cursor:"pointer",fontFamily:"inherit"}}>해고</button>}
+                  </div>
+                ))}
+                {hirePool.length>0 && (
+                  <>
+                    <p style={{fontSize:12,fontWeight:700,color:G400,margin:"10px 0 6px"}}>채용 가능</p>
+                    {hirePool.map(h=>(
+                      <div key={h.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:"1px solid "+G100}}>
+                        <span style={{fontSize:20}}>{h.emoji}</span>
+                        <div style={{flex:1}}>
+                          <p style={{fontSize:13,fontWeight:600,color:G900,margin:0}}>{h.name} <span style={{color:G400,fontWeight:400}}>({h.role})</span></p>
+                          <p style={{fontSize:11,color:G600,margin:0}}>일당 {h.wage.toLocaleString()}원 · 스킬 {h.skill}</p>
+                        </div>
+                        <button onClick={()=>{setS(p=>p?{...p,staff:[...p.staff,{...h,id:"h"+Date.now()}]}:p);}}
+                          style={{fontSize:11,color:GN,background:GNL,border:"none",borderRadius:6,padding:"4px 8px",cursor:"pointer",fontFamily:"inherit"}}>채용</button>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* 가격 조정 패널 */}
+            {showPanel==="price" && (
+              <div style={{background:G50,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+G200}}>
+                <p style={{fontSize:13,fontWeight:700,color:G900,margin:"0 0 8px"}}>💰 메뉴 가격 전략</p>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <span style={{fontSize:13,color:G600}}>현재 객단가</span>
+                  <span style={{fontSize:16,fontWeight:800,color:B}}>{s.spend.toLocaleString()}원</span>
+                </div>
+                <input type="range" min={Math.round(IND[s.ind].spend*0.5)} max={Math.round(IND[s.ind].spend*2)} step={500}
+                  value={s.spend} onChange={e=>setS(p=>p?{...p,spend:Number(e.target.value)}:p)}
+                  style={{width:"100%",accentColor:B}} />
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:G400,marginTop:4}}>
+                  <span>저가 (손님↑ 마진↓)</span><span>고가 (손님↓ 마진↑)</span>
+                </div>
+                <p style={{fontSize:11,color:G400,marginTop:6}}>💡 업종 기본값: {IND[s.ind].spend.toLocaleString()}원 — 기본 대비 {Math.round((s.spend/IND[s.ind].spend-1)*100)}%</p>
+              </div>
+            )}
+
+            {/* 통계 패널 */}
+            {showPanel==="stats" && (
+              <div style={{background:G50,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+G200}}>
+                <p style={{fontSize:13,fontWeight:700,color:G900,margin:"0 0 8px"}}>📊 경영 통계</p>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                  {[
+                    {l:"누적 매출",v:fmtN(s.totalRev)+"원"},
+                    {l:"누적 순이익",v:fmtN(s.totalProfit)+"원"},
+                    {l:"일평균 매출",v:s.day>0?fmtN(Math.round(s.totalRev/s.day))+"원":"0원"},
+                    {l:"일평균 순이익",v:s.day>0?fmtN(Math.round(s.totalProfit/s.day))+"원":"0원"},
+                    {l:"최고 하루",v:s.best>0?fmt(s.best):"아직 없음"},
+                    {l:"순이익률",v:s.totalRev>0?Math.round(s.totalProfit/s.totalRev*100)+"%":"0%"},
+                    {l:"연속 흑자",v:s.streak+"일"},
+                    {l:"총 인건비/일",v:fmtN(s.staff.reduce((a,x)=>a+x.wage,0))+"원"},
+                    {l:"흑자 일수",v:s.logs.filter(l=>l.profit>0).length+"일"},
+                    {l:"적자 일수",v:s.logs.filter(l=>l.profit<0).length+"일"},
+                  ].map(item=>(
+                    <div key={item.l} style={{background:"#fff",borderRadius:10,padding:"8px 10px"}}>
+                      <p style={{fontSize:11,color:G400,margin:"0 0 2px"}}>{item.l}</p>
+                      <p style={{fontSize:13,fontWeight:700,color:G900,margin:0}}>{item.v}</p>
+                    </div>
+                  ))}
+                </div>
+                {s.logs.length>=7 && (
+                  <div style={{marginTop:10}}>
+                    <p style={{fontSize:11,color:G400,margin:"0 0 6px"}}>최근 7일 순이익 추이</p>
+                    <div style={{display:"flex",alignItems:"flex-end",gap:3,height:60}}>
+                      {s.logs.slice(-7).map((l,i)=>{
+                        const max = Math.max(...s.logs.slice(-7).map(x=>Math.abs(x.profit)),1);
+                        const h = Math.abs(l.profit)/max*100;
+                        return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                          <div style={{width:"100%",height:Math.max(h*0.5,2),background:l.profit>=0?GN:RD,borderRadius:3}} />
+                          <span style={{fontSize:9,color:G400}}>{l.day}일</span>
+                        </div>;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 업적 패널 */}
+            {showPanel==="achievements" && (
+              <div style={{background:G50,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+G200}}>
+                <p style={{fontSize:13,fontWeight:700,color:G900,margin:"0 0 8px"}}>🏅 업적 ({earned.length}/{ACHIEVEMENTS.length})</p>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                  {ACHIEVEMENTS.map(a=>{
+                    const done = a.check(s);
+                    return <div key={a.id} style={{background:done?"#fff":G100,borderRadius:10,padding:"8px 10px",opacity:done?1:0.4,border:done?"1px solid #A7F3D0":"1px solid "+G200}}>
+                      <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+                        <span style={{fontSize:16}}>{a.icon}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:done?G900:G400}}>{a.title}</span>
+                      </div>
+                      <p style={{fontSize:10,color:G400,margin:0}}>{a.desc}</p>
+                    </div>;
+                  })}
+                </div>
+              </div>
+            )}
+
             <button onClick={openDay} style={{width:"100%",padding:"15px",borderRadius:14,border:"none",background:cfg.color,color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
               🚪 영업 시작! {isWk?"🎉 주말 특수!":""}
             </button>
@@ -1300,6 +1539,20 @@ function Over({s, onMenu, onRestart}:{s:S; onMenu:()=>void; onRestart:()=>void})
             })}
           </div>
         )}
+
+        {/* 업적 */}
+        {(()=>{const ea=ACHIEVEMENTS.filter(a=>a.check(s)); return ea.length>0?(
+          <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16,marginBottom:14}}>
+            <p style={{fontSize:15,fontWeight:700,color:G900,margin:"0 0 10px"}}>🏅 달성한 업적 ({ea.length}/{ACHIEVEMENTS.length})</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+              {ea.map(a=>(
+                <span key={a.id} style={{display:"inline-flex",alignItems:"center",gap:4,background:GNL,border:"1px solid #A7F3D0",borderRadius:20,padding:"4px 10px",fontSize:12,fontWeight:600,color:GN}}>
+                  {a.icon} {a.title}
+                </span>
+              ))}
+            </div>
+          </div>
+        ):null;})()}
 
         <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16,marginBottom:14}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
