@@ -415,13 +415,13 @@ const baseStyle = `
   .fb-error{background:#FFF0F0;border:1px solid #FFCDD2;border-radius:12px;padding:14px 16px;font-size:14px;color:#D32F2F}
 
   .fb-submit{width:100%;padding:16px;border-radius:12px;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:'Pretendard',sans-serif;background:#3182F6;color:#fff;transition:background .15s;margin-top:8px}
-  .fb-submit:hover{background:#1B64DA}
+  .fb-submit:hover{background:#2563EB}
   .fb-submit:disabled{cursor:not-allowed}
 
   .fb-success{text-align:center;padding:80px 24px}
   .fb-btn{display:inline-block;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;font-family:'Pretendard',sans-serif;transition:all .15s}
   .fb-btn-blue{background:#3182F6;color:#fff}
-  .fb-btn-blue:hover{background:#1B64DA}
+  .fb-btn-blue:hover{background:#2563EB}
   .fb-btn-gray{background:#F2F4F6;color:#333D4B}
   .fb-btn-gray:hover{background:#E5E8EB}
 

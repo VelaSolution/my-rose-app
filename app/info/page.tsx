@@ -90,7 +90,7 @@ export default function InfoPage() {
     <>
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0}
-        :root{--blue:#3182F6;--blue-dark:#1B64DA;--blue-light:#EBF3FF;--gray-50:#F9FAFB;--gray-100:#F2F4F6;--gray-200:#E5E8EB;--gray-400:#9EA6B3;--gray-600:#6B7684;--gray-800:#333D4B;--gray-900:#191F28}
+        :root{--blue:#3182F6;--blue-dark:#2563EB;--blue-light:#EBF3FF;--gray-50:#F9FAFB;--gray-100:#F2F4F6;--gray-200:#E5E8EB;--gray-400:#9EA6B3;--gray-600:#6B7684;--gray-800:#333D4B;--gray-900:#191F28}
         html{scroll-behavior:smooth}
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
         .fade-init{opacity:0;animation:fadeUp .6s ease forwards}
@@ -354,7 +354,7 @@ export default function InfoPage() {
       <section style={{background:"linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)", padding:"80px 24px"}}>
         <div className="section-inner" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:48,alignItems:"center"}}>
           <FadeIn>
-            <span className="section-tag" style={{background:"rgba(49,130,246,0.2)",color:"#60a5fa"}}>NEW</span>
+            <span className="section-tag" style={{background:"rgba(49,130,246,0.2)",color:"#93C5FD"}}>NEW</span>
             <h2 style={{fontSize:"clamp(28px,3.5vw,44px)",fontWeight:800,color:"#fff",letterSpacing:"-0.02em",margin:"12px 0 16px",lineHeight:1.2}}>
               경영 시뮬레이션 게임<br />
               <span style={{color:"#3182F6"}}>직접 운영해보세요</span>
@@ -391,7 +391,7 @@ export default function InfoPage() {
               <div style={{background:"rgba(49,130,246,0.15)",borderRadius:12,padding:"12px 16px",border:"1px solid rgba(49,130,246,0.3)",display:"flex",alignItems:"center",gap:10}}>
                 <span style={{fontSize:18}}>🏆</span>
                 <div>
-                  <p style={{fontSize:13,fontWeight:700,color:"#60a5fa",margin:0}}>글로벌 랭킹 시스템</p>
+                  <p style={{fontSize:13,fontWeight:700,color:"#93C5FD",margin:0}}>글로벌 랭킹 시스템</p>
                   <p style={{fontSize:12,color:"#475569",margin:0}}>90일 최고 순이익으로 전 세계 사장님들과 경쟁!</p>
                 </div>
               </div>

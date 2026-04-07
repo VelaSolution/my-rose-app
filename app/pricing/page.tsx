@@ -89,7 +89,7 @@ export default function PricingPage() {
         .plan-desc{font-size:14px;color:#6B7684;margin:12px 0 24px;line-height:1.6}
         .plan-btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:'Pretendard',sans-serif;transition:all .15s;margin-bottom:28px}
         .plan-btn-blue{background:#3182F6;color:#fff}
-        .plan-btn-blue:hover{background:#1B64DA}
+        .plan-btn-blue:hover{background:#2563EB}
         .plan-btn-gray{background:#F2F4F6;color:#333D4B}
         .plan-btn-gray:hover{background:#E5E8EB}
         .plan-btn-indigo{background:#6366F1;color:#fff}
@@ -117,7 +117,7 @@ export default function PricingPage() {
         .modal-plan-price span{font-size:15px;font-weight:500;color:#9EA6B3}
         .modal-notice{background:#EBF3FF;border-radius:12px;padding:16px;font-size:13px;color:#3182F6;line-height:1.6;margin-bottom:24px}
         .modal-btn{width:100%;padding:16px;border-radius:12px;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:'Pretendard',sans-serif;background:#3182F6;color:#fff;transition:background .15s}
-        .modal-btn:hover{background:#1B64DA}
+        .modal-btn:hover{background:#2563EB}
         @media(max-width:768px){.plans-grid{grid-template-columns:1fr}}
       `}</style>
 

@@ -1220,7 +1220,7 @@ function Play({s, setS, onOver}:{s:S; setS:React.Dispatch<React.SetStateAction<S
             )}
             {s.streak>=3 && (
               <div style={{background:BL,border:"1px solid #BFDBFE",borderRadius:12,padding:"9px 13px",marginBottom:10}}>
-                <p style={{fontSize:14,color:"#1B64DA",margin:0,fontWeight:600}}>🔥 {s.streak}일 연속 흑자 중!</p>
+                <p style={{fontSize:14,color:"#2563EB",margin:0,fontWeight:600}}>🔥 {s.streak}일 연속 흑자 중!</p>
               </div>
             )}
             <div style={{display:"grid",gridTemplateColumns:"repeat("+Math.min(s.staff.length,3)+",1fr)",gap:7,marginBottom:14}}>
