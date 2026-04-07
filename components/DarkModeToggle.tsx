@@ -1,56 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-const STORAGE_KEY = "vela-dark-mode";
+import { useState, useEffect } from "react";
 
 export default function DarkModeToggle() {
-  const [dark, setDark] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === "true") {
-      setDark(true);
-      document.documentElement.classList.add("dark");
-    }
+    setIsDark(document.documentElement.classList.contains("dark"));
   }, []);
 
   const toggle = () => {
-    const next = !dark;
-    setDark(next);
-    if (next) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem(STORAGE_KEY, String(next));
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("vela-theme", next ? "dark" : "light");
   };
 
   return (
-    <button
-      onClick={toggle}
-      aria-label={dark ? "라이트 모드로 전환" : "다크 모드로 전환"}
-      style={{
-        position: "fixed",
-        bottom: 24,
-        right: 24,
-        zIndex: 9999,
-        width: 44,
-        height: 44,
-        borderRadius: "50%",
-        border: "1px solid #E5E8EB",
-        background: dark ? "#1E293B" : "#fff",
-        color: dark ? "#FCD34D" : "#6B7684",
-        fontSize: 20,
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        boxShadow: "0 2px 8px rgba(0,0,0,.12)",
-        transition: "all .2s",
-      }}
-    >
-      {dark ? "\u2600\uFE0F" : "\uD83C\uDF19"}
-    </button>
+    <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900">🌙 다크 모드</h3>
+          <p className="text-xs text-slate-400 mt-0.5">화면 테마를 변경합니다</p>
+        </div>
+        <button
+          onClick={toggle}
+          className={`relative w-14 h-7 rounded-full transition-colors ${isDark ? "bg-blue-600" : "bg-slate-200"}`}
+          aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
+        >
+          <span
+            className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${isDark ? "translate-x-7" : "translate-x-1"}`}
+          />
+        </button>
+      </div>
+    </div>
   );
 }

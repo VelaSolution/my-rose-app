@@ -119,9 +119,6 @@ export default function NavBar() {
             )}
           </div>
 
-          <button onClick={toggleDarkMode} className="vela-theme-toggle" aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"} title={isDark ? "라이트 모드" : "다크 모드"}>
-            {isDark ? "\u2600\uFE0F" : "\uD83C\uDF19"}
-          </button>
           <button className="vela-hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열���"} aria-expanded={menuOpen}>
             <span /><span /><span />
           </button>
@@ -156,9 +153,6 @@ export default function NavBar() {
         <div style={{borderTop:"1px solid #E5E8EB",marginTop:12,paddingTop:12,display:"flex",gap:16,alignItems:"center"}}>
           <Link href="/terms" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0}}>이용약관</Link>
           <Link href="/privacy" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0}}>개인정보처리방침</Link>
-          <button onClick={toggleDarkMode} className="vela-theme-toggle" style={{marginLeft:"auto"}} aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}>
-            {isDark ? "\u2600\uFE0F" : "\uD83C\uDF19"}
-          </button>
         </div>
       </div>
     </>
