@@ -457,31 +457,40 @@ function delSave() {
 
 // ── 클라우드 저장/불러오기 ──────────────────────────────────────
 async function cloudSave(state: S) {
-  const sb = createSupabaseBrowserClient();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return false;
-  const payload = { user_id: user.id, state: JSON.stringify(state), updated_at: new Date().toISOString() };
-  const { data: existing } = await sb.from("game_saves").select("id").eq("user_id", user.id).limit(1);
-  if (existing && existing.length > 0) {
-    await sb.from("game_saves").update(payload).eq("user_id", user.id);
-  } else {
-    await sb.from("game_saves").insert(payload);
-  }
-  return true;
+  try {
+    const sb = createSupabaseBrowserClient();
+    if (!sb) return false;
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return false;
+    const payload = { user_id: user.id, state: JSON.stringify(state), updated_at: new Date().toISOString() };
+    const { data: existing } = await sb.from("game_saves").select("id").eq("user_id", user.id).limit(1);
+    if (existing && existing.length > 0) {
+      await sb.from("game_saves").update(payload).eq("user_id", user.id);
+    } else {
+      await sb.from("game_saves").insert(payload);
+    }
+    return true;
+  } catch { return false; }
 }
 async function cloudLoad(): Promise<S|null> {
-  const sb = createSupabaseBrowserClient();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return null;
-  const { data } = await sb.from("game_saves").select("state").eq("user_id", user.id).limit(1);
-  if (!data || data.length === 0) return null;
-  try { return JSON.parse(data[0].state); } catch { return null; }
+  try {
+    const sb = createSupabaseBrowserClient();
+    if (!sb) return null;
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return null;
+    const { data } = await sb.from("game_saves").select("state").eq("user_id", user.id).limit(1);
+    if (!data || data.length === 0) return null;
+    return JSON.parse(data[0].state);
+  } catch { return null; }
 }
 async function cloudDelete() {
-  const sb = createSupabaseBrowserClient();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return;
-  await sb.from("game_saves").delete().eq("user_id", user.id);
+  try {
+    const sb = createSupabaseBrowserClient();
+    if (!sb) return;
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    await sb.from("game_saves").delete().eq("user_id", user.id);
+  } catch { /* noop */ }
 }
 
 // ── 튜토리얼 ──────────────────────────────────────────────────
@@ -641,6 +650,7 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
       // 3. Supabase 클라우드 저장 목록
       try {
         const sb = createSupabaseBrowserClient();
+        if (!sb) throw new Error("no sb");
         const { data: { user } } = await sb.auth.getUser();
         if (user) {
           // 시뮬레이션 기록
@@ -1452,6 +1462,7 @@ function Over({s, onMenu, onRestart}:{s:S; onMenu:()=>void; onRestart:()=>void})
     (async()=>{
       try {
         const sb2 = createSupabaseBrowserClient();
+        if (!sb2) { setSubmitted(true); return; }
         // Top 10 리더보드 불러오기 (현재 시즌)
         sb2.from("game_rankings").select("nickname,score,grade,industry_icon")
           .eq("season", currentSeason)
