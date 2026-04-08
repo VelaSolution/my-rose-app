@@ -139,6 +139,7 @@ html.capacitor-app.dark .vela-nav { background: rgba(255,255,255,0.95) !importan
 html.capacitor-app.dark .vela-nav-logo { color: #191F28 !important; }
 html.capacitor-app.dark nav.fixed.bottom-0 { background-color: #fff !important; border-top-color: #E5E8EB !important; }
 /* ── 앱 전용 디자인 시스템 ──────────────────────────── */
+
 /* 타이포 */
 html.capacitor-app .text-2xl { font-size: 1.2rem !important; }
 html.capacitor-app .text-xl { font-size: 1.05rem !important; }
@@ -146,63 +147,47 @@ html.capacitor-app .text-lg { font-size: 0.95rem !important; }
 
 /* 카드 */
 html.capacitor-app .rounded-3xl { border-radius: 16px !important; }
+html.capacitor-app .p-6 { padding: 16px !important; }
+html.capacitor-app .p-5 { padding: 14px !important; }
 
-/* 버튼 — 통일된 크기 + 글자 중앙 */
-html.capacitor-app button:not(.rounded-full) {
-  min-height: 44px;
+/* ── 버튼 전부 통일 ── */
+html.capacitor-app button:not(.rounded-full),
+html.capacitor-app a.rounded-xl,
+html.capacitor-app a.rounded-2xl,
+html.capacitor-app a.rounded-3xl {
+  min-height: 44px !important;
+  height: auto !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   font-size: 14px !important;
-  line-height: 1 !important;
-}
-/* 주요 CTA 버튼 — 더 크게 */
-html.capacitor-app .bg-blue-500,
-html.capacitor-app .bg-blue-600,
-html.capacitor-app .bg-slate-900 {
-  min-height: 48px !important;
-  font-size: 15px !important;
   font-weight: 600 !important;
+  line-height: 1.2 !important;
   border-radius: 12px !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
 }
-/* 보조 버튼 */
-html.capacitor-app .bg-white.ring-1,
-html.capacitor-app .border.border-slate-200 {
-  min-height: 44px !important;
-  border-radius: 12px !important;
-}
-/* 링크는 min-height 없음 */
-html.capacitor-app a { min-height: auto; }
-/* 링크 버튼만 min-height */
-html.capacitor-app a.rounded-xl, html.capacitor-app a.rounded-2xl, html.capacitor-app a.rounded-3xl {
-  min-height: 44px;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+/* 링크 일반 — 버튼 스타일 안 먹임 */
+html.capacitor-app a:not(.rounded-xl):not(.rounded-2xl):not(.rounded-3xl) {
+  min-height: auto !important;
+  display: inline !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
 }
 
-/* 입력 필드 */
+/* ── 입력 필드 전부 통일 ── */
 html.capacitor-app input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
 html.capacitor-app textarea,
 html.capacitor-app select {
-  min-height: 44px;
+  min-height: 44px !important;
   font-size: 16px !important;
   border-radius: 10px !important;
   padding: 10px 14px !important;
 }
-
-/* 체크박스/라디오 크기 */
 html.capacitor-app input[type="checkbox"],
 html.capacitor-app input[type="radio"] {
   width: 20px !important;
   height: 20px !important;
-}
-
-/* 탭 버튼 */
-html.capacitor-app .overflow-x-auto button {
-  min-height: 36px !important;
-  padding: 6px 14px !important;
-  font-size: 13px !important;
 }
 
 /* 하단 여백 */
@@ -210,17 +195,6 @@ html.capacitor-app main { padding-bottom: 100px !important; }
 
 /* 시뮬레이터 데스크탑 미리보기 숨기기 */
 html.capacitor-app .hidden.lg\:block.relative { display: none !important; }
-
-/* 카드 내 여백 */
-html.capacitor-app .p-6 { padding: 16px !important; }
-html.capacitor-app .p-5 { padding: 14px !important; }
-
-/* 배지/태그 */
-html.capacitor-app .rounded-full.px-3,
-html.capacitor-app .rounded-full.px-2\.5 {
-  font-size: 11px !important;
-  padding: 4px 10px !important;
-}
 
 /* ── 슬라이더 ─────────────────────────────────────── */
 input[type="range"] { -webkit-appearance: none; appearance: none; height: 4px; background: #E5E8EB; border-radius: 2px; outline: none; }
@@ -275,12 +249,14 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20p
   .shadow-lg { box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; }
   .shadow-md { box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important; }
 
-  /* 버튼 — 토글 제외, 글자 중앙 */
+  /* 버튼 — 토글 제외, 글자 중앙, 크기 통일 */
   button:not(.rounded-full) {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-size: 14px !important;
+    font-weight: 600 !important;
   }
 
   /* 입력 필드 */
