@@ -45,44 +45,34 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const [newFolder, setNewFolder] = useState("");
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [allFolders, setAllFolders] = useState<Folder[]>([]);
+  const [movingFile, setMovingFile] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async (folderId?: string) => {
     const s = sb();
     if (!s) return setLoading(false);
 
-    const fq = s.from("hq_folders").select("*");
-    const fRes = folderId
-      ? await fq.eq("parent_id", folderId)
-      : await fq.is("parent_id", null);
-
-    const fileQ = s.from("hq_files").select("*");
-    const fileRes = folderId
-      ? await fileQ.eq("folder_id", folderId)
-      : await fileQ.is("folder_id", null);
+    const [fRes, fileRes, allF] = await Promise.all([
+      folderId
+        ? s.from("hq_folders").select("*").eq("parent_id", folderId)
+        : s.from("hq_folders").select("*").is("parent_id", null),
+      folderId
+        ? s.from("hq_files").select("*").eq("folder_id", folderId)
+        : s.from("hq_files").select("*").is("folder_id", null),
+      s.from("hq_folders").select("*").order("name"),
+    ]);
 
     if (fRes.data)
-      setFolders(
-        fRes.data.map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          parentId: r.parent_id,
-        }))
-      );
-
+      setFolders(fRes.data.map((r: any) => ({ id: r.id, name: r.name, parentId: r.parent_id })));
     if (fileRes.data)
-      setFiles(
-        fileRes.data.map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          size: formatSize(r.size || 0),
-          type: r.type || "",
-          url: r.url || "",
-          uploadedAt: r.created_at,
-          uploadedBy: r.uploaded_by || "",
-          folderId: r.folder_id,
-        }))
-      );
+      setFiles(fileRes.data.map((r: any) => ({
+        id: r.id, name: r.name, size: formatSize(r.size || 0),
+        type: r.type || "", url: r.url || "", uploadedAt: r.created_at,
+        uploadedBy: r.uploaded_by || "", folderId: r.folder_id,
+      })));
+    if (allF.data)
+      setAllFolders(allF.data.map((r: any) => ({ id: r.id, name: r.name, parentId: r.parent_id })));
 
     setLoading(false);
   };
@@ -211,6 +201,15 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
     load(currentFolder);
   };
 
+  const moveFile = async (fileId: string, targetFolderId: string | null) => {
+    const s = sb();
+    if (!s) return;
+    await s.from("hq_files").update({ folder_id: targetFolderId }).eq("id", fileId);
+    setMovingFile(null);
+    flash("파일이 이동되었습니다");
+    load(currentFolder);
+  };
+
   const formatDate = (d: string) => {
     try {
       return new Date(d).toLocaleDateString("ko-KR", {
@@ -320,7 +319,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
             {files.map((f) => (
               <div
                 key={f.id}
-                className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-100 hover:bg-slate-50/60 transition-colors"
+                className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-slate-100 hover:bg-slate-50/60 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <span className="text-lg flex-shrink-0">{fileIcon(f.type)}</span>
@@ -333,7 +332,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <a
                     href={f.url}
                     target="_blank"
@@ -343,12 +342,38 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                     다운로드
                   </a>
                   <button
+                    onClick={() => setMovingFile(movingFile === f.id ? null : f.id)}
+                    className="text-xs text-slate-400 hover:text-amber-600 transition-colors px-2 py-1"
+                  >
+                    이동
+                  </button>
+                  <button
                     onClick={() => deleteFile(f)}
                     className="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1"
                   >
                     삭제
                   </button>
                 </div>
+                {movingFile === f.id && (
+                  <div className="absolute right-0 top-full mt-1 z-10 bg-white border border-slate-200 rounded-xl shadow-lg p-2 min-w-[180px]">
+                    <p className="text-[10px] text-slate-400 font-semibold px-2 mb-1">이동할 폴더 선택</p>
+                    <button
+                      onClick={() => moveFile(f.id, null)}
+                      className="w-full text-left text-xs px-2 py-1.5 rounded-lg hover:bg-slate-50 text-slate-600"
+                    >
+                      📂 루트
+                    </button>
+                    {allFolders.filter(af => af.id !== currentFolder).map(af => (
+                      <button
+                        key={af.id}
+                        onClick={() => moveFile(f.id, af.id)}
+                        className="w-full text-left text-xs px-2 py-1.5 rounded-lg hover:bg-slate-50 text-slate-600"
+                      >
+                        📁 {af.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
