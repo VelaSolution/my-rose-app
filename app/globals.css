@@ -38,13 +38,19 @@ html.capacitor-app body {
 }
 html.capacitor-app .vela-nav {
   padding-top: env(safe-area-inset-top) !important;
-  height: calc(64px + env(safe-area-inset-top)) !important;
+  height: calc(52px + env(safe-area-inset-top)) !important;
   align-items: flex-end !important;
 }
 html.capacitor-app .vela-nav-inner {
-  height: 64px;
+  height: 52px;
   align-items: center;
 }
+/* 앱에서 NavBar 드롭다운/링크 숨기기 — 하단 탭바로 대체 */
+html.capacitor-app .vela-nav-links { display: none !important; }
+html.capacitor-app .vela-nav-actions { display: none !important; }
+html.capacitor-app .vela-hamburger { display: none !important; }
+/* 앱에서 body 상단 패딩 */
+html.capacitor-app body { padding-top: calc(52px + env(safe-area-inset-top)) !important; }
 /* 앱에서 ToolNav 하단 탭바 safe area */
 html.capacitor-app nav.fixed.bottom-0 {
   padding-bottom: env(safe-area-inset-bottom) !important;
@@ -55,6 +61,78 @@ html.capacitor-app .safe-bottom {
 }
 /* 앱에서 PWA 설치 프롬프트 숨기기 */
 html.capacitor-app .InstallPrompt { display: none !important; }
+
+/* ── 모바일 최적화 (max-width: 768px) ─────────────── */
+@media (max-width: 768px) {
+  /* 전체 폰트 크기 약간 줄이기 */
+  html { font-size: 15px; }
+
+  /* NavBar 높이 축소 */
+  .vela-nav { height: 56px !important; }
+  .vela-nav-logo { font-size: 18px !important; }
+
+  /* body 상단 패딩 NavBar에 맞춤 */
+  body { padding-top: 56px !important; }
+
+  /* 컨텐츠 영역 패딩 최적화 */
+  main { padding-left: 12px !important; padding-right: 12px !important; }
+  .px-4 { padding-left: 12px !important; padding-right: 12px !important; }
+
+  /* 카드 패딩 축소 */
+  .rounded-3xl.p-6 { padding: 16px !important; }
+  .rounded-3xl.p-5 { padding: 14px !important; }
+
+  /* 제목 크기 축소 */
+  .text-4xl { font-size: 1.75rem !important; }
+  .text-3xl { font-size: 1.5rem !important; }
+  .text-2xl { font-size: 1.25rem !important; }
+  .text-xl { font-size: 1.1rem !important; }
+  .text-lg { font-size: 1rem !important; }
+
+  /* 상단 여백 축소 */
+  .pt-20 { padding-top: 72px !important; }
+  .mt-6 { margin-top: 16px !important; }
+  .mb-10 { margin-bottom: 24px !important; }
+  .mb-8 { margin-bottom: 20px !important; }
+
+  /* 하단 탭바 공간 확보 */
+  .pb-16 { padding-bottom: 80px !important; }
+
+  /* 카드 border-radius 모바일 축소 */
+  .rounded-3xl { border-radius: 20px !important; }
+
+  /* 버튼 터치 영역 확보 */
+  button, a[role="button"], .rounded-xl {
+    min-height: 44px;
+  }
+
+  /* 입력 필드 터치 최적화 */
+  input, textarea, select {
+    font-size: 16px !important; /* iOS 확대 방지 */
+    min-height: 44px;
+  }
+
+  /* 탭 버튼 컴팩트 */
+  .flex.gap-1\.5.overflow-x-auto button {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* 그리드 간격 축소 */
+  .gap-4 { gap: 12px !important; }
+  .gap-3 { gap: 8px !important; }
+  .gap-6 { gap: 16px !important; }
+
+  /* 도구 허브 카드 한 줄에 1개 */
+  .grid.grid-cols-1.sm\:grid-cols-2 { grid-template-columns: 1fr !important; }
+
+  /* 모바일에서 데스크탑 사이드바 확실히 숨기기 */
+  aside.hidden.md\:flex { display: none !important; }
+
+  /* 스크롤바 숨기기 */
+  ::-webkit-scrollbar { display: none; }
+  * { -ms-overflow-style: none; scrollbar-width: none; }
+}
 
 /* ── 라이트 모드 가독성 강화 ───────────────────────── */
 .text-slate-400 { color: #6B7684 !important; }
