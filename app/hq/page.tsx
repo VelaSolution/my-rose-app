@@ -161,10 +161,25 @@ export default function HQPage() {
         const uName = user.user_metadata?.nickname ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "관리자";
         setUserName(uName);
         const adminEmails = ["mnhyuk@velaanalytics.com", "mnhyuk0213@gmail.com"];
-        // 팀 멤버 이메일 + 권한 확인
+        // 팀 멤버를 Supabase에서 먼저 로드하여 권한 확인
         let teamData: TeamMember[] = [];
-        try { const tm = localStorage.getItem("vela-hq-team"); if (tm) teamData = JSON.parse(tm); } catch {}
-        const teamEmails = teamData.map(m => m.email).filter(Boolean);
+        try {
+          const { data: td } = await sb.from("hq_team").select("*").order("created_at", { ascending: true });
+          if (td && td.length > 0) {
+            teamData = td.map((r: Record<string, unknown>) => ({ id: r.id as string, name: r.name as string, role: r.role as string, email: r.email as string, status: (r.status as "active" | "away" | "offline") ?? "active", hqRole: (r.hq_role as HQRole) ?? "팀원" }));
+          } else {
+            // 기본 멤버 삽입
+            const defaults = [
+              { name: "민혁", role: "대표", email: "mnhyuk@velaanalytics.com", status: "active", hq_role: "대표" },
+              { name: "운영팀", role: "운영", email: "ops@velaanalytics.com", status: "active", hq_role: "팀원" },
+            ];
+            const { data: inserted } = await sb.from("hq_team").insert(defaults).select();
+            if (inserted) {
+              teamData = inserted.map((r: Record<string, unknown>) => ({ id: r.id as string, name: r.name as string, role: r.role as string, email: r.email as string, status: (r.status as "active" | "away" | "offline") ?? "active", hqRole: (r.hq_role as HQRole) ?? "팀원" }));
+            }
+          }
+          setTeamMembers(teamData);
+        } catch {}
 
         if (adminEmails.includes(user.email ?? "")) {
           setAuthorized(true);
@@ -207,28 +222,46 @@ export default function HQPage() {
         setTasks((t.data ?? []) as Task[]);
         setAars((a.data ?? []) as AAR[]);
       } catch (e) { console.error("HQ load error:", e); }
-      try { const n = localStorage.getItem("vela-hq-notices"); if (n) setNotices(JSON.parse(n)); } catch {}
-      try { const f = localStorage.getItem("vela-hq-feedback"); if (f) setFeedbacks(JSON.parse(f)); } catch {}
-      try { const m = localStorage.getItem("vela-hq-memo"); if (m) setMemos(JSON.parse(m)); } catch {}
+
+      // Supabase에서 나머지 데이터 로드
       try {
-        const tm = localStorage.getItem("vela-hq-team");
-        if (tm) setTeamMembers(JSON.parse(tm));
-        else {
-          const defaults: TeamMember[] = [
-            { id: "1", name: "민혁", role: "대표", email: "mnhyuk@velaanalytics.com", status: "active", hqRole: "대표" },
-            { id: "2", name: "운영팀", role: "운영", email: "ops@velaanalytics.com", status: "active", hqRole: "팀원" },
-          ];
-          setTeamMembers(defaults); localStorage.setItem("vela-hq-team", JSON.stringify(defaults));
+        const s = createSupabaseBrowserClient();
+        if (s) {
+          const [noticesRes, feedbackRes, memosRes, chatRes, approvalsRes, decisionsRes, reportsRes, foldersRes, filesRes] = await Promise.all([
+            s.from("hq_notices").select("*").order("created_at", { ascending: false }),
+            s.from("hq_feedback").select("*").order("created_at", { ascending: false }),
+            s.from("hq_memos").select("*").order("created_at", { ascending: false }),
+            s.from("hq_chat").select("*").order("created_at", { ascending: true }),
+            s.from("hq_approvals").select("*").order("created_at", { ascending: false }),
+            s.from("hq_decisions").select("*").order("created_at", { ascending: false }),
+            s.from("hq_reports").select("*").order("created_at", { ascending: false }),
+            s.from("hq_folders").select("*").order("created_at", { ascending: true }),
+            s.from("hq_files").select("*").order("created_at", { ascending: false }),
+          ]);
+          if (noticesRes.data) setNotices(noticesRes.data.map((r: Record<string, unknown>) => ({ id: r.id as string, title: r.title as string, content: (r.content as string) ?? "", date: (r.created_at as string)?.slice(0, 10) ?? "", pinned: (r.pinned as boolean) ?? false, author: (r.author as string) ?? "", readBy: (r.read_by as string[]) ?? [] })));
+          if (feedbackRes.data) setFeedbacks(feedbackRes.data.map((r: Record<string, unknown>) => ({ id: r.id as string, type: (r.type as string) ?? "", title: (r.title as string) ?? "", description: (r.description as string) ?? "", priority: (r.priority as string) ?? "중간", status: (r.status as string) ?? "신규", date: (r.created_at as string)?.slice(0, 10) ?? "", author: (r.author as string) ?? "" })));
+          if (memosRes.data) setMemos(memosRes.data.map((r: Record<string, unknown>) => ({ id: r.id as string, content: (r.content as string) ?? "", time: r.created_at ? new Date(r.created_at as string).toLocaleString("ko-KR") : "" })));
+          if (chatRes.data) setChatMsgs(chatRes.data.map((r: Record<string, unknown>) => ({ id: r.id as string, sender: (r.sender as string) ?? "", text: (r.text as string) ?? "", time: (r.created_at as string) ?? "" })));
+          if (approvalsRes.data) setApprovals(approvalsRes.data.map((r: Record<string, unknown>) => ({ id: r.id as string, title: (r.title as string) ?? "", content: (r.content as string) ?? "", author: (r.author as string) ?? "", approver: (r.approver as string) ?? "", status: (r.status as "대기" | "승인" | "반려") ?? "대기", comment: (r.comment as string) ?? "", fileUrl: r.file_url as string | undefined, fileName: r.file_name as string | undefined, date: (r.created_at as string)?.slice(0, 10) ?? "" })));
+          if (decisionsRes.data) setDecisions(decisionsRes.data.map((r: Record<string, unknown>) => ({ id: r.id as string, title: (r.title as string) ?? "", decision: (r.decision as string) ?? "", reason: (r.reason as string) ?? "", owner: (r.owner as string) ?? "", date: (r.created_at as string)?.slice(0, 10) ?? "", followUp: (r.follow_up as string) ?? "" })));
+          if (reportsRes.data) {
+            const daily: DailyReport[] = []; const issue: IssueReport[] = []; const project: ProjectReport[] = [];
+            for (const r of reportsRes.data as Record<string, unknown>[]) {
+              const rt = r.report_type as string;
+              if (rt === "daily") daily.push({ id: r.id as string, date: (r.created_at as string)?.slice(0, 10) ?? "", content: (r.content as string) ?? "", problems: (r.problems as string) ?? "", nextSteps: (r.next_steps as string) ?? "", status: (r.status as ReportStatus) ?? "draft", approver: r.approver as string | undefined });
+              else if (rt === "issue") issue.push({ id: r.id as string, title: (r.title as string) ?? "", description: (r.description as string) ?? "", priority: (r.priority as string) ?? "중간", status: (r.status as string) ?? "신규", reportStatus: (r.status as ReportStatus) ?? "draft", approver: r.approver as string | undefined });
+              else if (rt === "project") project.push({ id: r.id as string, title: (r.title as string) ?? "", progress: (r.progress as number) ?? 0, description: (r.description as string) ?? "", deadline: (r.deadline as string) ?? "", reportStatus: (r.status as ReportStatus) ?? "draft", approver: r.approver as string | undefined });
+            }
+            setDailyReports(daily); setIssueReports(issue); setProjectReports(project);
+          }
+          if (foldersRes.data) setFolders(foldersRes.data.map((r: Record<string, unknown>) => ({ id: r.id as string, name: (r.name as string) ?? "", parentId: r.parent_id as string | undefined })));
+          if (filesRes.data) setFiles(filesRes.data.map((r: Record<string, unknown>) => ({ id: r.id as string, name: (r.name as string) ?? "", size: (r.size as string) ?? "", type: (r.type as string) ?? "", url: (r.url as string) ?? "", uploadedAt: (r.created_at as string) ?? "", uploadedBy: (r.uploaded_by as string) ?? "", folderId: r.folder_id as string | undefined })));
         }
-      } catch {}
+      } catch (e) { console.error("HQ Supabase load error:", e); }
+
+      // localStorage에 유지하는 항목
       try { const d = localStorage.getItem("vela-hq-directive"); if (d) setDirective(d); } catch {}
-      // files는 Supabase Storage에서 로드 (별도 처리 불필요 — 업로드 시 state에 추가)
-      try { const ch = localStorage.getItem("vela-hq-chat"); if (ch) setChatMsgs(JSON.parse(ch)); } catch {}
-      try { const ap = localStorage.getItem("vela-hq-approvals"); if (ap) setApprovals(JSON.parse(ap)); } catch {}
-      try { const dc = localStorage.getItem("vela-hq-decisions"); if (dc) setDecisions(JSON.parse(dc)); } catch {}
       try { const tc = localStorage.getItem("vela-hq-task-comments"); if (tc) setTaskComments(JSON.parse(tc)); } catch {}
-      try { const rp = localStorage.getItem("vela-hq-reports"); if (rp) { const d = JSON.parse(rp); setDailyReports(d.daily ?? []); setIssueReports(d.issue ?? []); setProjectReports(d.project ?? []); } } catch {}
-      try { const fl = localStorage.getItem("vela-hq-folders"); if (fl) setFolders(JSON.parse(fl)); } catch {}
       setLoading(false);
     })();
   }, []);
@@ -283,49 +316,120 @@ export default function HQPage() {
   const delAAR = async (id: string) => { await del("hq_aar", id); setAars(aars.filter(a => a.id !== id)); };
 
   // Notice helpers
-  const saveNotice = () => {
+  const saveNotice = async () => {
     if (!noticeForm.title.trim()) return;
-    const n: Notice = { id: Date.now().toString(), title: noticeForm.title, content: noticeForm.content, date: new Date().toISOString().slice(0, 10), pinned: noticeForm.pinned, author: userName };
-    const next = [n, ...notices]; setNotices(next); localStorage.setItem("vela-hq-notices", JSON.stringify(next));
-    setNoticeForm({ title: "", content: "", pinned: false }); flash("✓ 공지 저장됨");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_notices").insert({ title: noticeForm.title, content: noticeForm.content, pinned: noticeForm.pinned, author: userName }).select().single();
+      if (error) { flash("저장 실패: " + error.message); return; }
+      if (data) {
+        const n: Notice = { id: data.id, title: data.title, content: data.content ?? "", date: data.created_at?.slice(0, 10) ?? "", pinned: data.pinned ?? false, author: data.author ?? "", readBy: data.read_by ?? [] };
+        setNotices([n, ...notices]);
+      }
+      setNoticeForm({ title: "", content: "", pinned: false }); flash("✓ 공지 저장됨");
+    } catch (e) { flash("저장 실패"); }
   };
-  const togglePin = (id: string) => { const next = notices.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n); setNotices(next); localStorage.setItem("vela-hq-notices", JSON.stringify(next)); };
-  const delNotice = (id: string) => { const next = notices.filter(n => n.id !== id); setNotices(next); localStorage.setItem("vela-hq-notices", JSON.stringify(next)); };
+  const togglePin = async (id: string) => {
+    const current = notices.find(n => n.id === id); if (!current) return;
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_notices").update({ pinned: !current.pinned }).eq("id", id);
+      setNotices(notices.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n));
+    } catch {}
+  };
+  const delNotice = async (id: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_notices").delete().eq("id", id);
+      setNotices(notices.filter(n => n.id !== id));
+    } catch {}
+  };
   const sortedNotices = [...notices].sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1));
 
   // Feedback helpers
-  const saveFb = () => {
+  const saveFb = async () => {
     if (!fbForm.title.trim()) return;
-    const f: Feedback = { id: Date.now().toString(), ...fbForm, date: new Date().toISOString().slice(0, 10), author: userName };
-    const next = [f, ...feedbacks]; setFeedbacks(next); localStorage.setItem("vela-hq-feedback", JSON.stringify(next));
-    setFbForm({ type: "버그", title: "", description: "", priority: "중간", status: "신규" }); flash("✓ 피드백 저장됨");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_feedback").insert({ type: fbForm.type, title: fbForm.title, description: fbForm.description, priority: fbForm.priority, status: fbForm.status, author: userName }).select().single();
+      if (error) { flash("저장 실패: " + error.message); return; }
+      if (data) {
+        const f: Feedback = { id: data.id, type: data.type ?? "", title: data.title ?? "", description: data.description ?? "", priority: data.priority ?? "중간", status: data.status ?? "신규", date: data.created_at?.slice(0, 10) ?? "", author: data.author ?? "" };
+        setFeedbacks([f, ...feedbacks]);
+      }
+      setFbForm({ type: "버그", title: "", description: "", priority: "중간", status: "신규" }); flash("✓ 피드백 저장됨");
+    } catch { flash("저장 실패"); }
   };
-  const updateFbStatus = (id: string, status: string) => { const next = feedbacks.map(f => f.id === id ? { ...f, status } : f); setFeedbacks(next); localStorage.setItem("vela-hq-feedback", JSON.stringify(next)); };
-  const delFb = (id: string) => { const next = feedbacks.filter(f => f.id !== id); setFeedbacks(next); localStorage.setItem("vela-hq-feedback", JSON.stringify(next)); };
+  const updateFbStatus = async (id: string, status: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_feedback").update({ status }).eq("id", id);
+      setFeedbacks(feedbacks.map(f => f.id === id ? { ...f, status } : f));
+    } catch {}
+  };
+  const delFb = async (id: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_feedback").delete().eq("id", id);
+      setFeedbacks(feedbacks.filter(f => f.id !== id));
+    } catch {}
+  };
 
   // Memo helpers
-  const saveMemo = () => {
+  const saveMemo = async () => {
     if (!memoText.trim()) return;
-    const m: MemoItem = { id: Date.now().toString(), content: memoText, time: new Date().toLocaleString("ko-KR") };
-    const next = [m, ...memos]; setMemos(next); localStorage.setItem("vela-hq-memo", JSON.stringify(next));
-    setMemoText(""); flash("✓ 메모 저장됨");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_memos").insert({ content: memoText, author: userName }).select().single();
+      if (error) { flash("저장 실패: " + error.message); return; }
+      if (data) {
+        const m: MemoItem = { id: data.id, content: data.content ?? "", time: data.created_at ? new Date(data.created_at).toLocaleString("ko-KR") : "" };
+        setMemos([m, ...memos]);
+      }
+      setMemoText(""); flash("✓ 메모 저장됨");
+    } catch { flash("저장 실패"); }
   };
-  const delMemo = (id: string) => { const next = memos.filter(m => m.id !== id); setMemos(next); localStorage.setItem("vela-hq-memo", JSON.stringify(next)); };
+  const delMemo = async (id: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_memos").delete().eq("id", id);
+      setMemos(memos.filter(m => m.id !== id));
+    } catch {}
+  };
 
   // Team helpers
-  const saveTeamMember = () => {
+  const saveTeamMember = async () => {
     if (!teamForm.name.trim()) return;
-    const m: TeamMember = { id: Date.now().toString(), name: teamForm.name, role: teamForm.role, email: teamForm.email, status: "active", hqRole: teamForm.hqRole };
-    const next = [...teamMembers, m]; setTeamMembers(next); localStorage.setItem("vela-hq-team", JSON.stringify(next));
-    setTeamForm({ name: "", role: "", email: "", hqRole: "팀원" }); flash("✓ 멤버 추가됨");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_team").insert({ name: teamForm.name, role: teamForm.role, email: teamForm.email, status: "active", hq_role: teamForm.hqRole }).select().single();
+      if (error) { flash("저장 실패: " + error.message); return; }
+      if (data) {
+        const m: TeamMember = { id: data.id, name: data.name, role: data.role ?? "", email: data.email ?? "", status: data.status ?? "active", hqRole: data.hq_role ?? "팀원" };
+        setTeamMembers([...teamMembers, m]);
+      }
+      setTeamForm({ name: "", role: "", email: "", hqRole: "팀원" }); flash("✓ 멤버 추가됨");
+    } catch { flash("저장 실패"); }
   };
-  const delTeamMember = (id: string) => { const next = teamMembers.filter(m => m.id !== id); setTeamMembers(next); localStorage.setItem("vela-hq-team", JSON.stringify(next)); };
-  const toggleTeamStatus = (id: string) => {
+  const delTeamMember = async (id: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_team").delete().eq("id", id);
+      setTeamMembers(teamMembers.filter(m => m.id !== id));
+    } catch {}
+  };
+  const toggleTeamStatus = async (id: string) => {
     const cycle: Record<string, "active" | "away" | "offline"> = { active: "away", away: "offline", offline: "active" };
-    const next = teamMembers.map(m => m.id === id ? { ...m, status: cycle[m.status] } : m); setTeamMembers(next); localStorage.setItem("vela-hq-team", JSON.stringify(next));
+    const current = teamMembers.find(m => m.id === id); if (!current) return;
+    const newStatus = cycle[current.status];
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_team").update({ status: newStatus }).eq("id", id);
+      setTeamMembers(teamMembers.map(m => m.id === id ? { ...m, status: newStatus } : m));
+    } catch {}
   };
 
-  // Files — Supabase Storage
+  // Files — Supabase Storage + hq_files table
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f || !userId) return;
     const s = sb(); if (!s) return;
@@ -333,57 +437,110 @@ export default function HQPage() {
     const { error } = await s.storage.from("hq-files").upload(path, f);
     if (error) { flash("업로드 실패: " + error.message); e.target.value = ""; return; }
     const { data: urlData } = s.storage.from("hq-files").getPublicUrl(path);
-    const item: FileItem = { id: path, name: f.name, size: (f.size / 1024 < 1024 ? (f.size / 1024).toFixed(1) + "KB" : (f.size / 1024 / 1024).toFixed(1) + "MB"), type: f.type.split("/")[1] || "file", url: urlData.publicUrl, uploadedAt: new Date().toISOString(), uploadedBy: userName, folderId: currentFolderId };
-    setFiles([item, ...files]);
+    const sizeStr = f.size / 1024 < 1024 ? (f.size / 1024).toFixed(1) + "KB" : (f.size / 1024 / 1024).toFixed(1) + "MB";
+    const typeStr = f.type.split("/")[1] || "file";
+    try {
+      const { data, error: dbErr } = await s.from("hq_files").insert({ name: f.name, size: sizeStr, type: typeStr, url: urlData.publicUrl, folder_id: currentFolderId ?? null, uploaded_by: userName }).select().single();
+      if (dbErr) { flash("파일 정보 저장 실패"); e.target.value = ""; return; }
+      if (data) {
+        const item: FileItem = { id: data.id, name: data.name, size: data.size, type: data.type, url: data.url, uploadedAt: data.created_at ?? "", uploadedBy: data.uploaded_by ?? "", folderId: data.folder_id ?? undefined };
+        setFiles([item, ...files]);
+      }
+    } catch { flash("파일 정보 저장 실패"); e.target.value = ""; return; }
     flash("✓ 업로드 완료");
     e.target.value = "";
   };
   const delFile = async (id: string) => {
     const s = sb(); if (!s) return;
-    await s.storage.from("hq-files").remove([id]);
+    const fileItem = files.find(f => f.id === id);
+    // Storage에서 삭제 (URL에서 path 추출 시도)
+    if (fileItem?.url) {
+      try { const storagePath = fileItem.url.split("/hq-files/")[1]; if (storagePath) await s.storage.from("hq-files").remove([decodeURIComponent(storagePath)]); } catch {}
+    }
+    try { await s.from("hq_files").delete().eq("id", id); } catch {}
     setFiles(files.filter(f => f.id !== id));
   };
   const downloadFile = (f: FileItem) => { window.open(f.url, "_blank"); };
 
   // Chat
-  const sendChat = () => {
+  const sendChat = async () => {
     if (!chatInput.trim()) return;
-    const msg: ChatMsg = { id: Date.now().toString(), sender: userName, text: chatInput.trim(), time: new Date().toISOString() };
-    const next = [...chatMsgs, msg]; setChatMsgs(next); localStorage.setItem("vela-hq-chat", JSON.stringify(next));
-    setChatInput("");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_chat").insert({ sender: userName, text: chatInput.trim() }).select().single();
+      if (error) { flash("전송 실패: " + error.message); return; }
+      if (data) {
+        const msg: ChatMsg = { id: data.id, sender: data.sender ?? "", text: data.text ?? "", time: data.created_at ?? "" };
+        setChatMsgs([...chatMsgs, msg]);
+      }
+      setChatInput("");
+    } catch { flash("전송 실패"); }
   };
-  const delChat = (id: string) => { const next = chatMsgs.filter(m => m.id !== id); setChatMsgs(next); localStorage.setItem("vela-hq-chat", JSON.stringify(next)); };
+  const delChat = async (id: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_chat").delete().eq("id", id);
+      setChatMsgs(chatMsgs.filter(m => m.id !== id));
+    } catch {}
+  };
 
   // Approval helpers
   const saveApproval = async () => {
     if (!approvalForm.title.trim()) return;
+    const s = sb(); if (!s) return;
     let fileUrl: string | undefined; let fileName: string | undefined;
     if (approvalFile && userId) {
-      const s = sb(); if (s) {
-        const path = `${userId}/approval_${Date.now()}_${approvalFile.name}`;
-        const { error } = await s.storage.from("hq-files").upload(path, approvalFile);
-        if (!error) { const { data } = s.storage.from("hq-files").getPublicUrl(path); fileUrl = data.publicUrl; fileName = approvalFile.name; }
-      }
+      const path = `${userId}/approval_${Date.now()}_${approvalFile.name}`;
+      const { error } = await s.storage.from("hq-files").upload(path, approvalFile);
+      if (!error) { const { data } = s.storage.from("hq-files").getPublicUrl(path); fileUrl = data.publicUrl; fileName = approvalFile.name; }
     }
-    const a: Approval = { id: Date.now().toString(), title: approvalForm.title, content: approvalForm.content, author: userName, approver: approvalForm.approver || userName, status: "대기", comment: "", date: new Date().toISOString().slice(0, 10), fileUrl, fileName };
-    const next = [a, ...approvals]; setApprovals(next); localStorage.setItem("vela-hq-approvals", JSON.stringify(next));
-    setApprovalForm({ title: "", content: "", approver: "" }); setApprovalFile(null); flash("✓ 결재 요청됨");
+    try {
+      const { data, error } = await s.from("hq_approvals").insert({ title: approvalForm.title, content: approvalForm.content, author: userName, approver: approvalForm.approver || userName, status: "대기", comment: "", file_url: fileUrl, file_name: fileName }).select().single();
+      if (error) { flash("저장 실패: " + error.message); return; }
+      if (data) {
+        const a: Approval = { id: data.id, title: data.title ?? "", content: data.content ?? "", author: data.author ?? "", approver: data.approver ?? "", status: data.status ?? "대기", comment: data.comment ?? "", fileUrl: data.file_url, fileName: data.file_name, date: data.created_at?.slice(0, 10) ?? "" };
+        setApprovals([a, ...approvals]);
+      }
+      setApprovalForm({ title: "", content: "", approver: "" }); setApprovalFile(null); flash("✓ 결재 요청됨");
+    } catch { flash("저장 실패"); }
   };
-  const updateApproval = (id: string, status: "승인" | "반려", comment?: string) => {
-    const next = approvals.map(a => a.id === id ? { ...a, status, comment: comment ?? a.comment } : a);
-    setApprovals(next); localStorage.setItem("vela-hq-approvals", JSON.stringify(next));
-    flash(`✓ ${status}됨`);
+  const updateApproval = async (id: string, status: "승인" | "반려", comment?: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_approvals").update({ status, comment: comment ?? "" }).eq("id", id);
+      setApprovals(approvals.map(a => a.id === id ? { ...a, status, comment: comment ?? a.comment } : a));
+      flash(`✓ ${status}됨`);
+    } catch {}
   };
-  const delApproval = (id: string) => { const next = approvals.filter(a => a.id !== id); setApprovals(next); localStorage.setItem("vela-hq-approvals", JSON.stringify(next)); };
+  const delApproval = async (id: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_approvals").delete().eq("id", id);
+      setApprovals(approvals.filter(a => a.id !== id));
+    } catch {}
+  };
 
   // Decision helpers
-  const saveDecision = () => {
+  const saveDecision = async () => {
     if (!decisionForm.title.trim()) return;
-    const d: Decision = { id: Date.now().toString(), ...decisionForm, date: new Date().toISOString().slice(0, 10) };
-    const next = [d, ...decisions]; setDecisions(next); localStorage.setItem("vela-hq-decisions", JSON.stringify(next));
-    setDecisionForm({ title: "", decision: "", reason: "", owner: "", followUp: "" }); flash("✓ 의사결정 저장됨");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_decisions").insert({ title: decisionForm.title, decision: decisionForm.decision, reason: decisionForm.reason, owner: decisionForm.owner, follow_up: decisionForm.followUp }).select().single();
+      if (error) { flash("저장 실패: " + error.message); return; }
+      if (data) {
+        const d: Decision = { id: data.id, title: data.title ?? "", decision: data.decision ?? "", reason: data.reason ?? "", owner: data.owner ?? "", date: data.created_at?.slice(0, 10) ?? "", followUp: data.follow_up ?? "" };
+        setDecisions([d, ...decisions]);
+      }
+      setDecisionForm({ title: "", decision: "", reason: "", owner: "", followUp: "" }); flash("✓ 의사결정 저장됨");
+    } catch { flash("저장 실패"); }
   };
-  const delDecision = (id: string) => { const next = decisions.filter(d => d.id !== id); setDecisions(next); localStorage.setItem("vela-hq-decisions", JSON.stringify(next)); };
+  const delDecision = async (id: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_decisions").delete().eq("id", id);
+      setDecisions(decisions.filter(d => d.id !== id));
+    } catch {}
+  };
 
   // Task comment helpers
   const addTaskComment = (taskId: string) => {
@@ -394,24 +551,39 @@ export default function HQPage() {
   };
 
   // Notice read tracking
-  const markNoticeRead = (id: string) => {
+  const markNoticeRead = async (id: string) => {
     setExpandedNotice(expandedNotice === id ? null : id);
     const n = notices.find(x => x.id === id);
     if (n && !(n.readBy ?? []).includes(userName)) {
-      const next = notices.map(x => x.id === id ? { ...x, readBy: [...(x.readBy ?? []), userName] } : x);
-      setNotices(next); localStorage.setItem("vela-hq-notices", JSON.stringify(next));
+      const newReadBy = [...(n.readBy ?? []), userName];
+      setNotices(notices.map(x => x.id === id ? { ...x, readBy: newReadBy } : x));
+      const s = sb(); if (!s) return;
+      try { await s.from("hq_notices").update({ read_by: newReadBy }).eq("id", id); } catch {}
     }
   };
 
   // Folder helpers
-  const createFolder = () => {
+  const createFolder = async () => {
     if (!newFolderName.trim()) return;
-    const f: Folder = { id: Date.now().toString(), name: newFolderName.trim(), parentId: currentFolderId };
-    const next = [...folders, f]; setFolders(next); localStorage.setItem("vela-hq-folders", JSON.stringify(next));
-    setNewFolderName(""); flash("✓ 폴더 생성됨");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_folders").insert({ name: newFolderName.trim(), parent_id: currentFolderId ?? null }).select().single();
+      if (error) { flash("생성 실패: " + error.message); return; }
+      if (data) {
+        const f: Folder = { id: data.id, name: data.name ?? "", parentId: data.parent_id ?? undefined };
+        setFolders([...folders, f]);
+      }
+      setNewFolderName(""); flash("✓ 폴더 생성됨");
+    } catch { flash("생성 실패"); }
   };
-  const delFolder = (id: string) => {
-    const next = folders.filter(f => f.id !== id && f.parentId !== id); setFolders(next); localStorage.setItem("vela-hq-folders", JSON.stringify(next));
+  const delFolder = async (id: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      // 하위 폴더도 삭제
+      await s.from("hq_folders").delete().eq("parent_id", id);
+      await s.from("hq_folders").delete().eq("id", id);
+      setFolders(folders.filter(f => f.id !== id && f.parentId !== id));
+    } catch {}
   };
   const getFolderBreadcrumb = (folderId?: string): Folder[] => {
     const crumbs: Folder[] = []; let cur = folderId;
@@ -425,38 +597,68 @@ export default function HQPage() {
   };
 
   // Report sub-type helpers
-  const saveReports = (daily: DailyReport[], issue: IssueReport[], project: ProjectReport[]) => {
-    localStorage.setItem("vela-hq-reports", JSON.stringify({ daily, issue, project }));
-  };
-  const saveDailyReport = () => {
+  const saveDailyReport = async () => {
     if (!dailyForm.content.trim()) return;
-    const r: DailyReport = { id: Date.now().toString(), ...dailyForm };
-    const next = [r, ...dailyReports]; setDailyReports(next); saveReports(next, issueReports, projectReports);
-    setDailyForm({ date: new Date().toISOString().slice(0, 10), content: "", problems: "", nextSteps: "" }); flash("✓ 저장됨");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_reports").insert({ report_type: "daily", content: dailyForm.content, problems: dailyForm.problems, next_steps: dailyForm.nextSteps, status: "draft", author: userName }).select().single();
+      if (error) { flash("저장 실패: " + error.message); return; }
+      if (data) {
+        const r: DailyReport = { id: data.id, date: data.created_at?.slice(0, 10) ?? dailyForm.date, content: data.content ?? "", problems: data.problems ?? "", nextSteps: data.next_steps ?? "", status: data.status ?? "draft", approver: data.approver };
+        setDailyReports([r, ...dailyReports]);
+      }
+      setDailyForm({ date: new Date().toISOString().slice(0, 10), content: "", problems: "", nextSteps: "" }); flash("✓ 저장됨");
+    } catch { flash("저장 실패"); }
   };
-  const saveIssueReport = () => {
+  const saveIssueReport = async () => {
     if (!issueForm.title.trim()) return;
-    const r: IssueReport = { id: Date.now().toString(), ...issueForm };
-    const next = [r, ...issueReports]; setIssueReports(next); saveReports(dailyReports, next, projectReports);
-    setIssueForm({ title: "", description: "", priority: "중간", status: "신규" }); flash("✓ 저장됨");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_reports").insert({ report_type: "issue", title: issueForm.title, description: issueForm.description, priority: issueForm.priority, status: "draft", author: userName }).select().single();
+      if (error) { flash("저장 실패: " + error.message); return; }
+      if (data) {
+        const r: IssueReport = { id: data.id, title: data.title ?? "", description: data.description ?? "", priority: data.priority ?? "중간", status: issueForm.status, reportStatus: data.status ?? "draft", approver: data.approver };
+        setIssueReports([r, ...issueReports]);
+      }
+      setIssueForm({ title: "", description: "", priority: "중간", status: "신규" }); flash("✓ 저장됨");
+    } catch { flash("저장 실패"); }
   };
-  const saveProjectReport = () => {
+  const saveProjectReport = async () => {
     if (!projectForm.title.trim()) return;
-    const r: ProjectReport = { id: Date.now().toString(), title: projectForm.title, progress: Number(projectForm.progress) || 0, description: projectForm.description, deadline: projectForm.deadline };
-    const next = [r, ...projectReports]; setProjectReports(next); saveReports(dailyReports, issueReports, next);
-    setProjectForm({ title: "", progress: "", description: "", deadline: "" }); flash("✓ 저장됨");
+    const s = sb(); if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_reports").insert({ report_type: "project", title: projectForm.title, progress: Number(projectForm.progress) || 0, description: projectForm.description, deadline: projectForm.deadline || null, status: "draft", author: userName }).select().single();
+      if (error) { flash("저장 실패: " + error.message); return; }
+      if (data) {
+        const r: ProjectReport = { id: data.id, title: data.title ?? "", progress: data.progress ?? 0, description: data.description ?? "", deadline: data.deadline ?? "", reportStatus: data.status ?? "draft", approver: data.approver };
+        setProjectReports([r, ...projectReports]);
+      }
+      setProjectForm({ title: "", progress: "", description: "", deadline: "" }); flash("✓ 저장됨");
+    } catch { flash("저장 실패"); }
   };
-  const updateDailyReportStatus = (id: string, status: ReportStatus, approver?: string) => {
-    const next = dailyReports.map(r => r.id === id ? { ...r, status, approver: approver ?? r.approver } : r);
-    setDailyReports(next); saveReports(next, issueReports, projectReports); flash(`✓ ${REPORT_ST[status]?.label}`);
+  const updateDailyReportStatus = async (id: string, status: ReportStatus, approver?: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_reports").update({ status, approver: approver ?? null }).eq("id", id);
+      setDailyReports(dailyReports.map(r => r.id === id ? { ...r, status, approver: approver ?? r.approver } : r));
+      flash(`✓ ${REPORT_ST[status]?.label}`);
+    } catch {}
   };
-  const updateIssueReportStatus = (id: string, reportStatus: ReportStatus, approver?: string) => {
-    const next = issueReports.map(r => r.id === id ? { ...r, reportStatus, approver: approver ?? r.approver } : r);
-    setIssueReports(next); saveReports(dailyReports, next, projectReports); flash(`✓ ${REPORT_ST[reportStatus]?.label}`);
+  const updateIssueReportStatus = async (id: string, reportStatus: ReportStatus, approver?: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_reports").update({ status: reportStatus, approver: approver ?? null }).eq("id", id);
+      setIssueReports(issueReports.map(r => r.id === id ? { ...r, reportStatus, approver: approver ?? r.approver } : r));
+      flash(`✓ ${REPORT_ST[reportStatus]?.label}`);
+    } catch {}
   };
-  const updateProjectReportStatus = (id: string, reportStatus: ReportStatus, approver?: string) => {
-    const next = projectReports.map(r => r.id === id ? { ...r, reportStatus, approver: approver ?? r.approver } : r);
-    setProjectReports(next); saveReports(dailyReports, issueReports, next); flash(`✓ ${REPORT_ST[reportStatus]?.label}`);
+  const updateProjectReportStatus = async (id: string, reportStatus: ReportStatus, approver?: string) => {
+    const s = sb(); if (!s) return;
+    try {
+      await s.from("hq_reports").update({ status: reportStatus, approver: approver ?? null }).eq("id", id);
+      setProjectReports(projectReports.map(r => r.id === id ? { ...r, reportStatus, approver: approver ?? r.approver } : r));
+      flash(`✓ ${REPORT_ST[reportStatus]?.label}`);
+    } catch {}
   };
   const canApproveReport = myRole === "대표" || myRole === "이사" || myRole === "팀장";
 
