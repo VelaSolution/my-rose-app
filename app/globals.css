@@ -111,7 +111,7 @@ html, body, #__next {
   background: var(--background);
 }
 
-/* ── Dark Mode ─────────────────────────────────────── */
+/* ── Dark Mode — WCAG AA 대비 확보 ─────────────────── */
 html.dark, html.dark body {
   background: #0F172A !important;
   color: #E2E8F0 !important;
@@ -121,16 +121,17 @@ html.dark .bg-white { background-color: #1E293B !important; }
 html.dark .bg-slate-50 { background-color: #0F172A !important; }
 html.dark .bg-slate-100 { background-color: #253348 !important; }
 html.dark .bg-gray-50 { background-color: #0F172A !important; }
-html.dark .bg-gray-100 { background-color: #1E293B !important; }
+html.dark .bg-gray-100 { background-color: #253348 !important; }
 
-html.dark .text-slate-900 { color: #F1F5F9 !important; }
-html.dark .text-slate-800 { color: #E2E8F0 !important; }
-html.dark .text-slate-700 { color: #CBD5E1 !important; }
-html.dark .text-slate-600 { color: #94A3B8 !important; }
-html.dark .text-gray-900 { color: #F1F5F9 !important; }
-html.dark .text-gray-800 { color: #E2E8F0 !important; }
-html.dark .text-gray-700 { color: #CBD5E1 !important; }
-html.dark .text-gray-600 { color: #94A3B8 !important; }
+/* 텍스트: 모든 단계를 한 칸씩 밝게 */
+html.dark .text-slate-900 { color: #F8FAFC !important; }
+html.dark .text-slate-800 { color: #F1F5F9 !important; }
+html.dark .text-slate-700 { color: #E2E8F0 !important; }
+html.dark .text-slate-600 { color: #CBD5E1 !important; }
+html.dark .text-gray-900 { color: #F8FAFC !important; }
+html.dark .text-gray-800 { color: #F1F5F9 !important; }
+html.dark .text-gray-700 { color: #E2E8F0 !important; }
+html.dark .text-gray-600 { color: #CBD5E1 !important; }
 
 html.dark .border-slate-200 { border-color: #334155 !important; }
 html.dark .border-slate-300 { border-color: #334155 !important; }
@@ -146,31 +147,30 @@ html.dark input, html.dark textarea, html.dark select {
 
 html.dark .vela-nav { background: rgba(15, 23, 42, 0.92) !important; border-bottom-color: #334155 !important; }
 html.dark .vela-nav-logo { color: #F1F5F9 !important; }
-html.dark .vela-nav-links a { color: #94A3B8 !important; }
-html.dark .vela-nav-links a:hover { color: #F1F5F9 !important; }
-html.dark .vela-dropdown-btn { color: #94A3B8 !important; }
-html.dark .vela-dropdown-btn:hover { color: #F1F5F9 !important; }
+html.dark .vela-nav-links a { color: #CBD5E1 !important; }
+html.dark .vela-nav-links a:hover { color: #F8FAFC !important; }
+html.dark .vela-dropdown-btn { color: #CBD5E1 !important; }
+html.dark .vela-dropdown-btn:hover { color: #F8FAFC !important; }
 html.dark .vela-dropdown-menu { background: #1E293B !important; border-color: #334155 !important; }
 html.dark .vela-dropdown-item:hover { background: #334155 !important; }
-html.dark .vela-dropdown-label { color: #F1F5F9 !important; }
-html.dark .vela-dropdown-desc { color: #94A3B8 !important; }
+html.dark .vela-dropdown-label { color: #F8FAFC !important; }
+html.dark .vela-dropdown-desc { color: #CBD5E1 !important; }
 html.dark .vela-btn-dashboard { background: #334155 !important; color: #E2E8F0 !important; }
 html.dark .vela-btn-dashboard:hover { background: #475569 !important; }
-html.dark .vela-btn-logout { border-color: #334155 !important; color: #94A3B8 !important; }
-html.dark .vela-btn-logout:hover { border-color: #E2E8F0 !important; color: #F1F5F9 !important; }
-html.dark .vela-btn-login { color: #94A3B8 !important; }
-html.dark .vela-btn-login:hover { color: #F1F5F9 !important; }
+html.dark .vela-btn-logout { border-color: #334155 !important; color: #CBD5E1 !important; }
+html.dark .vela-btn-logout:hover { border-color: #F1F5F9 !important; color: #F8FAFC !important; }
+html.dark .vela-btn-login { color: #CBD5E1 !important; }
+html.dark .vela-btn-login:hover { color: #F8FAFC !important; }
 html.dark .vela-user-name { color: #E2E8F0 !important; }
 html.dark .vela-mobile-menu { background: #1E293B !important; border-bottom-color: #334155 !important; }
 html.dark .vela-mobile-link { color: #E2E8F0 !important; border-bottom-color: #334155 !important; }
 html.dark .vela-hamburger span { background: #E2E8F0 !important; }
 
-/* Dark mode: additional text overrides — 가독성 강화 */
-html.dark .text-slate-500 { color: #CBD5E1 !important; }
+/* Dark mode: 보조 텍스트 — WCAG AA 4.5:1 이상 확보 */
+html.dark .text-slate-500 { color: #E2E8F0 !important; }
 html.dark .text-slate-400 { color: #CBD5E1 !important; }
-html.dark .text-gray-500 { color: #CBD5E1 !important; }
+html.dark .text-gray-500 { color: #E2E8F0 !important; }
 html.dark .text-gray-400 { color: #CBD5E1 !important; }
-html.dark .text-xs.text-slate-400, html.dark .text-\[11px\].text-slate-400, html.dark .text-\[10px\].text-slate-400 { color: #94A3B8 !important; }
 
 /* Dark mode: border extras */
 html.dark .border-slate-100 { border-color: #1E293B !important; }
@@ -214,7 +214,7 @@ html.dark input:focus, html.dark textarea:focus, html.dark select:focus {
 
 /* Dark mode: placeholder text */
 html.dark input::placeholder, html.dark textarea::placeholder {
-  color: #CBD5E1 !important;
+  color: #94A3B8 !important;
 }
 
 /* Dark mode: scrollbar */
