@@ -109,7 +109,10 @@ export default function HQPage() {
         const uName = user.user_metadata?.nickname ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "관리자";
         setUserName(uName);
         const adminEmails = ["mnhyuk@velaanalytics.com", "mnhyuk0213@gmail.com"];
-        if (adminEmails.includes(user.email ?? "")) setAuthorized(true);
+        // 팀 멤버 이메일도 접근 허용
+        let teamEmails: string[] = [];
+        try { const tm = localStorage.getItem("vela-hq-team"); if (tm) teamEmails = JSON.parse(tm).map((m: { email: string }) => m.email).filter(Boolean); } catch {}
+        if (adminEmails.includes(user.email ?? "") || teamEmails.includes(user.email ?? "")) setAuthorized(true);
 
         // 플랫폼 실시간 통계
         try {
