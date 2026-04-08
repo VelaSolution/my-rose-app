@@ -61,6 +61,35 @@ html.capacitor-app .safe-bottom {
 }
 /* 앱에서 PWA 설치 프롬프트 숨기기 */
 html.capacitor-app .InstallPrompt { display: none !important; }
+/* 앱에서 상단/하단 바 절대 고정 — 스크롤 영향 없음 */
+html.capacitor-app .vela-nav {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 100 !important;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+html.capacitor-app nav.fixed.bottom-0 {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 100 !important;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+/* 앱에서 전체 화면 스크롤 영역 */
+html.capacitor-app {
+  height: 100%;
+  overflow: hidden;
+}
+html.capacitor-app body {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
 /* ── 모바일 최적화 (max-width: 768px) ─────────────── */
 @media (max-width: 768px) {
