@@ -64,7 +64,7 @@ export default function NavBar() {
           <Link href="/" className="vela-nav-logo" style={{fontSize:20,fontWeight:800,color:"#191F28",textDecoration:"none",letterSpacing:"-0.02em"}}>VELA<span style={{color:"#3182F6"}}>.</span></Link>
 
           <div className="vela-nav-links">
-            <a href="/info#features">{t("nav.service", locale)}</a>
+            <a href="/#features">{t("nav.service", locale)}</a>
             <div className="vela-dropdown">
               <Link href="/tools" className="vela-dropdown-btn" style={{ textDecoration:"none" }}>{t("nav.tools", locale)} <span className="vela-dropdown-arrow">▾</span></Link>
               <div className="vela-dropdown-menu">
@@ -117,7 +117,7 @@ export default function NavBar() {
 
       {/* 모바일 메뉴 */}
       <div className={`vela-mobile-menu${menuOpen ? " open" : ""}`} role="menu" aria-hidden={!menuOpen}>
-        <a href="/info#features" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>서비스</a>
+        <a href="/#features" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>서비스</a>
         <div style={{ borderBottom:"1px solid #F2F4F6", paddingBottom:"8px" }}>
           <p style={{ fontSize:"11px", fontWeight:700, color:"#9EA6B3", padding:"12px 0 6px", letterSpacing:"0.5px" }}>도구</p>
           {TOOLS.map(item => (
