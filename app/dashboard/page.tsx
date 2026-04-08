@@ -175,9 +175,9 @@ export default function DashboardHome() {
     <div className="min-h-screen bg-slate-50">
       
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 space-y-4 animate-pulse">
-        <div className="h-8 bg-slate-200 rounded-2xl w-48" />
+        <div className="h-8 bg-slate-200 rounded-3xl w-48" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[1,2,3,4].map(i => <div key={i} className="h-20 bg-slate-200 rounded-2xl" />)}
+          {[1,2,3,4].map(i => <div key={i} className="h-20 bg-slate-200 rounded-3xl" />)}
         </div>
         <div className="h-64 bg-slate-200 rounded-3xl" />
         <div className="h-48 bg-slate-200 rounded-3xl" />
@@ -189,7 +189,7 @@ export default function DashboardHome() {
     <div className="min-h-screen bg-slate-50">
       <div className="flex flex-col items-center justify-center h-[80vh] gap-4">
         <p className="text-xl font-bold text-slate-900">로그인 후 이용하세요</p>
-        <Link href="/login" className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white">로그인</Link>
+        <Link href="/login" className="rounded-3xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white">로그인</Link>
       </div>
     </div>
   );
@@ -207,7 +207,7 @@ export default function DashboardHome() {
               <h1 className="text-2xl font-bold text-slate-900 mt-1">{greeting}, {name}! 👋</h1>
             </div>
             <div className="flex gap-2">
-              <Link href="/simulator" className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition">시뮬레이터 →</Link>
+              <Link href="/simulator" className="rounded-3xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition">시뮬레이터 →</Link>
             </div>
           </div>
 
@@ -220,7 +220,7 @@ export default function DashboardHome() {
             return (
               <div className="space-y-2">
                 {alerts.map((alert, i) => (
-                  <div key={i} className={`rounded-2xl px-4 py-3 text-sm font-medium ${
+                  <div key={i} className={`rounded-3xl px-4 py-3 text-sm font-medium ${
                     alert.type === "critical" ? "bg-red-50 text-red-700 ring-1 ring-red-200" :
                     alert.type === "warning" ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200" :
                     "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
@@ -240,7 +240,7 @@ export default function DashboardHome() {
               { label:"누적 총 매출",   value: totalRevenue > 0 ? fmt(totalRevenue)+"원" : "—",         sub: `${snapshots.length}개월 합계`, color:"text-blue-600" },
               { label:"평균 원가율",    value: menus.length > 0 ? avgCostRate.toFixed(1)+"%" : "—",    sub: `메뉴 ${menus.length}개 기준`, color: avgCostRate > 40 ? "text-red-500" : menus.length > 0 ? "text-emerald-600" : "text-slate-900" },
             ].map(s => (
-              <div key={s.label} className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+              <div key={s.label} className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
                 <p className="text-xs text-slate-400 mb-1">{s.label}</p>
                 <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
                 {s.sub && <p className="text-xs text-slate-400 mt-1">{s.sub}</p>}
@@ -256,7 +256,7 @@ export default function DashboardHome() {
             const todayNum = Number(todaySales.replace(/[^0-9]/g, "")) || 0;
             const goalPct = dailyGoal > 0 ? Math.min(Math.round((todayNum / dailyGoal) * 100), 100) : 0;
             return (
-              <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+              <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-slate-900">📊 오늘의 매출</h2>
                   <span className="text-xs text-slate-400">{today}</span>
@@ -290,7 +290,7 @@ export default function DashboardHome() {
           })()}
 
           {/* 목표 달성 게이지 */}
-          <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+          <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-slate-900">🎯 월 매출 목표</h2>
               <button
@@ -504,7 +504,7 @@ export default function DashboardHome() {
                   <div className="space-y-2">
                     {sims.map(h => (
                       <Link key={h.id} href={`/result?historyId=${h.id}`}
-                        className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 hover:bg-slate-100 transition">
+                        className="flex items-center gap-3 rounded-3xl bg-slate-50 px-4 py-3 hover:bg-slate-100 transition">
                         <span className="text-xl">{IND[h.form?.industry] ?? "📊"}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-slate-800 truncate">{h.label}</p>

@@ -112,7 +112,7 @@ function StrategyGuideSection({
   const guides = useMemo(() => buildGuides(form, result), [form, result]);
 
   return (
-    <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <div className="mb-5">
         <h2 className="text-xl font-bold text-slate-900">전략 가이드</h2>
         <p className="mt-1 text-sm text-slate-500">
@@ -212,7 +212,7 @@ function AIStrategySection({
   };
 
   return (
-    <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <UpgradeModal
         open={showUpgrade}
         onClose={() => setShowUpgrade(false)}
@@ -387,7 +387,7 @@ function AIBriefingSection({ form, result, plan }: { form: FullForm; result: Ret
   };
 
   return (
-    <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900">AI 브리핑</h2>
@@ -495,7 +495,7 @@ function HistorySection() {
   const profitDiff = prev ? latest.result.profit - prev.result.profit : null;
 
   return (
-    <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900">월별 추이</h2>
@@ -681,10 +681,10 @@ function ResultContent() {
     <div className="min-h-screen bg-slate-50 print:bg-white">
       
       <main className="px-4 py-6 md:px-8 print:px-0">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto max-w-3xl space-y-6">
 
         {/* 헤더 */}
-        <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200 print:rounded-none print:shadow-none">
+        <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 print:rounded-none print:shadow-none">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2">
@@ -812,7 +812,7 @@ function ResultContent() {
 
         {/* 손익분기 D-day */}
         {result.bepGap < 0 && (
-          <section className="rounded-[28px] bg-gradient-to-r from-amber-50 to-orange-50 p-6 ring-1 ring-amber-200">
+          <section className="rounded-3xl bg-gradient-to-r from-amber-50 to-orange-50 p-6 ring-1 ring-amber-200">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <h2 className="text-lg font-bold text-amber-900">손익분기 달성까지</h2>
@@ -853,7 +853,7 @@ function ResultContent() {
             { label: "순이익률", mine: result.netMargin, avg: bench.netMargin, lowerBetter: false },
           ];
           return (
-            <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
               <div className="mb-5 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">업종 평균 비교</h2>
@@ -927,7 +927,7 @@ function ResultContent() {
           ].filter(i => i.value > 0);
           const total = items.reduce((s, i) => s + i.value, 0);
           return (
-            <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
               <h2 className="mb-1 text-xl font-bold text-slate-900">비용 구조</h2>
               <p className="mb-5 text-sm text-slate-500">월 총 비용 {fmt(total)}원의 구성</p>
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
@@ -970,7 +970,7 @@ function ResultContent() {
           const simResult = useMemo(() => calcResult({ ...form, ...sensitivity }), [sensitivity]);
           const profitDiff = simResult.profit - result.profit;
           return (
-            <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
               <div className="mb-5">
                 <h2 className="text-xl font-bold text-slate-900">민감도 분석</h2>
                 <p className="mt-1 text-sm text-slate-500">슬라이더를 조절해 수익 변화를 즉시 확인하세요.</p>
@@ -1063,7 +1063,7 @@ function ResultContent() {
             </div>
           );
           return (
-            <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
               <div className="mb-5">
                 <h2 className="text-xl font-bold text-slate-900">A vs B 시나리오 비교</h2>
                 <p className="mt-1 text-sm text-slate-500">두 가지 시나리오를 나란히 비교해 더 나은 선택을 찾으세요.</p>
@@ -1100,7 +1100,7 @@ function ResultContent() {
         })()}
 
         {/* 운영 진단 */}
-        <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <div className="mb-4">
             <h2 className="text-xl font-bold text-slate-900">운영 진단</h2>
             <p className="mt-1 text-sm text-slate-500">{config.label} 기준으로 해당하는 문제를 모두 표시합니다.</p>
@@ -1115,7 +1115,7 @@ function ResultContent() {
 
         {/* 비용 상세 + 추천 전략 */}
         <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <h2 className="text-xl font-bold text-slate-900">비용 상세</h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <InfoBox title="인건비 (4대보험 포함)" value={`${fmt(result.laborCost + result.insuranceCost)}원`} sub={`비율 ${pct(result.laborRatio)}`} tone={result.laborRatio < config.laborWarnRate ? "good" : "bad"} />
@@ -1135,7 +1135,7 @@ function ResultContent() {
             </div>
           </div>
 
-          <div className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <h2 className="text-xl font-bold text-slate-900">추천 전략</h2>
             <p className="mt-1 text-sm text-slate-500">단일·복합 시나리오 순이익 개선 효과 순입니다.</p>
             <div className="mt-5 space-y-3">
@@ -1161,7 +1161,7 @@ function ResultContent() {
 
         {/* 초기비용 & 부채 현황 */}
         {result.totalInitialCost > 0 && (
-          <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <h2 className="text-xl font-bold text-slate-900">초기비용 & 투자 회수 현황</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <InfoBox title="총 초기 투자비" value={`${fmt(result.totalInitialCost)}원`} sub="보증금 포함" />
@@ -1205,7 +1205,7 @@ function ResultContent() {
 
         {/* 차트 */}
         <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <h2 className="text-xl font-bold text-slate-900 mb-4">매출 대비 구성비</h2>
             {!isProfit && <p className="mb-2 text-xs text-red-500">적자 상태로 순이익 슬라이스는 표시되지 않습니다.</p>}
             <div className="h-80">
@@ -1220,7 +1220,7 @@ function ResultContent() {
             </div>
           </div>
 
-          <div className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <h2 className="text-xl font-bold text-slate-900 mb-1">객단가 변화 시뮬레이션</h2>
             <p className="mb-4 text-sm text-slate-500">{config.label} 기준 +{Math.round(config.simPctMin * 100)}%~+{Math.round(config.simPctMax * 100)}% 범위</p>
             <div className="h-80">
@@ -1245,7 +1245,7 @@ function ResultContent() {
         {/* 전략 가이드 — 지표별 실행 전략 아코디언 */}
         <StrategyGuideSection form={form} result={result} />
 
-        <section className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200 print:hidden">
+        <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 print:hidden">
           <button onClick={() => router.push("/simulator")} className="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">← 수치 다시 입력하기</button>
         </section>
       </div>

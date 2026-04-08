@@ -64,7 +64,8 @@
       "Bash(npx eslint:*)",
       "Bash(/usr/bin/awk -F/ '{print $NF}')",
       "Bash(/usr/bin/awk -F: '{print $1}')",
-      "Bash(/usr/bin/awk '{print $NF}')"
+      "Bash(/usr/bin/awk '{print $NF}')",
+      "Bash(read f:*)"
     ]
   }
 }

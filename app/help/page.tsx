@@ -93,7 +93,7 @@ export default function HelpPage() {
 
         <div className="space-y-4">
           {filtered.map(section => (
-            <div key={section.title} className="bg-white ring-1 ring-slate-200 rounded-2xl p-5">
+            <div key={section.title} className="bg-white ring-1 ring-slate-200 rounded-3xl p-5">
               <h2 className="text-base font-bold text-slate-900 mb-3">{section.icon} {section.title}</h2>
               <div className="space-y-1">
                 {section.items.map(item => {
@@ -123,7 +123,7 @@ export default function HelpPage() {
           )}
         </div>
 
-        <div className="mt-8 bg-slate-900 rounded-2xl p-6 text-center">
+        <div className="mt-8 bg-slate-900 rounded-3xl p-6 text-center">
           <p className="text-white font-bold text-sm mb-1">찾으시는 답변이 없나요?</p>
           <p className="text-slate-400 text-xs mb-4">홈페이지 하단 문의 폼으로 질문을 보내주세요.</p>
           <div className="flex gap-3 justify-center">

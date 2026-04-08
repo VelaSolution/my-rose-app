@@ -285,7 +285,7 @@ function PosUploader({
 
   if (plan === "free") {
     return (
-      <div className="rounded-[28px] bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden">
+      <div className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden">
         <UpgradeModal
           open={showUpgrade}
           onClose={() => setShowUpgrade(false)}
@@ -308,7 +308,7 @@ function PosUploader({
   }
 
   return (
-    <div className="rounded-[28px] bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden">
+    <div className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden">
       {/* SheetJS CDN */}
       <Script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" strategy="lazyOnload" />
 
@@ -936,7 +936,7 @@ function Step1({
         </div>
       </section>
 
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">배달 매출</h2>
           <p className="mt-1 text-sm text-slate-500">배달 채널이 있는 경우 입력하세요.</p>
@@ -1024,7 +1024,7 @@ function Step2({
 
   return (
     <div className="space-y-6">
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">인건비</h2>
           <p className="mt-1 text-sm text-slate-500">
@@ -1120,7 +1120,7 @@ function Step2({
         />
       </section>
 
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">임대 & 시설비</h2>
         </div>
@@ -1159,7 +1159,7 @@ function Step2({
         />
       </section>
 
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">원가 & 수수료</h2>
         </div>
@@ -1288,7 +1288,7 @@ function Step2({
         )}
       </section>
 
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">마케팅 & 기타</h2>
         </div>
@@ -1316,7 +1316,7 @@ function Step2({
         />
       </section>
 
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">세금</h2>
           <p className="mt-1 text-sm text-slate-500">실수령액 계산을 위한 세율을 입력하세요.</p>
@@ -1362,7 +1362,7 @@ function Step2({
       </section>
 
       {/* 프랜차이즈 섹션 */}
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">프랜차이즈</h2>
           <p className="mt-1 text-sm text-slate-500">프랜차이즈 가맹점인 경우 입력하세요.</p>
@@ -1401,7 +1401,7 @@ function Step3({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
         <h2 className="mb-1 text-xl font-bold text-slate-900">사업 현황</h2>
         <p className="mb-4 text-sm text-slate-500">현재 상태를 선택해주세요.</p>
 
@@ -1423,7 +1423,7 @@ function Step3({
         </div>
       </section>
 
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">초기 투자비용</h2>
           <p className="mt-1 text-sm text-slate-500">
@@ -1529,7 +1529,7 @@ function Step3({
         </div>
       </section>
 
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">부채 & 대출</h2>
           <p className="mt-1 text-sm text-slate-500">사업 관련 대출이 있는 경우 입력하세요.</p>
@@ -1582,7 +1582,7 @@ function Step3({
         )}
       </section>
 
-      <section className="space-y-4 rounded-[28px] bg-slate-100 p-4">
+      <section className="space-y-4 rounded-3xl bg-slate-100 p-4">
         <div className="px-1">
           <h2 className="text-xl font-bold text-slate-900">목표 설정</h2>
           <p className="mt-1 text-sm text-slate-500">
@@ -1911,7 +1911,7 @@ export default function Page() {
       <UpgradeModal open={showSimLimit} onClose={() => setShowSimLimit(false)} title="이번 달 시뮬레이션 한도를 다 사용했어요" description="무료 플랜은 월 3회까지 시뮬레이션할 수 있어요. 스탠다드 플랜으로 업그레이드하면 무제한으로 분석 가능합니다." />
 
       <main className="px-4 py-6 md:px-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-3xl">
 
         {showSaveModal && (
           <SaveModal
