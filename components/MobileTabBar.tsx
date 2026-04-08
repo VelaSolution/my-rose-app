@@ -14,7 +14,6 @@ const TABS = [
 export default function MobileTabBar() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/tools/") && pathname !== "/tools") return null;
   if (pathname.startsWith("/game")) return null;
 
   return (
