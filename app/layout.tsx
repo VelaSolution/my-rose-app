@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import NavBar from "@/components/NavBar";
 import CommandPalette from "@/components/CommandPalette";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -36,8 +36,16 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   alternates: { canonical: "https://velaanalytics.com" },
   manifest: "/manifest.json",
-  themeColor: "#3182F6",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "VELA" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#3182F6",
 };
 
 export default function RootLayout({
@@ -65,6 +73,10 @@ export default function RootLayout({
             window.addEventListener('load', () => {
               navigator.serviceWorker.register('/sw.js').catch(() => {});
             });
+          }
+          // Capacitor 앱 감지
+          if (window.Capacitor || navigator.userAgent.includes('CapacitorApp') || window.matchMedia('(display-mode: standalone)').matches) {
+            document.documentElement.classList.add('capacitor-app');
           }
         ` }} />
       </head>

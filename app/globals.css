@@ -31,6 +31,29 @@ body {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
+/* ── Capacitor 앱 모드 ────────────────────────────── */
+html.capacitor-app body {
+  padding-top: env(safe-area-inset-top) !important;
+  padding-bottom: 0 !important;
+}
+html.capacitor-app .vela-nav {
+  padding-top: env(safe-area-inset-top);
+  height: calc(64px + env(safe-area-inset-top));
+}
+html.capacitor-app .vela-nav-inner {
+  padding-top: 0;
+}
+/* 앱에서 ToolNav 하단 탭바 safe area */
+html.capacitor-app nav.fixed.bottom-0 {
+  padding-bottom: env(safe-area-inset-bottom) !important;
+}
+/* 앱에서 모바일 하단 버튼 safe area */
+html.capacitor-app .safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom) !important;
+}
+/* 앱에서 PWA 설치 프롬프트 숨기기 */
+html.capacitor-app .InstallPrompt { display: none !important; }
+
 /* ── 라이트 모드 가독성 강화 ───────────────────────── */
 .text-slate-400 { color: #6B7684 !important; }
 .text-slate-500 { color: #4E5968 !important; }

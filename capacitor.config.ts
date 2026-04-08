@@ -12,6 +12,8 @@ const config: CapacitorConfig = {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
     scheme: 'VELA',
+    scrollEnabled: true,
+    allowsLinkPreview: false,
   },
 };
 
