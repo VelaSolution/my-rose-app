@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
-type Tab = "mett" | "kpi" | "goal" | "task" | "aar";
+type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar";
 
 type Mett = { id: string; mission: string; enemy: string; terrain: string; troops: string; time_constraint: string; civil: string; created_at: string };
 type Metric = { id: string; date: string; revenue: number; users_count: number; conversion_rate: number; profit: number };
@@ -14,6 +14,7 @@ type Task = { id: string; goal_id: string | null; title: string; assignee: strin
 type AAR = { id: string; date: string; goal: string; result: string; gap_reason: string; improvement: string };
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
+  { key: "dashboard", label: "대시보드", icon: "📋" },
   { key: "mett", label: "METT-TC", icon: "🎯" },
   { key: "kpi", label: "KPI", icon: "📊" },
   { key: "goal", label: "목표", icon: "🏆" },
@@ -31,7 +32,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function HQPage() {
-  const [tab, setTab] = useState<Tab>("mett");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
@@ -172,6 +173,151 @@ export default function HQPage() {
             </button>
           ))}
         </div>
+
+        {/* Dashboard */}
+        {tab === "dashboard" && (() => {
+          const activeGoals = goals.filter(g => g.status === "active");
+          const pendingTasks = tasks.filter(t => t.status === "pending" || t.status === "in_progress");
+          const completedTasks = tasks.filter(t => t.status === "completed");
+          const latestMett = metts[0];
+          const latestMetric = metrics[0];
+          const prevMetric = metrics[1];
+          const recentAar = aars[0];
+
+          const delta = (curr: number, prev: number) => {
+            if (!prev) return "";
+            const pct = Math.round((curr - prev) / Math.abs(prev || 1) * 100);
+            return pct >= 0 ? `+${pct}%` : `${pct}%`;
+          };
+
+          return (
+            <>
+              {/* KPI 요약 카드 */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {[
+                  { label: "매출", value: latestMetric ? fmt(latestMetric.revenue) + "원" : "—", change: prevMetric ? delta(latestMetric?.revenue ?? 0, prevMetric.revenue) : "", color: "text-slate-900" },
+                  { label: "사용자", value: latestMetric ? fmt(latestMetric.users_count) + "명" : "—", change: prevMetric ? delta(latestMetric?.users_count ?? 0, prevMetric.users_count) : "", color: "text-blue-600" },
+                  { label: "전환율", value: latestMetric ? latestMetric.conversion_rate + "%" : "—", change: prevMetric ? delta(latestMetric?.conversion_rate ?? 0, prevMetric.conversion_rate) : "", color: "text-purple-600" },
+                  { label: "순이익", value: latestMetric ? fmt(latestMetric.profit) + "원" : "—", change: prevMetric ? delta(latestMetric?.profit ?? 0, prevMetric.profit) : "", color: (latestMetric?.profit ?? 0) >= 0 ? "text-emerald-600" : "text-red-500" },
+                ].map(s => (
+                  <div key={s.label} className={cardCls}>
+                    <p className="text-[11px] text-slate-400 mb-0.5">{s.label}</p>
+                    <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                    {s.change && <p className={`text-[11px] font-semibold mt-0.5 ${s.change.startsWith("+") ? "text-emerald-500" : "text-red-500"}`}>{s.change} vs 이전</p>}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* 현재 미션 */}
+                <div className={cardCls}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-slate-900">🎯 현재 미션</h3>
+                    <button onClick={() => setTab("mett")} className="text-[11px] text-blue-600 font-semibold">수정 →</button>
+                  </div>
+                  {latestMett ? (
+                    <div className="space-y-1.5 text-xs">
+                      <p className="text-sm font-bold text-slate-900 mb-2">{latestMett.mission}</p>
+                      {latestMett.enemy && <p><span className="text-slate-400">문제:</span> {latestMett.enemy}</p>}
+                      {latestMett.troops && <p><span className="text-slate-400">자원:</span> {latestMett.troops}</p>}
+                      {latestMett.time_constraint && <p><span className="text-slate-400">일정:</span> {latestMett.time_constraint}</p>}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">METT-TC를 작성하세요</p>
+                  )}
+                </div>
+
+                {/* 활성 목표 */}
+                <div className={cardCls}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-slate-900">🏆 활성 목표 ({activeGoals.length}/2)</h3>
+                    <button onClick={() => setTab("goal")} className="text-[11px] text-blue-600 font-semibold">관리 →</button>
+                  </div>
+                  {activeGoals.length === 0 ? (
+                    <p className="text-xs text-slate-400">목표를 설정하세요</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {activeGoals.map(g => {
+                        const pct = g.target_value > 0 ? Math.round(g.current_value / g.target_value * 100) : 0;
+                        return (
+                          <div key={g.id}>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="font-semibold text-slate-700">{g.title}</span>
+                              <span className="text-slate-400">{pct}%</span>
+                            </div>
+                            <div className="h-2 bg-slate-100 rounded-full">
+                              <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 진행 중 태스크 */}
+                <div className={cardCls}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-slate-900">✅ 태스크 ({completedTasks.length}/{tasks.length})</h3>
+                    <button onClick={() => setTab("task")} className="text-[11px] text-blue-600 font-semibold">관리 →</button>
+                  </div>
+                  {pendingTasks.length === 0 ? (
+                    <p className="text-xs text-emerald-600 font-semibold">모든 태스크 완료!</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {pendingTasks.slice(0, 5).map(t => (
+                        <div key={t.id} className="flex items-center gap-2 text-xs">
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${t.status === "in_progress" ? "bg-amber-400" : "bg-slate-300"}`} />
+                          <span className="text-slate-700 truncate flex-1">{t.title}</span>
+                          {t.deadline && <span className="text-slate-400 flex-shrink-0">{t.deadline.slice(5)}</span>}
+                        </div>
+                      ))}
+                      {pendingTasks.length > 5 && <p className="text-[11px] text-slate-400">+{pendingTasks.length - 5}개 더</p>}
+                    </div>
+                  )}
+                </div>
+
+                {/* 최근 AAR */}
+                <div className={cardCls}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-slate-900">📝 최근 AAR</h3>
+                    <button onClick={() => setTab("aar")} className="text-[11px] text-blue-600 font-semibold">작성 →</button>
+                  </div>
+                  {recentAar ? (
+                    <div className="text-xs space-y-1">
+                      <p className="text-[11px] text-slate-400">{recentAar.date}</p>
+                      <p><b>목표:</b> {recentAar.goal}</p>
+                      <p><b>결과:</b> {recentAar.result}</p>
+                      {recentAar.improvement && <p className="text-blue-600"><b>개선:</b> {recentAar.improvement}</p>}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">AAR을 작성하세요</p>
+                  )}
+                </div>
+              </div>
+
+              {/* 운영 루틴 */}
+              <div className={`${cardCls} mt-4`}>
+                <h3 className="text-sm font-bold text-slate-900 mb-3">📅 운영 루틴</h3>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="bg-slate-50 rounded-xl p-3">
+                    <p className="font-bold text-slate-700 mb-1">일일</p>
+                    <p className="text-slate-500">1. METT-TC 작성</p>
+                    <p className="text-slate-500">2. KPI 확인</p>
+                    <p className="text-slate-500">3. Task 실행</p>
+                    <p className="text-slate-500">4. AAR 작성</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3">
+                    <p className="font-bold text-slate-700 mb-1">주간</p>
+                    <p className="text-slate-500">월: 목표 설정</p>
+                    <p className="text-slate-500">수: 점검</p>
+                    <p className="text-slate-500">금: AAR + 전략 수정</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          );
+        })()}
 
         {/* METT-TC */}
         {tab === "mett" && (
