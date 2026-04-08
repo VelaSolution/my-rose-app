@@ -9,8 +9,8 @@ type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar" | "notice" | "
 type FileItem = { id: string; name: string; size: string; type: string; url: string; uploadedAt: string; uploadedBy: string };
 type ChatMsg = { id: string; sender: string; text: string; time: string };
 type TeamMember = { id: string; name: string; role: string; email: string; status: "active" | "away" | "offline" };
-type Notice = { id: string; title: string; content: string; date: string; pinned: boolean };
-type Feedback = { id: string; type: string; title: string; description: string; priority: string; status: string; date: string };
+type Notice = { id: string; title: string; content: string; date: string; pinned: boolean; author: string };
+type Feedback = { id: string; type: string; title: string; description: string; priority: string; status: string; date: string; author: string };
 type MemoItem = { id: string; content: string; time: string };
 type Mett = { id: string; mission: string; enemy: string; terrain: string; troops: string; time_constraint: string; civil: string; created_at: string };
 type Metric = { id: string; date: string; revenue: number; users_count: number; conversion_rate: number; profit: number };
@@ -81,6 +81,7 @@ export default function HQPage() {
   const [chatMsgs, setChatMsgs] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [platformStats, setPlatformStats] = useState({ totalUsers: 0, todayUsers: 0, totalRevenue: 0, activeSubscribers: 0 });
+  const [userName, setUserName] = useState("관리자");
   const directiveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 2000); };
@@ -101,6 +102,8 @@ export default function HQPage() {
         const { data: { user } } = await sb.auth.getUser();
         if (!user) { setLoading(false); return; }
         setUserId(user.id);
+        const uName = user.user_metadata?.nickname ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "관리자";
+        setUserName(uName);
         const adminEmails = ["mnhyuk@velaanalytics.com", "mnhyuk0213@gmail.com"];
         if (adminEmails.includes(user.email ?? "")) setAuthorized(true);
 
@@ -207,7 +210,7 @@ export default function HQPage() {
   // Notice helpers
   const saveNotice = () => {
     if (!noticeForm.title.trim()) return;
-    const n: Notice = { id: Date.now().toString(), title: noticeForm.title, content: noticeForm.content, date: new Date().toISOString().slice(0, 10), pinned: noticeForm.pinned };
+    const n: Notice = { id: Date.now().toString(), title: noticeForm.title, content: noticeForm.content, date: new Date().toISOString().slice(0, 10), pinned: noticeForm.pinned, author: userName };
     const next = [n, ...notices]; setNotices(next); localStorage.setItem("vela-hq-notices", JSON.stringify(next));
     setNoticeForm({ title: "", content: "", pinned: false }); flash("✓ 공지 저장됨");
   };
@@ -218,7 +221,7 @@ export default function HQPage() {
   // Feedback helpers
   const saveFb = () => {
     if (!fbForm.title.trim()) return;
-    const f: Feedback = { id: Date.now().toString(), ...fbForm, date: new Date().toISOString().slice(0, 10) };
+    const f: Feedback = { id: Date.now().toString(), ...fbForm, date: new Date().toISOString().slice(0, 10), author: userName };
     const next = [f, ...feedbacks]; setFeedbacks(next); localStorage.setItem("vela-hq-feedback", JSON.stringify(next));
     setFbForm({ type: "버그", title: "", description: "", priority: "중간", status: "신규" }); flash("✓ 피드백 저장됨");
   };
@@ -255,7 +258,7 @@ export default function HQPage() {
     const { error } = await s.storage.from("hq-files").upload(path, f);
     if (error) { flash("업로드 실패: " + error.message); e.target.value = ""; return; }
     const { data: urlData } = s.storage.from("hq-files").getPublicUrl(path);
-    const item: FileItem = { id: path, name: f.name, size: (f.size / 1024 < 1024 ? (f.size / 1024).toFixed(1) + "KB" : (f.size / 1024 / 1024).toFixed(1) + "MB"), type: f.type.split("/")[1] || "file", url: urlData.publicUrl, uploadedAt: new Date().toISOString(), uploadedBy: "대표" };
+    const item: FileItem = { id: path, name: f.name, size: (f.size / 1024 < 1024 ? (f.size / 1024).toFixed(1) + "KB" : (f.size / 1024 / 1024).toFixed(1) + "MB"), type: f.type.split("/")[1] || "file", url: urlData.publicUrl, uploadedAt: new Date().toISOString(), uploadedBy: userName };
     setFiles([item, ...files]);
     flash("✓ 업로드 완료");
     e.target.value = "";
@@ -270,7 +273,7 @@ export default function HQPage() {
   // Chat
   const sendChat = () => {
     if (!chatInput.trim()) return;
-    const msg: ChatMsg = { id: Date.now().toString(), sender: "대표", text: chatInput.trim(), time: new Date().toISOString() };
+    const msg: ChatMsg = { id: Date.now().toString(), sender: userName, text: chatInput.trim(), time: new Date().toISOString() };
     const next = [...chatMsgs, msg]; setChatMsgs(next); localStorage.setItem("vela-hq-chat", JSON.stringify(next));
     setChatInput("");
   };
@@ -596,7 +599,7 @@ export default function HQPage() {
               <div key={n.id} className={C}>
                 <div className="flex items-center justify-between mb-1">
                   <button onClick={() => setExpandedNotice(expandedNotice === n.id ? null : n.id)} className="text-sm font-bold text-left flex-1">{n.pinned && "📌 "}{n.title}</button>
-                  <span className="text-[11px] text-slate-400 flex-shrink-0 ml-2">{n.date}</span>
+                  <span className="text-[11px] text-slate-400 flex-shrink-0 ml-2">{n.author ?? "관리자"} · {n.date}</span>
                 </div>
                 {expandedNotice === n.id && <p className="text-xs text-slate-600 whitespace-pre-wrap mt-1 mb-2">{n.content}</p>}
                 <div className="flex gap-2 text-[11px]">
