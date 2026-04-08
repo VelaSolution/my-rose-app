@@ -17,6 +17,9 @@ const TOOL_SECTIONS = [
       { href: "/tools/labor", emoji: "👥", label: "인건비 스케줄러" },
       { href: "/tools/tax", emoji: "🧾", label: "세금 계산기" },
       { href: "/tools/pl-report", emoji: "📄", label: "손익계산서 PDF" },
+      { href: "/tools/labor-law", emoji: "⚖️", label: "인건비 계산기 (법정)" },
+      { href: "/tools/daily-sales", emoji: "📝", label: "일일 매출 기록" },
+      { href: "/tools/competitor-pricing", emoji: "🔍", label: "경쟁매장 가격" },
     ],
   },
   {
@@ -31,6 +34,8 @@ const TOOL_SECTIONS = [
       { href: "/tools/fundraising", emoji: "💎", label: "투자 유치 도구", i18nKey: "fundraising" },
       { href: "/tools/tax-guide", emoji: "🧾", label: "세무·회계 가이드", i18nKey: "taxGuide" },
       { href: "/tools/hiring", emoji: "👥", label: "인력 채용 도구", i18nKey: "hiring" },
+      { href: "/tools/handover", emoji: "🔄", label: "인수인계 체크리스트" },
+      { href: "/tools/revenue-forecast", emoji: "🔮", label: "매출 예측 AI" },
     ],
   },
   {
@@ -41,6 +46,10 @@ const TOOL_SECTIONS = [
       { href: "/tools/delivery-menu", emoji: "🛵", label: "배달앱 메뉴 최적화" },
       { href: "/tools/promo-generator", emoji: "📣", label: "프로모션 문구 생성기" },
       { href: "/tools/naver-place", emoji: "🟢", label: "네이버 플레이스 최적화" },
+      { href: "/tools/marketing-calendar", emoji: "📅", label: "시즌 마케팅" },
+      { href: "/tools/menu-pricing", emoji: "💰", label: "AI 메뉴 가격" },
+      { href: "/tools/review-analysis", emoji: "📊", label: "리뷰 감정 분석" },
+      { href: "/tools/delivery-analysis", emoji: "🛵", label: "배달앱 분석" },
     ],
   },
 ];

@@ -658,7 +658,7 @@ function ResultContent() {
       memo: shareMemo.trim(),
     });
     setSharing(false);
-    if (error) { alert("공유 실패. 다시 시도해주세요."); return; }
+    if (error) { alert("공유 실패: " + error.message); console.error("Share error:", error); return; }
     setShareMsg("커뮤니티에 공유됐어요! 🎉");
     setShowShareModal(false);
     setShareTitle(""); setShareMemo("");

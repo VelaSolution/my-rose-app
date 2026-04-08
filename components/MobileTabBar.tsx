@@ -15,6 +15,9 @@ export default function MobileTabBar() {
   const pathname = usePathname();
 
   if (pathname.startsWith("/game")) return null;
+  if (pathname.startsWith("/login")) return null;
+  if (pathname.startsWith("/signup")) return null;
+  if (pathname.startsWith("/reset-password")) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden vela-mobile-tab" style={{ paddingBottom: "env(safe-area-inset-bottom)", background: "#fff", borderTop: "1px solid #E5E8EB" }}>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import ToolNav from "@/components/ToolNav";
+
 
 type Category = "전체" | "원가관리" | "마케팅" | "세무" | "인사" | "트렌드";
 
@@ -135,7 +135,6 @@ export default function BlogPage() {
 
   return (
     <>
-      <ToolNav />
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">
           {/* Header */}
