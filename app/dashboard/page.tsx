@@ -40,6 +40,30 @@ export default function DashboardHome() {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [todaySales, setTodaySales] = useState("");
   const [todaySaved, setTodaySaved] = useState(false);
+  const [showWidgetSettings, setShowWidgetSettings] = useState(false);
+
+  type WidgetKey = "alerts" | "today" | "goal" | "chart" | "trend" | "forecast" | "sims" | "tools" | "menus" | "community" | "notes";
+  const WIDGET_LABELS: Record<WidgetKey, string> = {
+    alerts: "🔔 알림", today: "📊 오늘의 매출", goal: "🎯 월 목표", chart: "📈 월별 매출",
+    trend: "📊 추이 차트", forecast: "🔮 매출 예측", sims: "📊 시뮬레이션",
+    tools: "🛠️ 도구 바로가기", menus: "🧮 메뉴 원가", community: "👥 커뮤니티", notes: "📝 노트",
+  };
+  const defaultWidgets = Object.keys(WIDGET_LABELS).reduce((a, k) => ({ ...a, [k]: true }), {} as Record<WidgetKey, boolean>);
+  const [widgets, setWidgets] = useState<Record<WidgetKey, boolean>>(defaultWidgets);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("vela-dashboard-widgets");
+      if (saved) setWidgets(JSON.parse(saved));
+    } catch { /* noop */ }
+  }, []);
+  const toggleWidget = (key: WidgetKey) => {
+    const next = { ...widgets, [key]: !widgets[key] };
+    setWidgets(next);
+    localStorage.setItem("vela-dashboard-widgets", JSON.stringify(next));
+  };
+  const w = (key: WidgetKey) => widgets[key];
+
   const sb = typeof window !== "undefined" ? createSupabaseBrowserClient() : null;
 
   useEffect(() => {
@@ -207,15 +231,38 @@ export default function DashboardHome() {
               <h1 className="text-2xl font-bold text-slate-900 mt-1">{greeting}, {name}! 👋</h1>
             </div>
             <div className="flex gap-2">
+              <button onClick={() => setShowWidgetSettings(!showWidgetSettings)}
+                className="rounded-3xl bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">
+                ⚙️ 위젯 설정
+              </button>
               <Link href="/simulator" className="rounded-3xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition">시뮬레이터 →</Link>
             </div>
           </div>
+
+          {/* 위젯 설정 패널 */}
+          {showWidgetSettings && (
+            <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-slate-900">⚙️ 대시보드 위젯 설정</h3>
+                <button onClick={() => setShowWidgetSettings(false)} className="text-slate-400 text-xs hover:text-slate-600">✕ 닫기</button>
+              </div>
+              <p className="text-xs text-slate-400 mb-3">보고 싶은 위젯만 켜세요. 설정은 자동 저장됩니다.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {(Object.keys(WIDGET_LABELS) as WidgetKey[]).map(key => (
+                  <label key={key} className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition text-xs ${widgets[key] ? "bg-blue-50 ring-1 ring-blue-200 text-blue-700 font-semibold" : "bg-slate-50 text-slate-500"}`}>
+                    <input type="checkbox" checked={widgets[key]} onChange={() => toggleWidget(key)} className="accent-blue-600 w-3.5 h-3.5" />
+                    {WIDGET_LABELS[key]}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 이벤트 배너 */}
           <EventBanner />
 
           {/* 알림 센터 */}
-          {(() => {
+          {w("alerts") && (() => {
             const alerts = generateAlerts();
             return (
               <div className="space-y-2">
@@ -249,7 +296,7 @@ export default function DashboardHome() {
           </div>
 
           {/* 오늘의 매출 퀵 입력 */}
-          {(() => {
+          {w("today") && (() => {
             const todayKey = "vela-today-sales";
             const today = new Date().toISOString().slice(0, 10);
             const dailyGoal = monthlyGoal ? Math.round(monthlyGoal / 26) : 0;
@@ -290,7 +337,7 @@ export default function DashboardHome() {
           })()}
 
           {/* 목표 달성 게이지 */}
-          <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
+          {w("goal") && <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-slate-900">🎯 월 매출 목표</h2>
               <button
@@ -346,7 +393,7 @@ export default function DashboardHome() {
                 </div>
               </div>
             )}
-          </div>
+          </div>}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
