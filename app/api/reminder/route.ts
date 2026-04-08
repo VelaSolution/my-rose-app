@@ -4,6 +4,8 @@ import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit
 
 export const dynamic = "force-dynamic";
 
+function esc(s: string) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
 /**
  * POST /api/reminder
  * 매출 미입력 유저에게 리마인더 이메일 발송 (관리자 전용)
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     const errors: string[] = [];
 
     for (const profile of targets) {
-      const displayName = profile.store_name || profile.full_name || "사장님";
+      const displayName = esc(profile.store_name || profile.full_name || "사장님");
       const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
 
       const html = `

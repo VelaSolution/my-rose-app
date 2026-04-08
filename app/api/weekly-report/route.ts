@@ -4,6 +4,8 @@ import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit
 
 export const dynamic = "force-dynamic";
 
+function esc(s: string) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req);
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
     for (const profile of profiles) {
       if (!profile.email) continue;
 
-      const displayName = profile.store_name || profile.full_name || "사장님";
+      const displayName = esc(profile.store_name || profile.full_name || "사장님");
 
       // AI가 주간 리포트 생성
       const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -67,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     <h3 style="font-size:15px;color:#333;margin:0 0 12px;">이번 주 경영 팁</h3>
     <ul style="color:#555;font-size:14px;line-height:1.8;padding-left:20px;margin:0 0 28px;">
-      ${tips.map((t: string) => `<li style="margin-bottom:8px;">${t}</li>`).join("")}
+      ${tips.map((t: string) => `<li style="margin-bottom:8px;">${esc(t)}</li>`).join("")}
     </ul>
 
     <div style="text-align:center;">

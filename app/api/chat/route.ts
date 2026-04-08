@@ -1,8 +1,12 @@
 import { NextRequest } from "next/server";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const rl = checkRateLimit(ip, { key: "chat", limit: 10 });
+  if (!rl.ok) return rateLimitResponse();
   const body = await req.json();
   const { messages, context } = body;
 

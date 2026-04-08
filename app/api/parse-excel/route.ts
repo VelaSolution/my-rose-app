@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
@@ -21,6 +22,9 @@ function truncateCsvSafely(csvText: string): { text: string; truncated: boolean 
 
 export async function POST(req: NextRequest) {
   try {
+  const ip = getClientIp(req);
+  const rl = checkRateLimit(ip, { key: "parse-excel", limit: 3 });
+  if (!rl.ok) return rateLimitResponse();
   const body = await req.json().catch(() => null);
   if (!body) return new Response(JSON.stringify({ error: "입력값 누락" }), { status: 400, headers: { "Content-Type": "application/json" } });
   const { csvText, fileName, industry } = body;

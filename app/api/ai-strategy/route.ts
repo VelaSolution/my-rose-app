@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
@@ -6,6 +7,9 @@ const VALID_INDUSTRIES = ["cafe", "restaurant", "bar", "finedining", "gogi"];
 
 export async function POST(req: NextRequest) {
   try {
+  const ip = getClientIp(req);
+  const rl = checkRateLimit(ip, { key: "ai-strategy", limit: 5 });
+  if (!rl.ok) return rateLimitResponse();
   const body = await req.json().catch(() => null);
   if (!body?.form || !body?.result) {
     return new Response(JSON.stringify({ error: "입력값 누락" }), { status: 400, headers: { "Content-Type": "application/json" } });

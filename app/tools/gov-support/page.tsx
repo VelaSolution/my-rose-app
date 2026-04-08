@@ -129,7 +129,7 @@ export default function GovSupportPage() {
   return (
     <>
       <ToolNav />
-      <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+      <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">
           <Link href="/tools" className="text-xs text-slate-400 hover:text-slate-600 transition">← 도구 목록</Link>
           <div className="mt-4 mb-2">

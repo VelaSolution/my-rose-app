@@ -21,6 +21,14 @@ const TOOLS = [
   { icon:"📱", label:"SNS 콘텐츠",     href:"/tools/sns-content" },
   { icon:"💬", label:"리뷰 답변",      href:"/tools/review-reply" },
   { icon:"🗺️", label:"상권 분석",     href:"/tools/area-analysis" },
+  { icon:"📝", label:"사업계획서",     href:"/tools/business-plan" },
+  { icon:"🏛️", label:"정부 지원사업",  href:"/tools/gov-support" },
+  { icon:"📈", label:"재무 시뮬레이션", href:"/tools/financial-sim" },
+  { icon:"🧾", label:"세무·회계",      href:"/tools/tax-guide" },
+  { icon:"👥", label:"인력 채용",      href:"/tools/hiring" },
+  { icon:"🔮", label:"매출 예측 AI",   href:"/tools/revenue-forecast" },
+  { icon:"📝", label:"일일 매출",      href:"/tools/daily-sales" },
+  { icon:"🔍", label:"경쟁매장 가격",   href:"/tools/competitor-pricing" },
 ];
 
 type Snapshot   = { id:string; month:string; industry:string; total_sales:number; net_profit:number; cogs:number; };

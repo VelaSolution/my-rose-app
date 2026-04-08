@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -10,6 +11,9 @@ const industryLabels: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(ip, { key: "anon-ai-reply", limit: 5 });
+    if (!rl.ok) return rateLimitResponse();
     const { postId } = await req.json();
     if (!postId) return NextResponse.json({ error: "postId 필요" }, { status: 400 });
 

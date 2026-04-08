@@ -4,6 +4,8 @@ import { fmt } from "@/lib/vela";
 
 export const dynamic = "force-dynamic";
 
+function esc(s: string) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
 /**
  * POST /api/newsletter
  * 월간 리포트 이메일 발송 (관리자 전용)
@@ -100,7 +102,7 @@ export async function POST(req: NextRequest) {
           : "비교 데이터 없음";
       const growthColor = growthRate !== null && growthRate >= 0 ? "#16a34a" : "#dc2626";
 
-      const displayName = profile.store_name || profile.full_name || "사장님";
+      const displayName = esc(profile.store_name || profile.full_name || "사장님");
 
       const tips = generateTips(marginNow, growthRate);
 

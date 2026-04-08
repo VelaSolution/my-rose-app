@@ -53,7 +53,7 @@ export function compareTax(annualProfit: number, ceoSalary: number): TaxComparis
   // 개인사업자
   const personalIncomeTax = calcProgressiveTax(annualProfit, INCOME_TAX_BRACKETS);
   const personalLocalTax = Math.round(personalIncomeTax * 0.1);
-  const personalHealthIns = Math.round(annualProfit * 0.0709);
+  const personalHealthIns = Math.max(0, Math.round(annualProfit * 0.0709));
   const personalTotal = personalIncomeTax + personalLocalTax + personalHealthIns;
 
   // 법인사업자
