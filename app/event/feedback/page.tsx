@@ -98,8 +98,8 @@ export default function EventFeedbackPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "제출 실패");
       setSubmitted(true);
-    } catch (err: any) {
-      setError(err.message || "제출 중 오류가 발생했습니다.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "제출 중 오류가 발생했습니다.");
     } finally {
       setSubmitting(false);
     }

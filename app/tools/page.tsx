@@ -208,9 +208,6 @@ const CATEGORIES: { key: string; label: string; desc: string; tools: Tool[] }[] 
     ],
   },
 ];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TOOLS = CATEGORIES.flatMap(c => c.tools) as any[];
-
 const CATEGORY_ICONS: Record<string, string> = {
   calc: "💰",
   ai: "🤖",
@@ -259,7 +256,7 @@ export default function ToolsPage() {
         (tool) => resolveTitle(tool, locale).toLowerCase().includes(q) || resolveDesc(tool, locale).toLowerCase().includes(q)
       ),
     })).filter((cat) => cat.tools.length > 0);
-  }, [search]);
+  }, [search, locale]);
 
   const totalTools = CATEGORIES.reduce((sum, c) => sum + c.tools.length, 0);
 

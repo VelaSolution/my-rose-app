@@ -47,12 +47,12 @@ const monthLabel = (m: string) => {
 };
 
 /* ── 커스텀 툴팁 ──────────────────────────────────── */
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-lg px-4 py-3 text-xs">
       <p className="font-bold text-slate-700 mb-1">{label}</p>
-      {payload.map((p: any) => (
+      {payload.map((p) => (
         <p key={p.name} style={{ color: p.color }} className="font-semibold">
           {p.name}: {fmt(p.value)}원
         </p>

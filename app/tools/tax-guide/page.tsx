@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
-import CloudSyncBadge from "@/components/CloudSyncBadge";
 import SimDataPicker from "@/components/SimDataPicker";
 import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 

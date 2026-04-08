@@ -52,8 +52,7 @@ const MOBILE_TABS = [
   { href: "/tools", emoji: "🛠️", label: "도구목록" },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const toolLabel = (tool: any, locale?: Parameters<typeof t>[1]) =>
+const toolLabel = (tool: { label: string; i18nKey?: string }, locale?: Parameters<typeof t>[1]) =>
   tool.i18nKey ? t(`tool.${tool.i18nKey}.title`, locale) : tool.label;
 
 export default function ToolNav() {

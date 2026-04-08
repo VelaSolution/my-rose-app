@@ -11,7 +11,7 @@ import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 const TABS = ["개인 vs 법인", "설립 절차", "필요 서류", "비용 시뮬레이터"] as const;
 type Tab = (typeof TABS)[number];
 
-import { calcProgressiveTax, compareTax, INCOME_TAX_BRACKETS, CORP_TAX_BRACKETS } from "@/lib/tax";
+import { compareTax } from "@/lib/tax";
 
 const KEY = "vela-incorporation";
 const fmt = (n: number) => n.toLocaleString("ko-KR");

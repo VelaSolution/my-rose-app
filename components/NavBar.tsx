@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { User } from "@supabase/supabase-js";
-import { getLocale, setLocale, t, type Locale } from "@/lib/i18n";
+import { getLocale, t, type Locale } from "@/lib/i18n";
 
 const TOOLS = [
   // 경영 분석
