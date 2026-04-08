@@ -48,6 +48,8 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
   const [movingFile, setMovingFile] = useState<string | null>(null);
   const [preview, setPreview] = useState<FileItem | null>(null);
+  const [renamingFile, setRenamingFile] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async (folderId?: string) => {
@@ -125,6 +127,19 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
     if (!s) return;
     setUploading(true);
 
+    // 중복 체크
+    const duplicate = files.find(ef => ef.name === file.name);
+    if (duplicate) {
+      const ok = confirm(`"${file.name}" 파일이 이미 존재합니다. 덮어쓰시겠습니까?`);
+      if (!ok) {
+        setUploading(false);
+        if (fileRef.current) fileRef.current.value = "";
+        return;
+      }
+      // 기존 파일 삭제
+      await deleteFile(duplicate);
+    }
+
     let uploaded = false;
 
     // 1차: R2 시도
@@ -199,6 +214,20 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
 
     await s.from("hq_files").delete().eq("id", f.id);
     flash("파일이 삭제되었습니다");
+    load(currentFolder);
+  };
+
+  const renameFile = async (fileId: string) => {
+    if (!renameValue.trim()) return;
+    const s = sb();
+    if (!s) return;
+    // 같은 폴더에 같은 이름 있는지 체크
+    const dup = files.find(f => f.name === renameValue.trim() && f.id !== fileId);
+    if (dup) return flash("같은 이름의 파일이 이미 있습니다");
+    await s.from("hq_files").update({ name: renameValue.trim() }).eq("id", fileId);
+    setRenamingFile(null);
+    setRenameValue("");
+    flash("이름이 변경되었습니다");
     load(currentFolder);
   };
 
@@ -376,10 +405,24 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <span className="text-lg flex-shrink-0">{fileIcon(f.type)}</span>
                   <div className="min-w-0">
+                    {renamingFile === f.id ? (
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          className="text-sm font-semibold text-slate-800 border border-[#3182F6] rounded-lg px-2 py-0.5 outline-none focus:ring-2 focus:ring-blue-100 w-48"
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") renameFile(f.id); if (e.key === "Escape") { setRenamingFile(null); setRenameValue(""); } }}
+                          autoFocus
+                        />
+                        <button onClick={() => renameFile(f.id)} className="text-xs text-[#3182F6] font-semibold">확인</button>
+                        <button onClick={() => { setRenamingFile(null); setRenameValue(""); }} className="text-xs text-slate-400">취소</button>
+                      </div>
+                    ) : (
                     <p className="text-sm font-semibold text-slate-800 truncate">
                       {f.name}
                       {canPreview(f.type, f.name) && <span className="ml-1.5 text-[10px] text-[#3182F6] font-normal">미리보기</span>}
                     </p>
+                    )}
                     <p className="text-xs text-slate-400">
                       {f.size} · {f.uploadedBy} · {formatDate(f.uploadedAt)}
                     </p>
@@ -395,7 +438,13 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                     다운로드
                   </a>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setMovingFile(movingFile === f.id ? null : f.id); }}
+                    onClick={(e) => { e.stopPropagation(); setRenamingFile(f.id); setRenameValue(f.name); setMovingFile(null); }}
+                    className="text-xs text-slate-400 hover:text-slate-700 transition-colors px-2 py-1"
+                  >
+                    이름변경
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setMovingFile(movingFile === f.id ? null : f.id); setRenamingFile(null); }}
                     className="text-xs text-slate-400 hover:text-amber-600 transition-colors px-2 py-1"
                   >
                     이동
