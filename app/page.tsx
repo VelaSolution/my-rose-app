@@ -386,11 +386,13 @@ function LandingContent() {
       </section>
 
       {/* 이벤트 배너 — 랜딩 */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
-        <FadeIn>
-          <EventBanner />
-        </FadeIn>
-      </div>
+      <section style={{ padding: "0 24px" }}>
+        <div className="section-inner">
+          <FadeIn>
+            <EventBanner />
+          </FadeIn>
+        </div>
+      </section>
 
       {/* FEATURES */}
       <section id="features" className="features-bg">
