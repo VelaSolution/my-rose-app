@@ -119,7 +119,7 @@ html.dark, html.dark body {
 
 html.dark .bg-white { background-color: #1E293B !important; }
 html.dark .bg-slate-50 { background-color: #0F172A !important; }
-html.dark .bg-slate-100 { background-color: #1E293B !important; }
+html.dark .bg-slate-100 { background-color: #253348 !important; }
 html.dark .bg-gray-50 { background-color: #0F172A !important; }
 html.dark .bg-gray-100 { background-color: #1E293B !important; }
 
@@ -167,9 +167,10 @@ html.dark .vela-hamburger span { background: #E2E8F0 !important; }
 
 /* Dark mode: additional text overrides — 가독성 강화 */
 html.dark .text-slate-500 { color: #CBD5E1 !important; }
-html.dark .text-slate-400 { color: #94A3B8 !important; }
+html.dark .text-slate-400 { color: #CBD5E1 !important; }
 html.dark .text-gray-500 { color: #CBD5E1 !important; }
-html.dark .text-gray-400 { color: #94A3B8 !important; }
+html.dark .text-gray-400 { color: #CBD5E1 !important; }
+html.dark .text-xs.text-slate-400, html.dark .text-\[11px\].text-slate-400, html.dark .text-\[10px\].text-slate-400 { color: #94A3B8 !important; }
 
 /* Dark mode: border extras */
 html.dark .border-slate-100 { border-color: #1E293B !important; }
@@ -213,7 +214,7 @@ html.dark input:focus, html.dark textarea:focus, html.dark select:focus {
 
 /* Dark mode: placeholder text */
 html.dark input::placeholder, html.dark textarea::placeholder {
-  color: #94A3B8 !important;
+  color: #CBD5E1 !important;
 }
 
 /* Dark mode: scrollbar */
