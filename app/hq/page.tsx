@@ -1,11 +1,12 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
-type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar" | "notice" | "report" | "feedback" | "calendar" | "memo";
+type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar" | "notice" | "report" | "feedback" | "calendar" | "memo" | "team" | "timeline";
+type TeamMember = { id: string; name: string; role: string; email: string; status: "active" | "away" | "offline" };
 type Notice = { id: string; title: string; content: string; date: string; pinned: boolean };
 type Feedback = { id: string; type: string; title: string; description: string; priority: string; status: string; date: string };
 type MemoItem = { id: string; content: string; time: string };
@@ -27,6 +28,8 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "feedback", label: "피드백", icon: "🐛" },
   { key: "calendar", label: "일정", icon: "📅" },
   { key: "memo", label: "메모", icon: "💬" },
+  { key: "team", label: "팀", icon: "👥" },
+  { key: "timeline", label: "타임라인", icon: "🕐" },
 ];
 
 const fmt = (n: number) => n.toLocaleString("ko-KR");
@@ -66,7 +69,21 @@ export default function HQPage() {
   const [memoText, setMemoText] = useState("");
   const [calMonth, setCalMonth] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
 
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [teamForm, setTeamForm] = useState({ name: "", role: "", email: "" });
+  const [directive, setDirective] = useState("");
+  const [directiveSaved, setDirectiveSaved] = useState("");
+  const directiveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 2000); };
+
+  const saveDirective = useCallback((val: string) => {
+    if (directiveTimer.current) clearTimeout(directiveTimer.current);
+    directiveTimer.current = setTimeout(() => {
+      localStorage.setItem("vela-hq-directive", val);
+      setDirectiveSaved(new Date().toLocaleString("ko-KR"));
+    }, 500);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -95,6 +112,18 @@ export default function HQPage() {
       try { const n = localStorage.getItem("vela-hq-notices"); if (n) setNotices(JSON.parse(n)); } catch {}
       try { const f = localStorage.getItem("vela-hq-feedback"); if (f) setFeedbacks(JSON.parse(f)); } catch {}
       try { const m = localStorage.getItem("vela-hq-memo"); if (m) setMemos(JSON.parse(m)); } catch {}
+      try {
+        const tm = localStorage.getItem("vela-hq-team");
+        if (tm) setTeamMembers(JSON.parse(tm));
+        else {
+          const defaults: TeamMember[] = [
+            { id: "1", name: "민혁", role: "대표", email: "mnhyuk@velaanalytics.com", status: "active" },
+            { id: "2", name: "운영팀", role: "운영", email: "ops@velaanalytics.com", status: "active" },
+          ];
+          setTeamMembers(defaults); localStorage.setItem("vela-hq-team", JSON.stringify(defaults));
+        }
+      } catch {}
+      try { const d = localStorage.getItem("vela-hq-directive"); if (d) setDirective(d); } catch {}
       setLoading(false);
     })();
   }, []);
@@ -178,6 +207,19 @@ export default function HQPage() {
   };
   const delMemo = (id: string) => { const next = memos.filter(m => m.id !== id); setMemos(next); localStorage.setItem("vela-hq-memo", JSON.stringify(next)); };
 
+  // Team helpers
+  const saveTeamMember = () => {
+    if (!teamForm.name.trim()) return;
+    const m: TeamMember = { id: Date.now().toString(), name: teamForm.name, role: teamForm.role, email: teamForm.email, status: "active" };
+    const next = [...teamMembers, m]; setTeamMembers(next); localStorage.setItem("vela-hq-team", JSON.stringify(next));
+    setTeamForm({ name: "", role: "", email: "" }); flash("✓ 멤버 추가됨");
+  };
+  const delTeamMember = (id: string) => { const next = teamMembers.filter(m => m.id !== id); setTeamMembers(next); localStorage.setItem("vela-hq-team", JSON.stringify(next)); };
+  const toggleTeamStatus = (id: string) => {
+    const cycle: Record<string, "active" | "away" | "offline"> = { active: "away", away: "offline", offline: "active" };
+    const next = teamMembers.map(m => m.id === id ? { ...m, status: cycle[m.status] } : m); setTeamMembers(next); localStorage.setItem("vela-hq-team", JSON.stringify(next));
+  };
+
   // Report helper
   const genReport = () => {
     const now = new Date(); const weekAgo = new Date(now.getTime() - 7 * 86400000);
@@ -250,6 +292,49 @@ export default function HQPage() {
               ].map(s => (
                 <div key={s.l} className={C}><p className="text-[11px] text-slate-400">{s.l}</p><p className={`text-lg font-bold ${s.c}`}>{s.v}</p></div>
               ))}
+            </div>
+
+            {/* KPI 차트 — 최근 7일 매출 */}
+            {metrics.length > 0 && (() => {
+              const last7 = [...metrics].sort((a, b) => a.date.localeCompare(b.date)).slice(-7);
+              const maxRev = Math.max(...last7.map(m => m.revenue), 1);
+              return (
+                <div className={C}>
+                  <h3 className="text-sm font-bold mb-3">📊 최근 KPI 추이</h3>
+                  <div className="flex items-end gap-2 h-28">
+                    {last7.map(m => (
+                      <div key={m.id} className="flex-1 flex flex-col items-center gap-1">
+                        <div className="w-full bg-blue-500 rounded-t" style={{ height: `${Math.max((m.revenue / maxRev) * 100, 4)}%` }} />
+                        <span className={`w-2.5 h-2.5 rounded-full ${m.profit >= 0 ? "bg-emerald-500" : "bg-red-500"}`} />
+                        <span className="text-[9px] text-slate-400">{m.date.slice(5)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-3 mt-2 text-[10px] text-slate-400">
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 bg-blue-500 rounded inline-block" />매출</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 bg-emerald-500 rounded-full inline-block" />흑자</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-full inline-block" />적자</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className={C}><p className="text-[11px] text-slate-400">진행중 태스크</p><p className="text-lg font-bold text-amber-600">{pendingTasks.length}<span className="text-xs text-slate-400 font-normal"> / {tasks.length}</span></p></div>
+              <div className={C}><p className="text-[11px] text-slate-400">목표 달성률</p><p className="text-lg font-bold text-blue-600">{activeGoals.length > 0 ? Math.round(activeGoals.reduce((s, g) => s + (g.target_value > 0 ? g.current_value / g.target_value * 100 : 0), 0) / activeGoals.length) : 0}%</p></div>
+              <div className={C}><p className="text-[11px] text-slate-400">미처리 피드백</p><p className="text-lg font-bold text-red-500">{feedbacks.filter(f => f.status !== "완료").length}</p></div>
+              <div className={C}><p className="text-[11px] text-slate-400">이번 달 AAR</p><p className="text-lg font-bold text-purple-600">{aars.filter(a => a.date.slice(0, 7) === new Date().toISOString().slice(0, 7)).length}</p></div>
+            </div>
+
+            {/* 이번 주 핵심 지시 */}
+            <div className={C}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-bold">📣 이번 주 핵심 지시</h3>
+                {directiveSaved && <span className="text-[10px] text-slate-400">저장됨: {directiveSaved}</span>}
+              </div>
+              <textarea className={`${I} h-16`} value={directive} placeholder="이번 주에 팀이 반드시 완수해야 할 것..."
+                onChange={e => { setDirective(e.target.value); saveDirective(e.target.value); }} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -560,6 +645,65 @@ export default function HQPage() {
             ))}
           </div>
         )}
+
+        {/* Team */}
+        {tab === "team" && (
+          <div className="space-y-3">
+            <div className={C}>
+              <h3 className="text-sm font-bold mb-3">👥 팀 멤버 추가</h3>
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                <div><label className={L}>이름</label><input className={I} value={teamForm.name} onChange={e => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="홍길동" /></div>
+                <div><label className={L}>역할</label><input className={I} value={teamForm.role} onChange={e => setTeamForm({ ...teamForm, role: e.target.value })} placeholder="개발자" /></div>
+                <div><label className={L}>이메일</label><input className={I} value={teamForm.email} onChange={e => setTeamForm({ ...teamForm, email: e.target.value })} placeholder="email@company.com" /></div>
+              </div>
+              <button onClick={saveTeamMember} className={B}>추가</button>
+            </div>
+            {teamMembers.map(m => {
+              const statusDot: Record<string, string> = { active: "bg-emerald-500", away: "bg-amber-400", offline: "bg-slate-300" };
+              const statusLabel: Record<string, string> = { active: "활동", away: "자리비움", offline: "오프라인" };
+              return (
+                <div key={m.id} className={`${C} flex items-center gap-3`}>
+                  <button onClick={() => toggleTeamStatus(m.id)} className={`w-3 h-3 rounded-full flex-shrink-0 ${statusDot[m.status]}`} title={statusLabel[m.status]} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold">{m.name} <span className="text-xs text-slate-400 font-normal">{m.role}</span></p>
+                    {m.email && <p className="text-[11px] text-slate-400">{m.email}</p>}
+                  </div>
+                  <span className="text-[10px] text-slate-400">{statusLabel[m.status]}</span>
+                  <button onClick={() => delTeamMember(m.id)} className="text-[10px] text-red-400">✕</button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Timeline */}
+        {tab === "timeline" && (() => {
+          type TLItem = { time: string; icon: string; label: string; desc: string };
+          const items: TLItem[] = [];
+          metts.slice(0, 5).forEach(m => items.push({ time: m.created_at, icon: "🎯", label: "상황판단", desc: m.mission }));
+          metrics.slice(0, 5).forEach(m => items.push({ time: m.date + "T00:00:00", icon: "📊", label: "KPI", desc: `매출 ${fmt(m.revenue)}원 / 순이익 ${fmt(m.profit)}원` }));
+          goals.forEach(g => items.push({ time: g.start_date + "T00:00:00", icon: "🏆", label: `목표 [${ST[g.status]?.label ?? g.status}]`, desc: g.title }));
+          tasks.filter(t => t.status === "completed").slice(0, 5).forEach(t => items.push({ time: t.deadline ? t.deadline + "T00:00:00" : new Date().toISOString(), icon: "✅", label: "태스크 완료", desc: t.title }));
+          aars.slice(0, 5).forEach(a => items.push({ time: a.date + "T00:00:00", icon: "📝", label: "AAR", desc: a.goal }));
+          notices.slice(0, 5).forEach(n => items.push({ time: n.date + "T00:00:00", icon: "📢", label: "공지", desc: n.title }));
+          items.sort((a, b) => b.time.localeCompare(a.time));
+          return (
+            <div className="space-y-0">
+              <h3 className="text-sm font-bold mb-4">🕐 활동 타임라인</h3>
+              {items.length === 0 ? <p className="text-xs text-slate-400">데이터가 없습니다.</p> : (
+                <div className="relative border-l-2 border-slate-200 ml-3">
+                  {items.map((it, i) => (
+                    <div key={i} className="relative pl-6 pb-5">
+                      <span className="absolute -left-[11px] top-0.5 w-5 h-5 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-[10px]">{it.icon}</span>
+                      <p className="text-[10px] text-slate-400 mb-0.5">{new Date(it.time).toLocaleDateString("ko-KR")} · {it.label}</p>
+                      <p className="text-xs text-slate-800">{it.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </main>
     </div>
   );
