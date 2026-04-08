@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'VELA',
   webDir: 'out',
   server: {
-    url: 'https://velaanalytics.com',
+    url: 'https://velaanalytics.com?app=1',
     cleartext: true,
   },
   ios: {

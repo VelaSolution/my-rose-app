@@ -77,9 +77,10 @@ export default function RootLayout({
           }
           // 글씨 크기 복원
           try { var fs = localStorage.getItem('vela-font-size'); if (fs) document.documentElement.style.fontSize = fs + 'px'; } catch {}
-          // Capacitor 앱 감지
-          if (window.Capacitor || navigator.userAgent.includes('CapacitorApp') || window.matchMedia('(display-mode: standalone)').matches) {
+          // Capacitor 앱 감지 — URL ?app=1 또는 localStorage 플래그
+          if (window.Capacitor || navigator.userAgent.includes('CapacitorApp') || window.matchMedia('(display-mode: standalone)').matches || window.location.search.includes('app=1') || localStorage.getItem('vela-is-app') === '1') {
             document.documentElement.classList.add('capacitor-app');
+            localStorage.setItem('vela-is-app', '1');
           }
         ` }} />
       </head>
