@@ -37,8 +37,11 @@ function HeroMiniSim() {
   const [seats, setSeats] = useState(36);
   const [spend, setSpend] = useState(25000);
   const [turn, setTurn] = useState(1.6);
+  const [cogsRate, setCogsRate] = useState(32);
+  const [rent, setRent] = useState(200);
+  const [labor, setLabor] = useState(500);
   const sales = Math.round(seats * spend * turn * 26);
-  const cost = Math.round(sales * 0.35 + 6500000 + 2000000 + 500000);
+  const cost = Math.round(sales * cogsRate / 100 + labor * 10000 + rent * 10000 + 500000);
   const profit = sales - cost;
   const margin = sales > 0 ? ((profit / sales) * 100).toFixed(1) : "0";
   const fmt = (n: number) => Math.abs(n).toLocaleString("ko-KR");
@@ -76,6 +79,30 @@ function HeroMiniSim() {
             <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{turn.toFixed(1)}x</span>
           </div>
           <input type="range" min={0.5} max={6} step={0.1} value={turn} onChange={e=>setTurn(Number(e.target.value))}
+            style={{width:"100%",accentColor:"#3182F6",height:6}} />
+        </div>
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>원가율</span>
+            <span style={{fontSize:14,fontWeight:700,color:cogsRate>40?"#EF4444":"#191F28"}}>{cogsRate}%</span>
+          </div>
+          <input type="range" min={15} max={55} value={cogsRate} onChange={e=>setCogsRate(Number(e.target.value))}
+            style={{width:"100%",accentColor:"#3182F6",height:6}} />
+        </div>
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>월 임대료</span>
+            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{rent}만원</span>
+          </div>
+          <input type="range" min={50} max={1500} step={10} value={rent} onChange={e=>setRent(Number(e.target.value))}
+            style={{width:"100%",accentColor:"#3182F6",height:6}} />
+        </div>
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>월 인건비</span>
+            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{labor}만원</span>
+          </div>
+          <input type="range" min={100} max={2000} step={10} value={labor} onChange={e=>setLabor(Number(e.target.value))}
             style={{width:"100%",accentColor:"#3182F6",height:6}} />
         </div>
       </div>
