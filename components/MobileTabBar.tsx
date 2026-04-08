@@ -14,14 +14,12 @@ const TABS = [
 export default function MobileTabBar() {
   const pathname = usePathname();
 
-  // 도구 페이지에서는 ToolNav 탭바가 대신 보이므로 숨김
   if (pathname.startsWith("/tools/") && pathname !== "/tools") return null;
-  // 게임에서는 숨김
   if (pathname.startsWith("/game")) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-      <div className="flex items-center justify-around h-12">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden vela-mobile-tab" style={{ paddingBottom: "env(safe-area-inset-bottom)", background: "#fff", borderTop: "1px solid #E5E8EB" }}>
+      <div style={{ display: "flex", height: 50 }}>
         {TABS.map(tab => {
           const isActive = tab.href === "/"
             ? pathname === "/"
@@ -30,12 +28,22 @@ export default function MobileTabBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-                isActive ? "text-blue-600" : "text-slate-400"
-              }`}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textDecoration: "none",
+                color: isActive ? "#3182F6" : "#9EA6B3",
+                gap: 2,
+                minHeight: "auto",
+                fontSize: "inherit",
+                fontWeight: "inherit",
+              }}
             >
-              <span className="text-lg leading-none">{tab.icon}</span>
-              <span className="text-[10px] mt-0.5 font-medium">{tab.label}</span>
+              <span style={{ fontSize: 20, lineHeight: 1 }}>{tab.icon}</span>
+              <span style={{ fontSize: 10, fontWeight: 500 }}>{tab.label}</span>
             </Link>
           );
         })}
