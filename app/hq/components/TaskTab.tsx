@@ -38,9 +38,25 @@ export default function TaskTab({ userId, userName, flash }: Props) {
 
   useEffect(() => {
     load();
-    const saved = localStorage.getItem("vela-hq-task-comments");
-    if (saved) try { setComments(JSON.parse(saved)); } catch { /* noop */ }
+    loadComments();
   }, []);
+
+  async function loadComments() {
+    const s = sb();
+    if (!s) return;
+    try {
+      const { data } = await s.from("hq_task_comments").select("*").order("created_at", { ascending: true });
+      if (data) {
+        const grouped: Record<string, TaskComment[]> = {};
+        for (const r of data as any[]) {
+          const tid = r.task_id;
+          if (!grouped[tid]) grouped[tid] = [];
+          grouped[tid].push({ id: r.id, author: r.author, text: r.text, time: r.created_at });
+        }
+        setComments(grouped);
+      }
+    } catch {}
+  }
 
   async function load() {
     const s = sb();
@@ -87,19 +103,15 @@ export default function TaskTab({ userId, userName, flash }: Props) {
     await load();
   }
 
-  function addComment(taskId: string) {
+  async function addComment(taskId: string) {
     const text = commentInputs[taskId]?.trim();
     if (!text) return;
-    const c: TaskComment = {
-      id: crypto.randomUUID(),
-      author: userName,
-      text,
-      time: new Date().toISOString(),
-    };
-    const updated = { ...comments, [taskId]: [...(comments[taskId] ?? []), c] };
-    setComments(updated);
-    localStorage.setItem("vela-hq-task-comments", JSON.stringify(updated));
+    const s = sb();
+    if (!s) return;
+    const { error } = await s.from("hq_task_comments").insert({ task_id: taskId, author: userName, text });
+    if (error) { flash("댓글 저장 실패"); return; }
     setCommentInputs((p) => ({ ...p, [taskId]: "" }));
+    loadComments();
   }
 
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));

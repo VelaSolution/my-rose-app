@@ -33,8 +33,6 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("vela-hq-directive");
-    if (saved) setDirective(saved);
     load();
   }, []);
 
@@ -71,8 +69,24 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
         if (fbData) setFeedbacks(fbData.map((r: any) => ({ id: r.id, type: r.type ?? "", title: r.title ?? "", description: r.description ?? "", priority: r.priority ?? "중간", status: r.status ?? "신규", date: r.created_at?.slice(0, 10) ?? "", author: r.author ?? "" })));
       } catch {}
 
+      // 지시사항 로드
+      try {
+        const { data: dirData } = await s.from("hq_directives").select("content").eq("user_id", userId).single();
+        if (dirData?.content) setDirective(dirData.content);
+      } catch {}
+
       // 댓글 로드
-      try { const c = localStorage.getItem("vela-hq-dashboard-comments"); if (c) setComments(JSON.parse(c)); } catch {}
+      try {
+        const { data: cmtData } = await s.from("hq_item_comments").select("*").order("created_at", { ascending: true });
+        if (cmtData) {
+          const grouped: Record<string, Comment[]> = {};
+          for (const r of cmtData as any[]) {
+            if (!grouped[r.item_id]) grouped[r.item_id] = [];
+            grouped[r.item_id].push({ id: r.id, author: r.author, text: r.text, time: r.created_at ? new Date(r.created_at).toLocaleString("ko-KR") : "" });
+          }
+          setComments(grouped);
+        }
+      } catch {}
     } catch {
       flash("데이터 로딩 실패");
     } finally {
@@ -82,7 +96,8 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
 
   function saveDirective(v: string) {
     setDirective(v);
-    localStorage.setItem("vela-hq-directive", v);
+    const s = sb();
+    if (s) s.from("hq_directives").upsert({ user_id: userId, content: v, updated_at: new Date().toISOString() }, { onConflict: "user_id" }).then(() => {});
   }
 
   const latest = metrics[0];
@@ -93,12 +108,14 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
   const monthAars = aars.filter((a) => a.date?.startsWith(today().slice(0, 7))).length;
   const feedbackCount = feedbacks.filter(f => f.status !== "완료").length;
 
-  const addComment = (itemId: string) => {
+  const addComment = async (itemId: string) => {
     if (!commentText.trim()) return;
+    const s = sb();
+    if (!s) return;
+    const { error } = await s.from("hq_item_comments").insert({ item_id: itemId, item_type: "dashboard", author: userName, text: commentText.trim() });
+    if (error) { flash("댓글 저장 실패"); return; }
     const c: Comment = { id: Date.now().toString(), author: userName, text: commentText.trim(), time: new Date().toLocaleString("ko-KR") };
-    const next = { ...comments, [itemId]: [...(comments[itemId] ?? []), c] };
-    setComments(next);
-    localStorage.setItem("vela-hq-dashboard-comments", JSON.stringify(next));
+    setComments(prev => ({ ...prev, [itemId]: [...(prev[itemId] ?? []), c] }));
     setCommentText("");
   };
 

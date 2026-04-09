@@ -172,6 +172,32 @@ CREATE TABLE IF NOT EXISTS hq_files (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- ── 태스크 댓글 ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_task_comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  task_id UUID NOT NULL REFERENCES hq_tasks(id) ON DELETE CASCADE,
+  author TEXT NOT NULL,
+  text TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── 대시보드 지시사항/댓글 ──────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_directives (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL,
+  content TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS hq_item_comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  item_id TEXT NOT NULL,
+  item_type TEXT NOT NULL,
+  author TEXT NOT NULL,
+  text TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- ── 일정/캘린더 ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS hq_events (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -298,6 +324,9 @@ DO $$ BEGIN
   ALTER TABLE hq_reports ENABLE ROW LEVEL SECURITY;
   ALTER TABLE hq_folders ENABLE ROW LEVEL SECURITY;
   ALTER TABLE hq_files ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE hq_task_comments ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE hq_directives ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE hq_item_comments ENABLE ROW LEVEL SECURITY;
   ALTER TABLE hq_events ENABLE ROW LEVEL SECURITY;
   ALTER TABLE hq_attendance ENABLE ROW LEVEL SECURITY;
   ALTER TABLE hq_leave ENABLE ROW LEVEL SECURITY;
@@ -335,7 +364,7 @@ DECLARE
   tbl TEXT;
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
-    'hq_events','hq_notices','hq_feedback','hq_memos','hq_team','hq_chat',
+    'hq_task_comments','hq_directives','hq_item_comments','hq_events','hq_notices','hq_feedback','hq_memos','hq_team','hq_chat',
     'hq_decisions','hq_approvals','hq_reports','hq_folders','hq_files',
     'hq_attendance','hq_leave','hq_contacts','hq_board','hq_board_comments',
     'hq_surveys','hq_survey_responses','hq_wiki'
