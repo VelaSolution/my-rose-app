@@ -166,7 +166,9 @@ export default function HQPage() {
           setAuthorized(true);
           setMyRole("대표");
         } else {
-          const member = teamData.find(m => m.email === user.email);
+          // 이메일 매칭 (대소문자 무시, 공백 제거)
+          const userEmail = (user.email ?? "").trim().toLowerCase();
+          const member = teamData.find(m => (m.email ?? "").trim().toLowerCase() === userEmail);
           if (member) {
             setAuthorized(true);
             setMyRole((member.hq_role as HQRole) ?? "팀원");
