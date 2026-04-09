@@ -342,6 +342,14 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
     load(currentFolder);
   };
 
+  const changeSecurity = async (fileId: string, level: SecurityLevel) => {
+    const s = sb();
+    if (!s) return;
+    await s.from("hq_files").update({ security: level }).eq("id", fileId);
+    flash(`보안등급이 "${level}"으로 변경되었습니다`);
+    load(currentFolder);
+  };
+
   const moveFile = async (fileId: string, targetFolderId: string | null) => {
     const s = sb();
     if (!s) return;
@@ -588,9 +596,20 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                     <p className="text-sm font-semibold text-slate-800 truncate">
                       {f.name}
                       {canPreview(f.type, f.name) && <span className="ml-1.5 text-[10px] text-[#3182F6] font-normal">미리보기</span>}
-                      <span className={`ml-1.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold ${getSecurityStyle((f.security as SecurityLevel) || "내부용").color}`}>
-                        {getSecurityStyle((f.security as SecurityLevel) || "내부용").icon} {f.security || "내부용"}
-                      </span>
+                      {isAdmin ? (
+                        <select
+                          className={`ml-1.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold border-0 cursor-pointer ${getSecurityStyle((f.security as SecurityLevel) || "내부용").color}`}
+                          value={f.security || "내부용"}
+                          onClick={e => e.stopPropagation()}
+                          onChange={e => { e.stopPropagation(); changeSecurity(f.id, e.target.value as SecurityLevel); }}
+                        >
+                          {SECURITY_LEVELS.map(s => <option key={s.value} value={s.value}>{s.icon} {s.label}</option>)}
+                        </select>
+                      ) : (
+                        <span className={`ml-1.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold ${getSecurityStyle((f.security as SecurityLevel) || "내부용").color}`}>
+                          {getSecurityStyle((f.security as SecurityLevel) || "내부용").icon} {f.security || "내부용"}
+                        </span>
+                      )}
                     </p>
                     )}
                     <p className="text-xs text-slate-400">
