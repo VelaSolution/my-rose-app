@@ -35,42 +35,71 @@ const STATUS_LABEL: Record<string, string> = {
   offline: "오프라인",
 };
 
-type OrgNode = TeamMember & { children: OrgNode[] };
+type OrgNode = TeamMember & { children: OrgNode[]; teamName?: string };
 
+// 대표실 → 이사 → 팀별(role 기준) 구조
 function buildTree(members: TeamMember[]): OrgNode[] {
-  const grouped: Record<HQRole, TeamMember[]> = { "대표": [], "이사": [], "팀장": [], "팀원": [] };
-  members.forEach(m => {
-    const r = m.hqRole as HQRole;
-    if (grouped[r]) grouped[r].push(m);
-    else grouped["팀원"].push(m);
-  });
+  const ceo = members.filter(m => m.hqRole === "대표");
+  const directors = members.filter(m => m.hqRole === "이사");
+  const leaders = members.filter(m => m.hqRole === "팀장");
+  const staff = members.filter(m => m.hqRole === "팀원");
 
-  const teamwonNodes: OrgNode[] = grouped["팀원"].map(m => ({ ...m, children: [] }));
-  const teamjangNodes: OrgNode[] = grouped["팀장"].map((m, i) => {
-    const chunkSize = grouped["팀장"].length > 0 ? Math.ceil(teamwonNodes.length / grouped["팀장"].length) : teamwonNodes.length;
-    const start = i * chunkSize;
-    return { ...m, children: teamwonNodes.slice(start, start + chunkSize) };
-  });
-  if (grouped["팀장"].length === 0 && teamwonNodes.length > 0) {
-    // If no 팀장, attach 팀원 directly to next level up
-    const isaNodes: OrgNode[] = grouped["이사"].map((m, i) => {
-      const chunkSize = grouped["이사"].length > 0 ? Math.ceil(teamwonNodes.length / grouped["이사"].length) : teamwonNodes.length;
-      const start = i * chunkSize;
-      return { ...m, children: teamwonNodes.slice(start, start + chunkSize) };
-    });
-    const roots: OrgNode[] = grouped["대표"].map(m => ({ ...m, children: isaNodes.length > 0 ? isaNodes : teamwonNodes }));
-    return roots.length > 0 ? roots : isaNodes.length > 0 ? isaNodes : teamwonNodes;
+  // 팀 그룹핑: role(직책/팀명)을 기준으로 팀 구성
+  // 팀장은 각자 자기 role이 팀명
+  // 팀원은 같은 role의 팀장 아래로 배치
+  const teams: Map<string, { leader?: TeamMember; members: TeamMember[] }> = new Map();
+
+  // 팀장들로 팀 생성
+  for (const l of leaders) {
+    const teamName = l.role || "기타";
+    if (!teams.has(teamName)) teams.set(teamName, { members: [] });
+    teams.get(teamName)!.leader = l;
   }
 
-  const isaNodes: OrgNode[] = grouped["이사"].map((m, i) => {
-    const chunkSize = grouped["이사"].length > 0 ? Math.ceil(teamjangNodes.length / grouped["이사"].length) : teamjangNodes.length;
-    const start = i * chunkSize;
-    return { ...m, children: teamjangNodes.slice(start, start + chunkSize) };
+  // 팀원들을 role이 같은 팀에 배치
+  for (const s of staff) {
+    const teamName = s.role || "기타";
+    if (!teams.has(teamName)) teams.set(teamName, { members: [] });
+    teams.get(teamName)!.members.push(s);
+  }
+
+  // 팀 노드 만들기
+  const teamNodes: OrgNode[] = [...teams.entries()].map(([teamName, team]) => {
+    const memberNodes: OrgNode[] = team.members.map(m => ({ ...m, children: [] }));
+    if (team.leader) {
+      return { ...team.leader, children: memberNodes, teamName };
+    }
+    // 팀장 없는 팀: 가상 노드
+    return {
+      id: `team-${teamName}`,
+      name: teamName,
+      role: teamName,
+      email: "",
+      status: "active" as const,
+      hqRole: "팀장" as HQRole,
+      children: memberNodes,
+      teamName,
+    };
   });
 
-  const topChildren = isaNodes.length > 0 ? isaNodes : teamjangNodes;
-  const roots: OrgNode[] = grouped["대표"].map(m => ({ ...m, children: topChildren }));
-  return roots.length > 0 ? roots : topChildren;
+  // 이사 노드: 팀들을 이사에게 분배
+  let directorNodes: OrgNode[];
+  if (directors.length > 0) {
+    directorNodes = directors.map((d, i) => {
+      const chunkSize = Math.ceil(teamNodes.length / directors.length);
+      const start = i * chunkSize;
+      return { ...d, children: teamNodes.slice(start, start + chunkSize) };
+    });
+  } else {
+    directorNodes = teamNodes; // 이사 없으면 바로 팀 연결
+  }
+
+  // 대표 노드: 최상위
+  if (ceo.length > 0) {
+    return ceo.map(c => ({ ...c, children: directorNodes, teamName: "대표실" }));
+  }
+
+  return directorNodes;
 }
 
 function PersonCard({ node, onSelect, selected }: { node: OrgNode; onSelect: (n: OrgNode) => void; selected: string | null }) {
@@ -93,10 +122,14 @@ function PersonCard({ node, onSelect, selected }: { node: OrgNode; onSelect: (n:
             <div className={`w-2 h-2 rounded-full ${STATUS_DOT[node.status] || "bg-slate-300"}`} />
             <span className="text-sm font-bold text-slate-900">{node.name}</span>
           </div>
-          {/* Role */}
+          {/* Role/Team */}
           <span className="text-xs text-slate-500">{node.role}</span>
           {/* HQ Role badge */}
           <span className={`${BADGE} text-[10px] ${ROLE_BADGE_COLORS[node.hqRole]}`}>{node.hqRole}</span>
+          {/* Team label for leaders */}
+          {node.teamName && node.hqRole === "팀장" && (
+            <span className="text-[10px] text-slate-400 font-medium">{node.teamName}팀</span>
+          )}
         </div>
       </button>
     </div>
