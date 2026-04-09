@@ -38,13 +38,31 @@ const TOOLS = [
 
 export default function NavBar() {
   const [user, setUser] = useState<User | null>(null);
+  const [isHqMember, setIsHqMember] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [locale, setLocaleState] = useState<Locale>("ko");
   useEffect(() => { setLocaleState(getLocale()); }, []);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }: { data: { user: User | null } }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }: { data: { user: User | null } }) => {
+      setUser(data.user);
+      // HQ 팀원 여부 확인
+      if (data.user?.email) {
+        const adminEmails = ["mnhyuk@velaanalytics.com", "mnhyuk0213@gmail.com"];
+        if (adminEmails.includes(data.user.email)) {
+          setIsHqMember(true);
+        } else {
+          supabase.from("hq_team").select("email, approved").then(({ data: td }: { data: any[] | null }) => {
+            if (td) {
+              const email = data.user!.email!.trim().toLowerCase();
+              const found = td.find((t: any) => (t.email ?? "").trim().toLowerCase() === email && t.approved !== false);
+              setIsHqMember(!!found);
+            }
+          });
+        }
+      }
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e: string, session: { user: User | null } | null) => {
       setUser(session?.user ?? null);
     });
@@ -95,7 +113,7 @@ export default function NavBar() {
                   {user.user_metadata?.nickname ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "내 계정"}
                 </Link>
                 <Link href="/dashboard" className="vela-btn-dashboard">{t("nav.dashboard", locale)}</Link>
-                {["mnhyuk@velaanalytics.com", "mnhyuk0213@gmail.com"].includes(user.email ?? "") && (
+                {isHqMember && (
                   <Link href="/hq" className="vela-btn-dashboard" style={{background:"#1a1a2e",color:"#fff"}}>🏛️ HQ</Link>
                 )}
                 <button className="vela-btn-logout" onClick={handleLogout}>{t("nav.logout", locale)}</button>

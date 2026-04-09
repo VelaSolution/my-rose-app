@@ -194,7 +194,7 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
             {members.map((m) => (
               <div
                 key={m.id}
-                className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-100 hover:bg-slate-50/60 transition-colors"
+                className="group flex items-center justify-between px-4 py-3 rounded-xl border border-slate-100 hover:bg-slate-50/60 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <button
@@ -222,10 +222,8 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
                       ) : (
                         <span className={`${BADGE} bg-blue-50 text-blue-600`}>{m.hqRole}</span>
                       )}
-                      {m.approved === false ? (
+                      {m.approved === false && (
                         <span className={`${BADGE} bg-amber-50 text-amber-600 text-[10px]`}>승인대기</span>
-                      ) : (
-                        <span className={`${BADGE} bg-emerald-50 text-emerald-600 text-[10px]`}>승인됨</span>
                       )}
                     </div>
                     <p className="text-xs text-slate-400 truncate">
@@ -243,7 +241,7 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
                   )}
                   {canApprove && m.approved !== false && (
                     <button onClick={() => toggleApproval(m.id, false)}
-                      className="text-xs text-slate-400 hover:text-amber-600 transition-colors px-2 py-1">
+                      className="text-xs text-slate-300 hover:text-amber-600 transition-colors px-2 py-1 opacity-0 group-hover:opacity-100">
                       승인취소
                     </button>
                   )}
