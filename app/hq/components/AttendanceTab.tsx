@@ -70,65 +70,64 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
-  // Load data
-  useEffect(() => {
-    (async () => {
-      const s = sb();
-      if (s) {
-        try {
-          const { data } = await s.from("hq_attendance").select("*").order("created_at", { ascending: false });
-          if (data && data.length >= 0) { setRecords(data as AttendanceRecord[]); return; }
-        } catch {}
-        // 팀원 목록 로드
-        if (canViewTeam) {
-          try {
-            const { data: td } = await s.from("hq_team").select("name, role").order("created_at", { ascending: true });
-            if (td) setTeamMembers(td as TeamMember[]);
-          } catch {}
-        }
+  // Load data from Supabase
+  const loadData = async () => {
+    const s = sb();
+    if (!s) return;
+    try {
+      const { data } = await s.from("hq_attendance").select("*").order("date", { ascending: false });
+      if (data) {
+        setRecords(data.map((r: any) => ({
+          id: r.id, date: r.date, clockIn: r.clock_in || "", clockOut: r.clock_out || "",
+          status: r.status || "정상", overtime: r.overtime || 0, memo: r.memo || "", userName: r.user_name || "",
+        })));
       }
-      try { const d = localStorage.getItem("vela-hq-attendance"); if (d) setRecords(JSON.parse(d)); } catch {}
-    })();
-  }, []);
+    } catch {}
+    if (canViewTeam) {
+      try {
+        const { data: td } = await s.from("hq_team").select("name, role").order("created_at", { ascending: true });
+        if (td) setTeamMembers(td as TeamMember[]);
+      } catch {}
+    }
+  };
 
-  const persist = (next: AttendanceRecord[]) => { setRecords(next); localStorage.setItem("vela-hq-attendance", JSON.stringify(next)); };
+  useEffect(() => { loadData(); }, []);
 
   const todayStr = today();
   const todayRec = records.find(r => r.date === todayStr && r.userName === userName);
 
-  const clockIn = () => {
+  const clockIn = async () => {
     if (todayRec?.clockIn) { flash("이미 출근 기록이 있습니다"); return; }
+    const s = sb();
+    if (!s) return;
     const time = now.toTimeString().slice(0, 5);
     const isLate = time > "09:00";
-    const rec: AttendanceRecord = {
-      id: crypto.randomUUID(),
-      date: todayStr,
-      clockIn: time,
-      clockOut: "",
-      status: isLate ? "지각" : "정상",
-      overtime: 0,
-      memo: memo.trim(),
-      userName,
-    };
-    persist([rec, ...records]);
+    const { error } = await s.from("hq_attendance").upsert({
+      user_id: userId, user_name: userName, date: todayStr,
+      clock_in: time, status: isLate ? "지각" : "정상", memo: memo.trim() || null,
+    }, { onConflict: "user_id,date" });
+    if (error) { flash("저장 실패: " + error.message); return; }
     flash(`출근 완료 (${time})`);
     setMemo("");
+    loadData();
   };
 
-  const clockOut = () => {
+  const clockOut = async () => {
     if (!todayRec) { flash("출근 기록이 없습니다"); return; }
     if (todayRec.clockOut) { flash("이미 퇴근 기록이 있습니다"); return; }
+    const s = sb();
+    if (!s) return;
     const time = now.toTimeString().slice(0, 5);
     const hours = diffHours(todayRec.clockIn, time);
     const isEarly = time < "18:00";
     const overtime = Math.max(0, +(hours - 8).toFixed(1));
-    const updated = records.map(r =>
-      r.id === todayRec.id
-        ? { ...r, clockOut: time, overtime, status: (isEarly && todayRec.status !== "지각" ? "조퇴" : r.status) as AttendanceRecord["status"] }
-        : r
-    );
-    persist(updated);
+    const newStatus = isEarly && todayRec.status !== "지각" ? "조퇴" : todayRec.status;
+    const { error } = await s.from("hq_attendance").update({
+      clock_out: time, overtime, status: newStatus,
+    }).eq("id", todayRec.id);
+    if (error) { flash("저장 실패: " + error.message); return; }
     flash(`퇴근 완료 (${time}) - ${hours}시간 근무`);
+    loadData();
   };
 
   // Week records
