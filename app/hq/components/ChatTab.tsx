@@ -27,8 +27,8 @@ function dateSeparatorLabel(dateStr: string): string {
   yest.setDate(yest.getDate() - 1);
   const yesterdayStr = yest.toISOString().slice(0, 10);
   const ds = d.toISOString().slice(0, 10);
-  if (ds === todayStr) return "\uC624\uB298";
-  if (ds === yesterdayStr) return "\uC5B4\uC81C";
+  if (ds === todayStr) return "오늘";
+  if (ds === yesterdayStr) return "어제";
   return d.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 }
 
@@ -143,7 +143,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
     const s = sb();
     if (!s) return;
     await s.from("hq_chat").delete().eq("id", id);
-    flash("\uC0AD\uC81C\uB428");
+    flash("삭제됨");
     load();
   };
 
@@ -190,7 +190,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
 
   return (
     <div className={`${C} flex flex-col`} style={{ height: "calc(100vh - 200px)", minHeight: "500px" }}>
-      <h3 className="text-lg font-bold text-slate-800 mb-4 flex-shrink-0">\uD300 \uCC44\uD305</h3>
+      <h3 className="text-lg font-bold text-slate-800 mb-4 flex-shrink-0">팀 채팅</h3>
 
       {/* Messages area */}
       <div
@@ -199,9 +199,9 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
         className="flex-1 overflow-y-auto space-y-1 mb-4 pr-1 relative"
       >
         {loading ? (
-          <div className="text-center py-12 text-slate-400">\uBD88\uB7EC\uC624\uB294 \uC911...</div>
+          <div className="text-center py-12 text-slate-400">불러오는 중...</div>
         ) : messages.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">\uBA54\uC2DC\uC9C0\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uCCAB \uBA54\uC2DC\uC9C0\uB97C \uBCF4\uB0B4\uBCF4\uC138\uC694!</div>
+          <div className="text-center py-12 text-slate-400">메시지가 없습니다. 첫 메시지를 보내보세요!</div>
         ) : (
           groupedMessages.map((group, gi) => (
             <div key={gi}>
@@ -247,7 +247,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
                           <button
                             onClick={() => setReplyTo({ id: m.id, sender: m.sender, text: m.text })}
                             className="text-slate-300 hover:text-[#3182F6] transition-colors"
-                            title="\uB2F5\uC7A5"
+                            title="답장"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -257,7 +257,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
                           <button
                             onClick={() => setShowReactionPicker(showReactionPicker === m.id ? null : m.id)}
                             className="text-slate-300 hover:text-amber-400 transition-colors"
-                            title="\uBC18\uC751"
+                            title="반응"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -268,7 +268,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
                             <button
                               onClick={() => deleteMsg(m.id)}
                               className="text-slate-300 hover:text-red-400 transition-colors"
-                              title="\uC0AD\uC81C"
+                              title="삭제"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -346,7 +346,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
-            {unreadCount > 0 ? `\uC0C8 \uBA54\uC2DC\uC9C0 ${unreadCount}\uAC1C` : "\uC544\uB798\uB85C"}
+            {unreadCount > 0 ? `새 메시지 ${unreadCount}개` : "아래로"}
           </button>
         </div>
       )}
@@ -355,7 +355,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
       {replyTo && (
         <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl mb-2 border border-blue-100">
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-blue-600">{replyTo.sender} \uC5D0\uAC8C \uB2F5\uC7A5</p>
+            <p className="text-xs font-semibold text-blue-600">{replyTo.sender} 에게 답장</p>
             <p className="text-xs text-blue-400 truncate">{replyTo.text}</p>
           </div>
           <button onClick={() => setReplyTo(null)} className="text-blue-400 hover:text-blue-600 flex-shrink-0">
@@ -373,10 +373,10 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
           value={text}
           onChange={(e) => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={replyTo ? `${replyTo.sender}\uC5D0\uAC8C \uB2F5\uC7A5...` : "\uBA54\uC2DC\uC9C0\uB97C \uC785\uB825\uD558\uC138\uC694..."}
+          placeholder={replyTo ? `${replyTo.sender}에게 답장...` : "메시지를 입력하세요..."}
         />
         <button className={`${B} flex-shrink-0`} onClick={send}>
-          \uC804\uC1A1
+          전송
         </button>
       </div>
     </div>
