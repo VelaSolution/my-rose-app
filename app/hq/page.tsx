@@ -64,6 +64,15 @@ const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName
   orgchart: OrgChartTab,
 };
 
+// Bottom nav tabs for mobile (5 most important)
+const BOTTOM_NAV_TABS: { key: Tab | "more"; label: string; icon: string }[] = [
+  { key: "dashboard", label: "현황판", icon: "📋" },
+  { key: "attendance", label: "근태", icon: "⏰" },
+  { key: "task", label: "태스크", icon: "✅" },
+  { key: "chat", label: "채팅", icon: "💬" },
+  { key: "more", label: "더보기", icon: "☰" },
+];
+
 export default function HQPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -182,26 +191,38 @@ export default function HQPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
-      <style>{`.vela-nav,.vela-mobile-tab{display:none!important}body{padding-top:0!important}`}</style>
+      <meta name="theme-color" content="#ffffff" />
+      <style>{`
+        .vela-nav,.vela-mobile-tab{display:none!important}
+        body{padding-top:0!important;padding-top:env(safe-area-inset-top)!important}
+      `}</style>
 
-      {/* ── 헤더 ───────────────────────────────────────── */}
-      <header className="bg-white border-b border-slate-200/80 px-4 lg:px-6 py-3 sticky top-0 z-50">
+      {/* ── 헤더 (compact on mobile) ───────────────────── */}
+      <header className="bg-white border-b border-slate-200/80 px-3 lg:px-6 py-2 lg:py-3 sticky top-0 z-50" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
             {/* 모바일 햄버거 */}
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 transition">
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition">
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
             </button>
             <button onClick={() => setTab("dashboard")} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#3182F6] rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-sm">V</span>
-              </div>
-              <span className="text-lg font-bold text-slate-900 tracking-tight hidden sm:block">VELA HQ</span>
+              {/* New hexagon HQ logo */}
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="hqLogoGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#3182F6" />
+                    <stop offset="1" stopColor="#2563EB" />
+                  </linearGradient>
+                </defs>
+                <path d="M16 1.5L29.5 9.25V24.75L16 30.5L2.5 24.75V9.25L16 1.5Z" fill="url(#hqLogoGrad)" />
+                <text x="16" y="19.5" textAnchor="middle" fill="white" fontSize="11" fontWeight="700" fontFamily="system-ui, sans-serif">HQ</text>
+              </svg>
+              <span className="text-base lg:text-lg font-bold text-slate-900 tracking-tight hidden sm:block">VELA HQ</span>
             </button>
-            <span className="text-[11px] bg-[#3182F6]/10 text-[#3182F6] px-2.5 py-1 rounded-lg font-bold">{myRole}</span>
+            <span className="text-[10px] lg:text-[11px] bg-[#3182F6]/10 text-[#3182F6] px-2 py-0.5 lg:px-2.5 lg:py-1 rounded-lg font-bold">{myRole}</span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
             {msg && (
               <span className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-semibold animate-pulse">
                 {msg}
@@ -219,8 +240,8 @@ export default function HQPage() {
               </svg>
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center">
-                <span className="text-sm font-bold text-slate-600">{userName[0]}</span>
+              <div className="w-7 h-7 lg:w-8 lg:h-8 bg-slate-100 rounded-xl flex items-center justify-center">
+                <span className="text-xs lg:text-sm font-bold text-slate-600">{userName[0]}</span>
               </div>
               <span className="text-sm font-semibold text-slate-700 hidden sm:block">{myRole} {userName}</span>
             </div>
@@ -228,37 +249,37 @@ export default function HQPage() {
         </div>
       </header>
 
-      {/* ── 모바일 사이드바 오버레이 ─────────────────── */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setSidebarOpen(false)}>
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-200 shadow-2xl pt-16 overflow-y-auto"
-            onClick={e => e.stopPropagation()}>
-            <nav className="px-3 py-2">
-              {SIDEBAR_GROUPS.map(g => {
-                const groupTabs = g.items.filter(k => ROLE_PERMISSIONS[myRole]?.includes(k));
-                if (groupTabs.length === 0) return null;
-                return (
-                  <div key={g.label} className="mb-4">
-                    <p className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{g.label}</p>
-                    {groupTabs.map(k => {
-                      const t = TAB_MAP[k]; if (!t) return null;
-                      return (
-                        <button key={k} onClick={() => { setTab(k); setSidebarOpen(false); }}
-                          className={`w-full text-left px-3 py-2.5 text-sm rounded-xl flex items-center gap-2.5 transition-all mb-0.5 ${
-                            tab === k ? "bg-[#3182F6]/10 text-[#3182F6] font-semibold" : "text-slate-600 hover:bg-slate-50"
-                          }`}>
-                          <span className="text-base">{t.icon}</span><span>{t.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </nav>
-          </aside>
-        </div>
-      )}
+      {/* ── 모바일 사이드바 오버레이 (slide animation) ── */}
+      <div className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`} onClick={() => setSidebarOpen(false)}>
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+        <aside
+          className={`absolute left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-200 shadow-2xl pt-16 overflow-y-auto transition-transform duration-300 ease-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+          style={{ paddingTop: "calc(env(safe-area-inset-top) + 4rem)" }}
+          onClick={e => e.stopPropagation()}>
+          <nav className="px-3 py-2">
+            {SIDEBAR_GROUPS.map(g => {
+              const groupTabs = g.items.filter(k => ROLE_PERMISSIONS[myRole]?.includes(k));
+              if (groupTabs.length === 0) return null;
+              return (
+                <div key={g.label} className="mb-4">
+                  <p className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{g.label}</p>
+                  {groupTabs.map(k => {
+                    const t = TAB_MAP[k]; if (!t) return null;
+                    return (
+                      <button key={k} onClick={() => { setTab(k); setSidebarOpen(false); }}
+                        className={`w-full text-left px-3 py-2.5 text-sm rounded-xl flex items-center gap-2.5 transition-all mb-0.5 ${
+                          tab === k ? "bg-[#3182F6]/10 text-[#3182F6] font-semibold" : "text-slate-600 hover:bg-slate-50"
+                        }`}>
+                        <span className="text-base">{t.icon}</span><span>{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </nav>
+        </aside>
+      </div>
 
       <div className="flex">
         {/* ── 데스크톱 사이드바 ──────────────────────── */}
@@ -299,35 +320,19 @@ export default function HQPage() {
         </aside>
 
         {/* ── 메인 콘텐츠 ──────────────────────────────── */}
-        <main className="flex-1 min-w-0">
-          {/* 모바일 탭바 */}
-          <nav className="md:hidden bg-white border-b border-slate-200/80 sticky top-[53px] z-30">
-            <div className="flex overflow-x-auto scrollbar-none">
-              {allowedTabs.map(t => (
-                <button key={t.key} onClick={() => setTab(t.key)}
-                  className={`flex-shrink-0 px-4 py-3 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
-                    tab === t.key
-                      ? "border-[#3182F6] text-[#3182F6]"
-                      : "border-transparent text-slate-400 hover:text-slate-600"
-                  }`}>
-                  {t.icon} {t.label}
-                </button>
-              ))}
-            </div>
-          </nav>
-
-          {/* 페이지 헤더 */}
-          <div className="px-5 lg:px-8 pt-6 pb-2">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{activeTabInfo?.icon}</span>
+        <main className="flex-1 min-w-0 pb-16 md:pb-0">
+          {/* 페이지 헤더 (compact on mobile) */}
+          <div className="px-4 lg:px-8 pt-4 lg:pt-6 pb-1 lg:pb-2">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <span className="text-xl lg:text-2xl">{activeTabInfo?.icon}</span>
               <div>
-                <h1 className="text-xl font-bold text-slate-900">{activeTabInfo?.label}</h1>
+                <h1 className="text-base lg:text-xl font-bold text-slate-900">{activeTabInfo?.label}</h1>
               </div>
             </div>
           </div>
 
           {/* 탭 콘텐츠 */}
-          <div className="px-5 lg:px-8 pb-10">
+          <div className="px-4 lg:px-8 pb-10">
             {userId && tab === "dashboard" ? (
               <Dashboard userId={userId} userName={userName} myRole={myRole} flash={flash} onNavigate={setTab} />
             ) : userId ? (
@@ -336,6 +341,34 @@ export default function HQPage() {
           </div>
         </main>
       </div>
+
+      {/* ── 모바일 하단 네비게이션 ─────────────────────── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200/80" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="flex items-center justify-around h-14">
+          {BOTTOM_NAV_TABS.map(item => {
+            const isMore = item.key === "more";
+            const isActive = !isMore && tab === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => {
+                  if (isMore) {
+                    setSidebarOpen(true);
+                  } else {
+                    setTab(item.key as Tab);
+                  }
+                }}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+                  isActive ? "text-[#3182F6]" : "text-slate-400"
+                }`}
+              >
+                <span className="text-lg leading-none">{item.icon}</span>
+                <span className={`text-[10px] font-semibold ${isActive ? "text-[#3182F6]" : "text-slate-400"}`}>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
       {/* ── 검색 모달 ───────────────────────────────────── */}
       {userId && (
