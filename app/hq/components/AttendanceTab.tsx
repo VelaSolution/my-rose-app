@@ -77,8 +77,12 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     try {
       const { data } = await s.from("hq_attendance").select("*").order("date", { ascending: false });
       if (data) {
+        const toTime = (ts: string | null) => {
+          if (!ts) return "";
+          try { return new Date(ts).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return ""; }
+        };
         setRecords(data.map((r: any) => ({
-          id: r.id, date: r.date, clockIn: r.clock_in || "", clockOut: r.clock_out || "",
+          id: r.id, date: r.date, clockIn: toTime(r.clock_in), clockOut: toTime(r.clock_out),
           status: r.status || "정상", overtime: r.overtime || 0, memo: r.memo || "", userName: r.user_name || "",
         })));
       }
@@ -102,9 +106,10 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     if (!s) return;
     const time = now.toTimeString().slice(0, 5);
     const isLate = time > "09:00";
+    const timestamp = new Date().toISOString();
     const { error } = await s.from("hq_attendance").upsert({
       user_id: userId, user_name: userName, date: todayStr,
-      clock_in: time, status: isLate ? "지각" : "정상", memo: memo.trim() || null,
+      clock_in: timestamp, status: isLate ? "지각" : "정상", memo: memo.trim() || null,
     }, { onConflict: "user_id,date" });
     if (error) { flash("저장 실패: " + error.message); return; }
     flash(`출근 완료 (${time})`);
@@ -122,8 +127,9 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     const isEarly = time < "18:00";
     const overtime = Math.max(0, +(hours - 8).toFixed(1));
     const newStatus = isEarly && todayRec.status !== "지각" ? "조퇴" : todayRec.status;
+    const timestamp = new Date().toISOString();
     const { error } = await s.from("hq_attendance").update({
-      clock_out: time, overtime, status: newStatus,
+      clock_out: timestamp, overtime, status: newStatus,
     }).eq("id", todayRec.id);
     if (error) { flash("저장 실패: " + error.message); return; }
     flash(`퇴근 완료 (${time}) - ${hours}시간 근무`);
