@@ -12,6 +12,7 @@ interface Props {
 }
 
 const ROLES: HQRole[] = ["팀원", "팀장", "이사", "대표"];
+type TeamMemberExt = TeamMember & { approved?: boolean };
 const STATUS_DOT: Record<string, string> = {
   active: "bg-emerald-400",
   away: "bg-amber-400",
@@ -24,7 +25,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function TeamTab({ userId, userName, myRole, flash }: Props) {
-  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [members, setMembers] = useState<TeamMemberExt[]>([]);
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
@@ -40,15 +41,16 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
       .order("created_at", { ascending: true });
     if (data) {
       const ROLE_RANK: Record<string, number> = { "대표": 0, "이사": 1, "팀장": 2, "팀원": 3 };
-      const mapped = data.map((r: any) => ({
+      const mapped: TeamMemberExt[] = data.map((r: any) => ({
         id: r.id,
         name: r.name,
         role: r.role,
         email: r.email,
         status: r.status || "offline",
         hqRole: (r.hq_role || "팀원") as HQRole,
+        approved: r.approved ?? true,
       }));
-      mapped.sort((a: TeamMember, b: TeamMember) => (ROLE_RANK[a.hqRole] ?? 9) - (ROLE_RANK[b.hqRole] ?? 9));
+      mapped.sort((a, b) => (ROLE_RANK[a.hqRole] ?? 9) - (ROLE_RANK[b.hqRole] ?? 9));
       setMembers(mapped);
     }
     setLoading(false);
@@ -68,7 +70,7 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
       email: email.trim(),
       hq_role: hqRole,
       status: "offline",
-      created_at: new Date().toISOString(),
+      approved: false,
     });
     if (error) return flash("저장 실패: " + error.message);
     flash("팀원이 추가되었습니다");
@@ -76,6 +78,17 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
     setRole("");
     setEmail("");
     setHqRole("팀원");
+    load();
+  };
+
+  const canApprove = myRole === "대표";
+
+  const toggleApproval = async (id: string, approved: boolean) => {
+    const s = sb();
+    if (!s) return;
+    const { error } = await s.from("hq_team").update({ approved }).eq("id", id);
+    if (error) { flash("변경 실패: " + error.message); return; }
+    flash(approved ? "승인 완료" : "승인 취소됨");
     load();
   };
 
@@ -189,11 +202,12 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
                       <span className="font-semibold text-slate-800 text-sm">
                         {m.name}
                       </span>
-                      <span
-                        className={`${BADGE} bg-blue-50 text-blue-600`}
-                      >
-                        {m.hqRole}
-                      </span>
+                      <span className={`${BADGE} bg-blue-50 text-blue-600`}>{m.hqRole}</span>
+                      {m.approved === false ? (
+                        <span className={`${BADGE} bg-amber-50 text-amber-600 text-[10px]`}>승인대기</span>
+                      ) : (
+                        <span className={`${BADGE} bg-emerald-50 text-emerald-600 text-[10px]`}>승인됨</span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-400 truncate">
                       {m.role && `${m.role} · `}
@@ -201,12 +215,24 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => remove(m.id)}
-                  className="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1"
-                >
-                  삭제
-                </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {canApprove && m.approved === false && (
+                    <button onClick={() => toggleApproval(m.id, true)}
+                      className="text-xs bg-emerald-50 text-emerald-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition">
+                      승인
+                    </button>
+                  )}
+                  {canApprove && m.approved !== false && (
+                    <button onClick={() => toggleApproval(m.id, false)}
+                      className="text-xs text-slate-400 hover:text-amber-600 transition-colors px-2 py-1">
+                      승인취소
+                    </button>
+                  )}
+                  <button onClick={() => remove(m.id)}
+                    className="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1">
+                    삭제
+                  </button>
+                </div>
               </div>
             ))}
           </div>

@@ -146,19 +146,19 @@ export default function HQPage() {
 
         const adminEmails = ["mnhyuk@velaanalytics.com", "mnhyuk0213@gmail.com"];
 
-        // 팀 멤버 로드
-        let teamData: { email: string; hq_role: string }[] = [];
+        // 팀 멤버 로드 (승인된 멤버만)
+        let teamData: { email: string; hq_role: string; approved: boolean }[] = [];
         try {
-          const { data: td } = await sb.from("hq_team").select("email, hq_role").order("created_at", { ascending: true });
+          const { data: td } = await sb.from("hq_team").select("email, hq_role, approved").order("created_at", { ascending: true });
           if (td && td.length > 0) {
-            teamData = td as { email: string; hq_role: string }[];
+            teamData = td as { email: string; hq_role: string; approved: boolean }[];
           } else {
             const defaults = [
               { name: "민혁", role: "대표", email: "mnhyuk@velaanalytics.com", status: "active", hq_role: "대표" },
               { name: "운영팀", role: "운영", email: "ops@velaanalytics.com", status: "active", hq_role: "팀원" },
             ];
             const { data: inserted } = await sb.from("hq_team").insert(defaults).select("email, hq_role");
-            if (inserted) teamData = inserted as { email: string; hq_role: string }[];
+            if (inserted) teamData = inserted as { email: string; hq_role: string; approved: boolean }[];
           }
         } catch {}
 
@@ -169,6 +169,11 @@ export default function HQPage() {
           // 이메일 매칭 (대소문자 무시, 공백 제거)
           const userEmail = (user.email ?? "").trim().toLowerCase();
           const member = teamData.find(m => (m.email ?? "").trim().toLowerCase() === userEmail);
+          if (member && member.approved === false) {
+            // 승인 대기 중
+            setLoading(false);
+            return;
+          }
           if (member) {
             setAuthorized(true);
             setMyRole((member.hq_role as HQRole) ?? "팀원");
@@ -193,11 +198,12 @@ export default function HQPage() {
   if (!authorized) return (
     <main className="min-h-screen bg-[#F7F8FA] flex items-center justify-center px-4">
       <div className="text-center bg-white rounded-3xl p-10 shadow-lg border border-slate-200/60 max-w-sm w-full">
-        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
-          <span className="text-3xl">🔒</span>
+        <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+          <span className="text-3xl">⏳</span>
         </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-2">접근 권한 없음</h2>
-        <p className="text-sm text-slate-500 mb-6">VELA HQ는 등록된 팀원만 이용할 수 있습니다.</p>
+        <h2 className="text-xl font-bold text-slate-900 mb-2">승인 대기 중</h2>
+        <p className="text-sm text-slate-500 mb-2">VELA HQ 접속 승인을 기다리고 있습니다.</p>
+        <p className="text-xs text-slate-400 mb-6">대표의 승인 후 접속할 수 있습니다.</p>
         <Link href="/" className="inline-block rounded-xl bg-[#3182F6] text-white font-semibold px-6 py-3 text-sm hover:bg-[#2672DE] transition-all">
           홈으로 돌아가기
         </Link>

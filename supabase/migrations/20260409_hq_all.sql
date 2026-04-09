@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS hq_team (
   email TEXT,
   status TEXT DEFAULT 'active',
   hq_role TEXT DEFAULT '팀원',
+  approved BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
