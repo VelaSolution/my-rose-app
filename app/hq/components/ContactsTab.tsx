@@ -124,20 +124,24 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
     const isTeamContact = editingId.startsWith("team-");
     const realId = isTeamContact ? editingId.replace("team-", "") : editingId;
     try {
+      let error;
       if (isTeamContact) {
-        await s.from("hq_team").update({
+        const res = await s.from("hq_team").update({
           name: editForm.name, role: editForm.department, email: editForm.email,
         }).eq("id", realId);
+        error = res.error;
       } else {
-        await s.from("hq_contacts").update({
+        const res = await s.from("hq_contacts").update({
           name: editForm.name, department: editForm.department, position: editForm.position,
           phone: editForm.phone, email: editForm.email, extension: editForm.extension,
         }).eq("id", editingId);
+        error = res.error;
       }
+      if (error) { flash("수정 실패: " + error.message); console.error("saveEdit error:", error); return; }
       flash("수정 완료");
       setEditingId(null);
       load();
-    } catch { flash("수정 실패"); }
+    } catch (e) { flash("수정 실패"); console.error(e); }
   };
 
   const remove = async (id: string) => {
