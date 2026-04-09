@@ -294,7 +294,31 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
       {/* Monthly stats */}
       {viewMode === "my" && (
         <div className={C}>
-          <h3 className="text-sm font-bold text-slate-700 mb-4">월간 통계</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-700">월간 통계</h3>
+            <button
+              onClick={() => {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, "0");
+                const header = "이름,날짜,출근시간,퇴근시간,상태,초과근무,메모";
+                const rows = monthRecords.map(r =>
+                  [r.userName, r.date, r.clockIn || "", r.clockOut || "", r.status, r.overtime, `"${(r.memo || "").replace(/"/g, '""')}"`].join(",")
+                );
+                const csv = "\uFEFF" + [header, ...rows].join("\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `근태현황_${yyyy}-${mm}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="flex items-center gap-1.5 rounded-xl bg-emerald-50 text-emerald-700 font-semibold px-4 py-2 text-xs hover:bg-emerald-100 transition-all"
+            >
+              📥 엑셀 다운로드
+            </button>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="rounded-xl bg-emerald-50 p-4 text-center">
               <p className="text-xs text-emerald-600 font-semibold mb-1">출근일수</p>

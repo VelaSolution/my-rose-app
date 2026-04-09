@@ -117,6 +117,19 @@ export default function TaskTab({ userId, userName, flash }: Props) {
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
   const goalMap = Object.fromEntries(goals.map((g) => [g.id, g.title]));
 
+  function dDayBadge(deadline: string | null | undefined) {
+    if (!deadline) return null;
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    const dl = new Date(deadline);
+    dl.setHours(0, 0, 0, 0);
+    const diff = Math.round((dl.getTime() - todayDate.getTime()) / 86400000);
+    if (diff === 0) return <span className={`${BADGE} text-[10px] bg-red-50 text-red-600`}>D-DAY</span>;
+    if (diff < 0) return <span className={`${BADGE} text-[10px] bg-red-50 text-red-600`}>D+{Math.abs(diff)} 지연</span>;
+    if (diff <= 3) return <span className={`${BADGE} text-[10px] bg-amber-50 text-amber-600`}>D-{diff}</span>;
+    return <span className={`${BADGE} text-[10px] bg-slate-50 text-slate-500`}>D-{diff}</span>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -183,13 +196,14 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                 <div className="flex items-center gap-3">
                   <div className={`h-2.5 w-2.5 rounded-full ${dot}`} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         className="truncate text-sm font-semibold text-slate-800 text-left hover:text-[#3182F6]"
                         onClick={() => setExpandedTask(isExpanded ? null : t.id)}
                       >
                         {t.title}
                       </button>
+                      {dDayBadge(t.deadline)}
                       {t.goal_id && goalMap[t.goal_id] && (
                         <span className={`${BADGE} text-[10px] bg-blue-50 text-blue-600`}>
                           {goalMap[t.goal_id]}
@@ -267,7 +281,10 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                 <div className="space-y-2">
                   {colTasks.map((t) => (
                     <div key={t.id} className="rounded-xl border border-slate-200/60 bg-white p-3 shadow-sm">
-                      <p className="text-sm font-semibold text-slate-800">{t.title}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-slate-800">{t.title}</p>
+                        {dDayBadge(t.deadline)}
+                      </div>
                       <p className="mt-1 text-xs text-slate-400">
                         {t.assignee} &middot; {t.deadline || "마감일 없음"}
                       </p>

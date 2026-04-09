@@ -43,6 +43,37 @@ function calcDays(start: string, end: string, type: string): number {
   return diff;
 }
 
+const LEAVE_TYPE_COLOR: Record<string, string> = {
+  "연차": "bg-blue-500",
+  "반차(오전)": "bg-amber-500",
+  "반차(오후)": "bg-amber-500",
+  "병가": "bg-red-500",
+  "경조": "bg-purple-500",
+  "출장": "bg-emerald-500",
+  "기타": "bg-slate-500",
+};
+
+const LEAVE_TYPE_TEXT_COLOR: Record<string, string> = {
+  "연차": "text-blue-700",
+  "반차(오전)": "text-amber-700",
+  "반차(오후)": "text-amber-700",
+  "병가": "text-red-700",
+  "경조": "text-purple-700",
+  "출장": "text-emerald-700",
+  "기타": "text-slate-700",
+};
+
+function getCalendarDays(year: number, month: number) {
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+  const startDay = first.getDay(); // 0=Sun
+  const days: (number | null)[] = [];
+  for (let i = 0; i < startDay; i++) days.push(null);
+  for (let d = 1; d <= last.getDate(); d++) days.push(d);
+  while (days.length % 7 !== 0) days.push(null);
+  return days;
+}
+
 export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +83,9 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
   const [reason, setReason] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<"mine" | "pending" | "all">("mine");
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
 
   /* ── fetch ────────────────────────────────────────────── */
   const fetchAll = useCallback(async () => {
@@ -141,11 +175,93 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
     return true;
   });
 
+  /* ── calendar helpers ──────────────────────────────────── */
+  const calDays = getCalendarDays(calYear, calMonth);
+
+  function getLeavesForDate(dateStr: string): LeaveRequest[] {
+    return requests.filter(r => {
+      if (r.status === "반려") return false;
+      return r.startDate <= dateStr && r.endDate >= dateStr;
+    });
+  }
+
+  const calPrev = () => {
+    if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }
+    else setCalMonth(m => m - 1);
+  };
+  const calNext = () => {
+    if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0); }
+    else setCalMonth(m => m + 1);
+  };
+
   /* ── render ───────────────────────────────────────────── */
   if (loading) return <p className="text-center text-sm text-slate-400 py-12">불러오는 중...</p>;
 
   return (
     <div className="space-y-6">
+      {/* View mode toggle */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setViewMode("list")}
+          className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${viewMode === "list" ? "bg-[#3182F6] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+        >
+          목록
+        </button>
+        <button
+          onClick={() => setViewMode("calendar")}
+          className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${viewMode === "calendar" ? "bg-[#3182F6] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+        >
+          캘린더
+        </button>
+      </div>
+
+      {/* Calendar view */}
+      {viewMode === "calendar" && (
+        <div className={C}>
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={calPrev} className="rounded-xl bg-slate-100 text-slate-600 font-semibold px-3 py-1.5 text-sm hover:bg-slate-200 transition-all">&larr;</button>
+            <h3 className="text-sm font-bold text-slate-700">{calYear}년 {calMonth + 1}월 휴가 현황</h3>
+            <button onClick={calNext} className="rounded-xl bg-slate-100 text-slate-600 font-semibold px-3 py-1.5 text-sm hover:bg-slate-200 transition-all">&rarr;</button>
+          </div>
+          {/* Legend */}
+          <div className="flex flex-wrap gap-3 mb-4">
+            {(["연차", "반차(오전)", "병가", "경조", "출장", "기타"] as const).map(t => (
+              <div key={t} className="flex items-center gap-1.5 text-xs text-slate-500">
+                <span className={`w-2.5 h-2.5 rounded-full ${LEAVE_TYPE_COLOR[t]}`} />
+                {t === "반차(오전)" ? "반차" : t}
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-xl overflow-hidden">
+            {["일", "월", "화", "수", "목", "금", "토"].map(d => (
+              <div key={d} className="bg-slate-50 text-center py-2 text-[11px] font-bold text-slate-400">{d}</div>
+            ))}
+            {calDays.map((day, i) => {
+              if (day === null) return <div key={`empty-${i}`} className="bg-white min-h-[72px]" />;
+              const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+              const leaves = getLeavesForDate(dateStr);
+              const isToday = dateStr === today();
+              return (
+                <div key={dateStr} className={`bg-white min-h-[72px] p-1.5 ${isToday ? "ring-2 ring-inset ring-[#3182F6]/40" : ""}`}>
+                  <p className={`text-[11px] font-semibold mb-1 ${isToday ? "text-[#3182F6]" : i % 7 === 0 ? "text-red-400" : i % 7 === 6 ? "text-blue-400" : "text-slate-500"}`}>{day}</p>
+                  <div className="space-y-0.5">
+                    {leaves.slice(0, 3).map(l => (
+                      <div key={l.id} className="flex items-center gap-1 truncate">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${LEAVE_TYPE_COLOR[l.type]}`} />
+                        <span className={`text-[10px] font-medium truncate ${LEAVE_TYPE_TEXT_COLOR[l.type]}`}>{l.requester}</span>
+                      </div>
+                    ))}
+                    {leaves.length > 3 && (
+                      <p className="text-[9px] text-slate-400 font-semibold">+{leaves.length - 3}명</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Remaining leave */}
       <div className={C}>
         <div className="flex items-center justify-between mb-4">

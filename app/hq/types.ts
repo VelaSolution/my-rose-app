@@ -6,7 +6,7 @@ export type Tab =
   | "team" | "timeline" | "files" | "chat" | "approval" | "decision"
   // 하이윅스 신규
   | "attendance" | "leave" | "contacts" | "board" | "survey" | "wiki"
-  | "orgchart";
+  | "orgchart" | "audit";
 
 export type HQRole = "대표" | "이사" | "팀장" | "팀원";
 
@@ -97,6 +97,7 @@ export const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "decision", label: "의사결정", icon: "⚖️" },
   { key: "wiki", label: "위키", icon: "📖" },
   { key: "orgchart", label: "조직도", icon: "🏢" },
+  { key: "audit", label: "활동로그", icon: "📜" },
 ];
 
 export const SIDEBAR_GROUPS: { label: string; items: Tab[] }[] = [
@@ -107,7 +108,7 @@ export const SIDEBAR_GROUPS: { label: string; items: Tab[] }[] = [
   { label: "소통", items: ["notice", "board", "feedback", "chat", "memo"] },
   { label: "조직", items: ["team", "contacts", "survey", "orgchart"] },
   { label: "문서", items: ["files", "approval", "wiki"] },
-  { label: "분석", items: ["timeline"] },
+  { label: "분석", items: ["timeline", "audit"] },
 ];
 
 export const ROLE_PERMISSIONS: Record<HQRole, Tab[]> = {

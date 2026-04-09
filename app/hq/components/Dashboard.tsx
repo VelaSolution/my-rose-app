@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { HQRole, Mett, Metric, Goal, Task, AAR, Tab, Feedback } from "@/app/hq/types";
 import { sb, fmt, today, I, C, B, BADGE, ST } from "@/app/hq/utils";
 
@@ -12,6 +12,47 @@ interface Props {
   myRole: HQRole;
   flash: (m: string) => void;
   onNavigate?: (tab: Tab) => void;
+}
+
+// ── Widget customization ──────────────────────────────
+type SectionKey = "stats" | "todayTasks" | "approvals_attendance" | "recentActivity" | "kpi" | "goals" | "tasks" | "feedback" | "aars";
+
+const ALL_SECTIONS: { key: SectionKey; label: string; icon: string }[] = [
+  { key: "stats", label: "플랫폼 통계", icon: "👥" },
+  { key: "todayTasks", label: "오늘 할 일", icon: "📌" },
+  { key: "approvals_attendance", label: "결재 & 출근", icon: "📋" },
+  { key: "recentActivity", label: "최근 활동", icon: "🕐" },
+  { key: "kpi", label: "KPI", icon: "📊" },
+  { key: "goals", label: "목표", icon: "🏆" },
+  { key: "tasks", label: "태스크", icon: "✅" },
+  { key: "feedback", label: "피드백", icon: "🐛" },
+  { key: "aars", label: "AAR", icon: "📝" },
+];
+
+const DEFAULT_ORDER: SectionKey[] = ALL_SECTIONS.map(s => s.key);
+const LS_KEY = "vela_hq_dashboard_prefs";
+
+interface WidgetPrefs {
+  order: SectionKey[];
+  hidden: SectionKey[];
+}
+
+function loadWidgetPrefs(): WidgetPrefs {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Ensure any new sections are appended
+      const order = parsed.order?.length ? parsed.order.filter((k: SectionKey) => DEFAULT_ORDER.includes(k)) : [...DEFAULT_ORDER];
+      for (const k of DEFAULT_ORDER) { if (!order.includes(k)) order.push(k); }
+      return { order, hidden: parsed.hidden ?? [] };
+    }
+  } catch {}
+  return { order: [...DEFAULT_ORDER], hidden: [] };
+}
+
+function saveWidgetPrefs(prefs: WidgetPrefs) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(prefs)); } catch {}
 }
 
 export default function Dashboard({ userId, userName, myRole, flash, onNavigate }: Props) {
@@ -35,6 +76,46 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
   const [attendanceIn, setAttendanceIn] = useState(0);
   const [attendanceOut, setAttendanceOut] = useState(0);
   const [recentActivity, setRecentActivity] = useState<{ type: string; icon: string; title: string; time: string; tab: Tab }[]>([]);
+
+  // Widget customization state
+  const [editMode, setEditMode] = useState(false);
+  const [widgetPrefs, setWidgetPrefs] = useState<WidgetPrefs>(() => loadWidgetPrefs());
+  const [dragItem, setDragItem] = useState<SectionKey | null>(null);
+
+  const updatePrefs = useCallback((updater: (prev: WidgetPrefs) => WidgetPrefs) => {
+    setWidgetPrefs(prev => {
+      const next = updater(prev);
+      saveWidgetPrefs(next);
+      return next;
+    });
+  }, []);
+
+  const toggleVisibility = (key: SectionKey) => {
+    updatePrefs(prev => ({
+      ...prev,
+      hidden: prev.hidden.includes(key)
+        ? prev.hidden.filter(k => k !== key)
+        : [...prev.hidden, key],
+    }));
+  };
+
+  const handleDragStart = (key: SectionKey) => setDragItem(key);
+  const handleDragOver = (e: React.DragEvent, overKey: SectionKey) => {
+    e.preventDefault();
+    if (!dragItem || dragItem === overKey) return;
+    updatePrefs(prev => {
+      const order = [...prev.order];
+      const fromIdx = order.indexOf(dragItem);
+      const toIdx = order.indexOf(overKey);
+      if (fromIdx === -1 || toIdx === -1) return prev;
+      order.splice(fromIdx, 1);
+      order.splice(toIdx, 0, dragItem);
+      return { ...prev, order };
+    });
+  };
+  const handleDragEnd = () => setDragItem(null);
+
+  const isSectionVisible = (key: SectionKey) => !widgetPrefs.hidden.includes(key);
 
   useEffect(() => {
     load();
@@ -251,8 +332,65 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
             {userName}님, {(() => { const h = new Date().getHours(); return h < 12 ? "좋은 오전이에요" : h < 18 ? "좋은 오후에요" : "좋은 저녁이에요"; })()}. 오늘도 화이팅!
           </p>
         </div>
-        <span className={`${BADGE} bg-blue-50 text-blue-700`}>{myRole}</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setEditMode(v => !v)}
+            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+              editMode
+                ? "bg-[#3182F6] text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {editMode ? "완료" : "편집"}
+          </button>
+          <span className={`${BADGE} bg-blue-50 text-blue-700`}>{myRole}</span>
+        </div>
       </div>
+
+      {/* Edit mode: section order & visibility */}
+      {editMode && (
+        <div className={`${C} !p-4 border-[#3182F6]/30`}>
+          <p className="text-xs font-bold text-slate-700 mb-2">위젯 순서 & 표시 설정 <span className="font-normal text-slate-400">— 드래그로 순서 변경, 눈 아이콘으로 표시/숨김</span></p>
+          <div className="space-y-1">
+            {widgetPrefs.order.map(key => {
+              const sec = ALL_SECTIONS.find(s => s.key === key);
+              if (!sec) return null;
+              const visible = isSectionVisible(key);
+              return (
+                <div
+                  key={key}
+                  draggable
+                  onDragStart={() => handleDragStart(key)}
+                  onDragOver={(e) => handleDragOver(e, key)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${
+                    dragItem === key ? "border-[#3182F6] bg-blue-50 shadow-md" : "border-slate-200 bg-white hover:bg-slate-50"
+                  } ${!visible ? "opacity-50" : ""}`}
+                >
+                  <span className="text-slate-400 flex-shrink-0 cursor-grab">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="4" cy="3" r="1.2"/><circle cx="10" cy="3" r="1.2"/><circle cx="4" cy="7" r="1.2"/><circle cx="10" cy="7" r="1.2"/><circle cx="4" cy="11" r="1.2"/><circle cx="10" cy="11" r="1.2"/></svg>
+                  </span>
+                  <span className="text-sm">{sec.icon}</span>
+                  <span className="text-sm font-medium text-slate-700 flex-1">{sec.label}</span>
+                  <button
+                    onClick={() => toggleVisibility(key)}
+                    className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${
+                      visible ? "text-[#3182F6] hover:bg-blue-50" : "text-slate-300 hover:bg-slate-100"
+                    }`}
+                    title={visible ? "숨기기" : "표시"}
+                  >
+                    {visible ? (
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                    ) : (
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Platform Stats */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

@@ -17,7 +17,27 @@ interface EnrichedMsg extends ChatMsg {
   reactions?: Record<string, string[]>;
 }
 
+interface TeamMemberSimple {
+  id: string;
+  name: string;
+}
+
 const REACTIONS = ["👍", "❤️", "😂", "👏", "🔥"];
+
+/** Render text with @mentions highlighted in blue bold */
+function renderMentionText(text: string, isMe: boolean) {
+  const parts = text.split(/(@[가-힣a-zA-Z0-9_]+)/g);
+  return parts.map((part, i) => {
+    if (/^@[가-힣a-zA-Z0-9_]+$/.test(part)) {
+      return (
+        <span key={i} className={`font-bold ${isMe ? "text-blue-200" : "text-[#3182F6]"}`}>
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+}
 
 function dateSeparatorLabel(dateStr: string): string {
   const d = new Date(dateStr);
@@ -42,12 +62,42 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null);
   const [typingVisible, setTypingVisible] = useState(false);
 
+  const [teamMembers, setTeamMembers] = useState<TeamMemberSimple[]>([]);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastSeenCount = useRef(0);
   const isAtBottom = useRef(true);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load team members for @mention
+  useEffect(() => {
+    (async () => {
+      const s = sb();
+      if (!s) return;
+      const { data } = await s.from("hq_team").select("id, name").eq("status", "active");
+      if (data) setTeamMembers(data as TeamMemberSimple[]);
+    })();
+  }, []);
+
+  const filteredMembers = mentionQuery !== null
+    ? teamMembers.filter(m => m.name.includes(mentionQuery))
+    : [];
+
+  const insertMention = (name: string) => {
+    const atIdx = text.lastIndexOf("@");
+    if (atIdx === -1) return;
+    const before = text.slice(0, atIdx);
+    const after = text.slice(atIdx).replace(/@[^\s]*/, "");
+    setText(before + `@${name} ` + after);
+    setMentionQuery(null);
+    setMentionIndex(0);
+    inputRef.current?.focus();
+  };
 
   const load = useCallback(async () => {
     const s = sb();
@@ -125,6 +175,28 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // @mention dropdown navigation
+    if (mentionQuery !== null && filteredMembers.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMentionIndex(i => (i + 1) % filteredMembers.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMentionIndex(i => (i - 1 + filteredMembers.length) % filteredMembers.length);
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        insertMention(filteredMembers[mentionIndex].name);
+        return;
+      }
+      if (e.key === "Escape") {
+        setMentionQuery(null);
+        return;
+      }
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       send();
@@ -137,6 +209,15 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
     setTypingVisible(true);
     if (typingTimeout.current) clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => setTypingVisible(false), 2000);
+
+    // @mention detection
+    const atMatch = val.match(/@([^\s]*)$/);
+    if (atMatch) {
+      setMentionQuery(atMatch[1]);
+      setMentionIndex(0);
+    } else {
+      setMentionQuery(null);
+    }
   };
 
   const deleteMsg = async (id: string) => {
@@ -239,7 +320,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
                       )}
 
                       <div className={`relative rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${isMe ? "bg-[#3182F6] text-white rounded-br-md" : "bg-slate-100 text-slate-800 rounded-bl-md"}`}>
-                        <p className="whitespace-pre-wrap">{m.text}</p>
+                        <p className="whitespace-pre-wrap">{renderMentionText(m.text, isMe)}</p>
 
                         {/* Action buttons (reply, react, delete) */}
                         <div className={`absolute ${isMe ? "-left-20" : "-right-20"} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-all`}>
@@ -367,17 +448,39 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
       )}
 
       {/* Input area */}
-      <div className="flex-shrink-0 flex gap-2 pt-3 border-t border-slate-100">
-        <input
-          className={`${I} flex-1`}
-          value={text}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={replyTo ? `${replyTo.sender}에게 답장...` : "메시지를 입력하세요..."}
-        />
-        <button className={`${B} flex-shrink-0`} onClick={send}>
-          전송
-        </button>
+      <div className="flex-shrink-0 relative pt-3 border-t border-slate-100">
+        {/* @mention dropdown */}
+        {mentionQuery !== null && filteredMembers.length > 0 && (
+          <div className="absolute bottom-full left-0 mb-1 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-20 max-h-40 overflow-y-auto">
+            {filteredMembers.map((m, i) => (
+              <button
+                key={m.id}
+                onMouseDown={(e) => { e.preventDefault(); insertMention(m.name); }}
+                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors ${
+                  i === mentionIndex ? "bg-[#3182F6]/10 text-[#3182F6]" : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <span className="w-6 h-6 rounded-full bg-[#3182F6] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  {m.name.charAt(0)}
+                </span>
+                <span className="font-medium">{m.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <input
+            ref={inputRef}
+            className={`${I} flex-1`}
+            value={text}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={replyTo ? `${replyTo.sender}에게 답장...` : "메시지를 입력하세요... (@으로 멘션)"}
+          />
+          <button className={`${B} flex-shrink-0`} onClick={send}>
+            전송
+          </button>
+        </div>
       </div>
     </div>
   );

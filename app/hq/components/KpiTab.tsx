@@ -135,6 +135,29 @@ export default function KpiTab({ userId, flash }: Props) {
             <p className="py-8 text-center text-sm text-slate-400">기록이 없습니다.</p>
           )}
         </div>
+        {records.length > 0 && (
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => {
+                const header = "날짜,매출,사용자,전환율,이익";
+                const rows = records.map(r =>
+                  [r.date, r.revenue, r.users_count, r.conversion_rate, r.profit].join(",")
+                );
+                const csv = "\uFEFF" + [header, ...rows].join("\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `KPI_${today()}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="flex items-center gap-1.5 rounded-xl bg-emerald-50 text-emerald-700 font-semibold px-4 py-2 text-xs hover:bg-emerald-100 transition-all"
+            >
+              📥 CSV 다운로드
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
