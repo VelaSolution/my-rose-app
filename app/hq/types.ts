@@ -6,7 +6,7 @@ export type Tab =
   | "team" | "timeline" | "files" | "chat" | "approval" | "decision"
   // 하이윅스 신규
   | "attendance" | "leave" | "contacts" | "board" | "survey" | "wiki"
-  | "orgchart" | "audit";
+  | "orgchart" | "audit" | "gantt";
 
 export type HQRole = "대표" | "이사" | "팀장" | "팀원";
 
@@ -98,11 +98,12 @@ export const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "wiki", label: "위키", icon: "📖" },
   { key: "orgchart", label: "조직도", icon: "🏢" },
   { key: "audit", label: "활동로그", icon: "📜" },
+  { key: "gantt", label: "간트", icon: "📊" },
 ];
 
 export const SIDEBAR_GROUPS: { label: string; items: Tab[] }[] = [
   { label: "출퇴근", items: ["attendance", "leave"] },
-  { label: "운영", items: ["dashboard", "task", "calendar"] },
+  { label: "운영", items: ["dashboard", "task", "calendar", "gantt"] },
   { label: "전략", items: ["mett", "kpi", "goal"] },
   { label: "보고", items: ["report", "aar", "decision"] },
   { label: "소통", items: ["notice", "board", "feedback", "chat", "memo"] },
@@ -114,7 +115,7 @@ export const SIDEBAR_GROUPS: { label: string; items: Tab[] }[] = [
 export const ROLE_PERMISSIONS: Record<HQRole, Tab[]> = {
   "대표": TABS.map(t => t.key),
   "이사": TABS.map(t => t.key).filter(k => k !== "team"),
-  "팀장": ["dashboard", "attendance", "leave", "kpi", "task", "aar", "notice", "report", "feedback", "board", "survey", "calendar", "memo", "contacts", "files", "chat", "decision", "wiki", "orgchart"],
+  "팀장": ["dashboard", "attendance", "leave", "kpi", "task", "aar", "notice", "report", "feedback", "board", "survey", "calendar", "memo", "contacts", "files", "chat", "decision", "wiki", "orgchart", "gantt"],
   "팀원": ["dashboard", "attendance", "leave", "task", "notice", "board", "calendar", "memo", "chat", "contacts", "wiki", "survey", "orgchart"],
 };
 

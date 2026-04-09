@@ -37,6 +37,7 @@ import SurveyTab from "./components/SurveyTab";
 import WikiTab from "./components/WikiTab";
 import OrgChartTab from "./components/OrgChartTab";
 import AuditLog from "./components/AuditLog";
+import GanttTab from "./components/GanttTab";
 
 // ── 탭 → 컴포넌트 매핑 ────────────────────────────────
 const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName: string; myRole: HQRole; flash: (m: string) => void }>> = {
@@ -65,6 +66,7 @@ const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName
   wiki: WikiTab,
   orgchart: OrgChartTab,
   audit: AuditLog,
+  gantt: GanttTab,
 };
 
 // Bottom nav tabs for mobile (5 most important)
