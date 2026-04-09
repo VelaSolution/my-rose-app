@@ -101,6 +101,13 @@ function PreviewContent({ file }: { file: FileItem }) {
   );
 }
 
+// 권한: 대표/이사=전체, 팀장=업로드+본인삭제, 팀원=조회+업로드만
+function getPermissions(myRole: HQRole, uploaderName: string, userName: string) {
+  if (myRole === "대표" || myRole === "이사") return { canUpload: true, canDelete: true, canMove: true, canRename: true, canCreateFolder: true, canDeleteFolder: true };
+  if (myRole === "팀장") return { canUpload: true, canDelete: uploaderName === userName, canMove: uploaderName === userName, canRename: uploaderName === userName, canCreateFolder: true, canDeleteFolder: false };
+  return { canUpload: true, canDelete: uploaderName === userName, canMove: false, canRename: false, canCreateFolder: false, canDeleteFolder: false };
+}
+
 export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -117,7 +124,11 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [textContent, setTextContent] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ type: "file" | "folder"; id: string; name: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const isAdmin = myRole === "대표" || myRole === "이사";
+  const canCreateFolder = myRole !== "팀원";
 
   const load = async (folderId?: string) => {
     const s = sb();
@@ -182,8 +193,11 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const deleteFolder = async (id: string) => {
     const s = sb();
     if (!s) return;
+    await s.from("hq_files").delete().eq("folder_id", id);
+    await s.from("hq_folders").delete().eq("parent_id", id);
     await s.from("hq_folders").delete().eq("id", id);
     flash("폴더가 삭제되었습니다");
+    setConfirmDelete(null);
     load(currentFolder);
   };
 
@@ -281,6 +295,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
 
     await s.from("hq_files").delete().eq("id", f.id);
     flash("파일이 삭제되었습니다");
+    setConfirmDelete(null);
     load(currentFolder);
   };
 
@@ -322,6 +337,34 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
 
   return (
     <div className="space-y-5">
+      {/* 삭제 확인 팝업 */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setConfirmDelete(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-5">
+              <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">🗑️</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">삭제 확인</h3>
+              <p className="text-sm text-slate-500">
+                <span className="font-semibold text-slate-700">&ldquo;{confirmDelete.name}&rdquo;</span>
+                {confirmDelete.type === "folder" ? " 폴더와 내부 파일이" : " 파일이"} 영구 삭제됩니다.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(null)} className={`${B2} flex-1`}>취소</button>
+              <button
+                onClick={() => {
+                  if (confirmDelete.type === "folder") deleteFolder(confirmDelete.id);
+                  else { const f = files.find(x => x.id === confirmDelete.id); if (f) deleteFile(f); }
+                }}
+                className="flex-1 rounded-xl bg-red-500 text-white font-semibold px-4 py-2.5 text-sm hover:bg-red-600 transition-all"
+              >삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 미리보기 모달 */}
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setPreview(null)}>
@@ -369,6 +412,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
 
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-3">
+          {canCreateFolder && (
           <div className="flex items-center gap-2">
             <input
               className={`${I} !w-48`}
@@ -381,6 +425,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
               폴더 생성
             </button>
           </div>
+          )}
           <div className="flex items-center gap-2">
             <input
               ref={fileRef}
@@ -413,12 +458,14 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                   {f.name}
                 </span>
               </div>
-              <button
-                onClick={() => deleteFolder(f.id)}
-                className="absolute top-2 right-2 text-xs text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                ✕
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "folder", id: f.id, name: f.name }); }}
+                  className="absolute top-2 right-2 text-xs text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -473,32 +520,27 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                  <a
-                    href={f.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-[#3182F6] hover:underline px-2 py-1"
-                  >
-                    다운로드
-                  </a>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setRenamingFile(f.id); setRenameValue(f.name); setMovingFile(null); }}
-                    className="text-xs text-slate-400 hover:text-slate-700 transition-colors px-2 py-1"
-                  >
-                    이름변경
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setMovingFile(movingFile === f.id ? null : f.id); setRenamingFile(null); }}
-                    className="text-xs text-slate-400 hover:text-amber-600 transition-colors px-2 py-1"
-                  >
-                    이동
-                  </button>
-                  <button
-                    onClick={() => deleteFile(f)}
-                    className="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1"
-                  >
-                    삭제
-                  </button>
+                  {(() => {
+                    const perm = getPermissions(myRole, f.uploadedBy, userName);
+                    return (
+                      <>
+                        <a href={f.url} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-[#3182F6] hover:underline px-2 py-1">다운로드</a>
+                        {perm.canRename && (
+                          <button onClick={() => { setRenamingFile(f.id); setRenameValue(f.name); setMovingFile(null); }}
+                            className="text-xs text-slate-400 hover:text-slate-700 transition-colors px-2 py-1">이름변경</button>
+                        )}
+                        {perm.canMove && (
+                          <button onClick={() => { setMovingFile(movingFile === f.id ? null : f.id); setRenamingFile(null); }}
+                            className="text-xs text-slate-400 hover:text-amber-600 transition-colors px-2 py-1">이동</button>
+                        )}
+                        {perm.canDelete && (
+                          <button onClick={() => setConfirmDelete({ type: "file", id: f.id, name: f.name })}
+                            className="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1">삭제</button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
                 {movingFile === f.id && (
                   <div className="absolute right-0 top-full mt-1 z-10 bg-white border border-slate-200 rounded-xl shadow-lg p-2 min-w-[180px]" onClick={(e) => e.stopPropagation()}>
