@@ -83,6 +83,15 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
 
   const canApprove = myRole === "대표";
 
+  const changeRole = async (id: string, newRole: HQRole) => {
+    const s = sb();
+    if (!s) return;
+    const { error } = await s.from("hq_team").update({ hq_role: newRole }).eq("id", id);
+    if (error) { flash("변경 실패: " + error.message); return; }
+    flash(`권한이 "${newRole}"으로 변경되었습니다`);
+    load();
+  };
+
   const toggleApproval = async (id: string, approved: boolean) => {
     const s = sb();
     if (!s) return;
@@ -202,7 +211,17 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
                       <span className="font-semibold text-slate-800 text-sm">
                         {m.name}
                       </span>
-                      <span className={`${BADGE} bg-blue-50 text-blue-600`}>{m.hqRole}</span>
+                      {canApprove ? (
+                        <select
+                          value={m.hqRole}
+                          onChange={e => changeRole(m.id, e.target.value as HQRole)}
+                          className={`${BADGE} bg-blue-50 text-blue-600 border-0 cursor-pointer text-xs font-semibold rounded-lg`}
+                        >
+                          {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      ) : (
+                        <span className={`${BADGE} bg-blue-50 text-blue-600`}>{m.hqRole}</span>
+                      )}
                       {m.approved === false ? (
                         <span className={`${BADGE} bg-amber-50 text-amber-600 text-[10px]`}>승인대기</span>
                       ) : (
