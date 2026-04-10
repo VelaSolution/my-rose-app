@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import { TeamDisplayProvider } from "./utils";
 import {
   Tab, HQRole, TABS, SIDEBAR_GROUPS, ROLE_PERMISSIONS, TAB_MAP,
 } from "./types";
@@ -229,6 +230,7 @@ export default function HQPage() {
   const activeTabInfo = TAB_MAP[tab];
 
   return (
+    <TeamDisplayProvider>
     <div className={`min-h-screen bg-[#F7F8FA]${darkMode ? " hq-dark" : ""}`}>
       <meta name="theme-color" content={darkMode ? "#0F172A" : "#ffffff"} />
       <style>{`
@@ -422,5 +424,6 @@ export default function HQPage() {
         />
       )}
     </div>
+    </TeamDisplayProvider>
   );
 }

@@ -1,14 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext, createContext, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 export { ST, REPORT_ST } from "./types";
 
 // ── Supabase 헬퍼 ──────────────────────────────────────
 export const sb = () => { try { return createSupabaseBrowserClient(); } catch { return null; } };
 
-// ── 팀원 표시명 (부서 직책 이름) ──────────────────────
+// ── 팀원 표시명 Context (한번만 로드, 전체 공유) ──────
 export type TeamInfo = { name: string; role: string; hq_role: string };
+type TeamDisplayCtx = { displayName: (name: string) => string; teamMap: Record<string, { role: string; hqRole: string }> };
 
-export function useTeamDisplayNames() {
+const fallbackDisplayName = (name: string) => name;
+const TeamDisplayContext = createContext<TeamDisplayCtx>({ displayName: fallbackDisplayName, teamMap: {} });
+
+export function TeamDisplayProvider({ children }: { children: React.ReactNode }) {
   const [map, setMap] = useState<Record<string, { role: string; hqRole: string }>>({});
 
   useEffect(() => {
@@ -26,14 +30,18 @@ export function useTeamDisplayNames() {
     })();
   }, []);
 
-  const displayName = (name: string) => {
+  const displayName = useCallback((name: string) => {
     const info = map[name];
     if (!info) return name;
     const parts = [info.role, info.hqRole, name].filter(Boolean);
     return parts.join(" ");
-  };
+  }, [map]);
 
-  return { displayName, teamMap: map };
+  return <TeamDisplayContext value={{ displayName, teamMap: map }}>{children}</TeamDisplayContext>;
+}
+
+export function useTeamDisplayNames() {
+  return useContext(TeamDisplayContext);
 }
 
 // ── 포맷팅 ─────────────────────────────────────────────

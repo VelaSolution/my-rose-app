@@ -56,101 +56,32 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
     const items: Notification[] = [];
     const todayStr = today();
 
-    // 1. 대기 중인 결재
-    try {
-      const { data } = await s.from("hq_approvals").select("id, title, date").eq("status", "대기").eq("approver", userName);
-      if (data) for (const a of data as any[]) {
-        items.push({ id: `approval-${a.id}`, icon: "📋", title: `결재 대기: ${a.title}`, time: a.date, tab: "approval" });
-      }
-    } catch {}
+    // 전체 쿼리를 병렬 실행
+    const [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10] = await Promise.all([
+      s.from("hq_approvals").select("id, title, date").eq("status", "대기").eq("approver", userName).then(r => r.data).catch(() => null),
+      s.from("hq_notices").select("id, title, date, read_by").order("date", { ascending: false }).limit(20).then(r => r.data).catch(() => null),
+      s.from("hq_tasks").select("id, title, deadline, status").eq("deadline", todayStr).eq("user_id", userId).then(r => r.data).catch(() => null),
+      s.from("hq_leave").select("id, type, status, date").eq("requester", userName).in("status", ["승인", "반려"]).then(r => r.data).catch(() => null),
+      s.from("hq_chat").select("id, sender, text, created_at").neq("sender", userName).order("created_at", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
+      s.from("hq_dm").select("id, sender, text, created_at").eq("receiver", userName).order("created_at", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
+      s.from("hq_feedback").select("id, title, author, date").order("date", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
+      s.from("hq_reports").select("id, title, status, date, author").eq("status", "submitted").order("date", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
+      s.from("hq_board").select("id, title, author, date").order("date", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
+      s.from("hq_surveys").select("id, title, author, date, status").eq("status", "진행중").order("date", { ascending: false }).limit(5).then(r => r.data).catch(() => null),
+    ]);
 
-    // 2. 읽지 않은 공지
-    try {
-      const { data } = await s.from("hq_notices").select("id, title, date, read_by").order("date", { ascending: false }).limit(20);
-      if (data) for (const n of data as any[]) {
-        if (!(n.read_by ?? []).includes(userName)) {
-          items.push({ id: `notice-${n.id}`, icon: "📢", title: `새 공지: ${n.title}`, time: n.date, tab: "notice" });
-        }
-      }
-    } catch {}
+    if (r1) for (const a of r1 as any[]) items.push({ id: `approval-${a.id}`, icon: "📋", title: `결재 대기: ${a.title}`, time: a.date, tab: "approval" });
+    if (r2) for (const n of r2 as any[]) { if (!(n.read_by ?? []).includes(userName)) items.push({ id: `notice-${n.id}`, icon: "📢", title: `새 공지: ${n.title}`, time: n.date, tab: "notice" }); }
+    if (r3) for (const t of r3 as any[]) { if (t.status !== "completed" && t.status !== "failed") items.push({ id: `task-${t.id}`, icon: "⏰", title: `오늘 마감: ${t.title}`, time: todayStr, tab: "task" }); }
+    if (r4) for (const l of r4 as any[]) items.push({ id: `leave-${l.id}`, icon: "🏖️", title: `휴가 ${l.status === "승인" ? "승인됨" : "반려됨"}: ${l.type}`, time: l.date, tab: "leave" });
+    if (r5) for (const c of r5 as any[]) items.push({ id: `chat-${c.id}`, icon: "💬", title: `${displayName(c.sender)}: ${(c.text as string).slice(0, 30)}`, time: c.created_at, tab: "chat" });
+    if (r6) for (const d of r6 as any[]) items.push({ id: `dm-${d.id}`, icon: "✉️", title: `DM ${displayName(d.sender)}: ${(d.text as string).slice(0, 30)}`, time: d.created_at, tab: "chat" });
+    if (r7) for (const f of r7 as any[]) { if (f.author !== userName) items.push({ id: `feedback-${f.id}`, icon: "🐛", title: `피드백: ${f.title}`, time: f.date, tab: "feedback" }); }
+    if (r8) for (const r of r8 as any[]) { if (r.author !== userName) items.push({ id: `report-${r.id}`, icon: "📄", title: `보고서 제출: ${r.title}`, time: r.date, tab: "report" }); }
+    if (r9) for (const b of r9 as any[]) { if (b.author !== userName) items.push({ id: `board-${b.id}`, icon: "💬", title: `게시판: ${b.title}`, time: b.date, tab: "board" }); }
+    if (r10) for (const sv of r10 as any[]) { if (sv.author !== userName) items.push({ id: `survey-${sv.id}`, icon: "📊", title: `설문 참여: ${sv.title}`, time: sv.date, tab: "survey" }); }
 
-    // 3. 오늘 마감 태스크
-    try {
-      const { data } = await s.from("hq_tasks").select("id, title, deadline, status").eq("deadline", todayStr).eq("user_id", userId);
-      if (data) for (const t of data as any[]) {
-        if (t.status !== "completed" && t.status !== "failed") {
-          items.push({ id: `task-${t.id}`, icon: "⏰", title: `오늘 마감: ${t.title}`, time: todayStr, tab: "task" });
-        }
-      }
-    } catch {}
-
-    // 4. 승인/반려된 내 휴가
-    try {
-      const { data } = await s.from("hq_leave").select("id, type, status, date").eq("requester", userName).in("status", ["승인", "반려"]);
-      if (data) for (const l of data as any[]) {
-        items.push({ id: `leave-${l.id}`, icon: "🏖️", title: `휴가 ${l.status === "승인" ? "승인됨" : "반려됨"}: ${l.type}`, time: l.date, tab: "leave" });
-      }
-    } catch {}
-
-    // 5. 팀 채팅 최근 메시지 (내가 보낸 것 제외, 최근 10개)
-    try {
-      const { data } = await s.from("hq_chat").select("id, sender, text, created_at").neq("sender", userName).order("created_at", { ascending: false }).limit(10);
-      if (data) for (const c of data as any[]) {
-        items.push({ id: `chat-${c.id}`, icon: "💬", title: `${displayName(c.sender)}: ${(c.text as string).slice(0, 30)}`, time: c.created_at, tab: "chat" });
-      }
-    } catch {}
-
-    // 6. 개별 채팅 (DM) — 나에게 온 메시지
-    try {
-      const { data } = await s.from("hq_dm").select("id, sender, text, created_at").eq("receiver", userName).order("created_at", { ascending: false }).limit(10);
-      if (data) for (const d of data as any[]) {
-        items.push({ id: `dm-${d.id}`, icon: "✉️", title: `DM ${displayName(d.sender)}: ${(d.text as string).slice(0, 30)}`, time: d.created_at, tab: "chat" });
-      }
-    } catch {}
-
-    // 7. 새 피드백
-    try {
-      const { data } = await s.from("hq_feedback").select("id, title, author, date").order("date", { ascending: false }).limit(10);
-      if (data) for (const f of data as any[]) {
-        if (f.author !== userName) {
-          items.push({ id: `feedback-${f.id}`, icon: "🐛", title: `피드백: ${f.title}`, time: f.date, tab: "feedback" });
-        }
-      }
-    } catch {}
-
-    // 8. 새 보고서 (제출됨)
-    try {
-      const { data } = await s.from("hq_reports").select("id, title, status, date, author").eq("status", "submitted").order("date", { ascending: false }).limit(10);
-      if (data) for (const r of data as any[]) {
-        if (r.author !== userName) {
-          items.push({ id: `report-${r.id}`, icon: "📄", title: `보고서 제출: ${r.title}`, time: r.date, tab: "report" });
-        }
-      }
-    } catch {}
-
-    // 9. 새 게시판 글
-    try {
-      const { data } = await s.from("hq_board").select("id, title, author, date").order("date", { ascending: false }).limit(10);
-      if (data) for (const b of data as any[]) {
-        if (b.author !== userName) {
-          items.push({ id: `board-${b.id}`, icon: "💬", title: `게시판: ${b.title}`, time: b.date, tab: "board" });
-        }
-      }
-    } catch {}
-
-    // 10. 새 설문
-    try {
-      const { data } = await s.from("hq_surveys").select("id, title, author, date, status").eq("status", "진행중").order("date", { ascending: false }).limit(5);
-      if (data) for (const sv of data as any[]) {
-        if (sv.author !== userName) {
-          items.push({ id: `survey-${sv.id}`, icon: "📊", title: `설문 참여: ${sv.title}`, time: sv.date, tab: "survey" });
-        }
-      }
-    } catch {}
-
-    // 시간순 정렬 (최신 먼저)
     items.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-
     setNotifications(items);
   }, [userId, userName]);
 
@@ -160,7 +91,7 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
   // Fetch on mount + auto-refresh every 30s
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
