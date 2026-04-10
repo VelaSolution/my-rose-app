@@ -8,8 +8,6 @@ import CloudSyncBadge from "@/components/CloudSyncBadge";
 import ToolNav from "@/components/ToolNav";
 import EmptyState from "@/components/EmptyState";
 import { exportCSV } from "@/lib/exportCSV";
-import SimDataPicker from "@/components/SimDataPicker";
-import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 type Competitor = {
   id: string;
@@ -26,17 +24,6 @@ export default function CompetitorPricingPage() {
   const [storeName, setStoreName] = useState("");
   const [menus, setMenus] = useState([{ name: "", price: "", note: "" }]);
   const [editId, setEditId] = useState<string | null>(null);
-
-  const INDUSTRY_LABEL: Record<string, string> = {
-    cafe: "카페", restaurant: "음식점", bar: "술집/바", finedining: "파인다이닝", gogi: "고깃집",
-  };
-  const simFields = (sim: SimulatorSnapshot) => [
-    { key: "avgSpend", label: "내 객단가 (비교용)", value: `${fmt(sim.avgSpend)}원`, rawValue: sim.avgSpend },
-    { key: "industry", label: "업종", value: INDUSTRY_LABEL[sim.industry] ?? sim.industry, rawValue: sim.industry },
-  ];
-  const applySimSelected = (_selected: Record<string, number | string>) => {
-    // 참고용 데이터 표시
-  };
 
   const handleSave = () => {
     if (!storeName.trim()) return;
@@ -105,7 +92,6 @@ export default function CompetitorPricingPage() {
               </button>
             )}
           </div>
-          <SimDataPicker fields={simFields} onApply={applySimSelected} />
         </div>
 
         {avgPrice > 0 && (

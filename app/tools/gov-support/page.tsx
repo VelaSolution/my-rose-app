@@ -5,8 +5,6 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
-import SimDataPicker from "@/components/SimDataPicker";
-import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 type Stage = "예비창업" | "1년미만" | "1~3년" | "3년이상";
 type Revenue = "없음" | "1억미만" | "1~3억" | "3~5억" | "5억이상";
@@ -83,18 +81,6 @@ export default function GovSupportPage() {
 
   const up = <K extends keyof Profile>(k: K, v: Profile[K]) => setProfileCloud({ ...profile, [k]: v });
 
-  const simFields = (sim: SimulatorSnapshot) => {
-    const rev = sim.totalSales * 12;
-    const revBucket = rev === 0 ? "없음" : rev < 10000_0000 ? "1억미만" : rev < 30000_0000 ? "1~3억" : rev < 50000_0000 ? "3~5억" : "5억이상";
-    return [
-      { key: "industry", label: "업종", value: sim.industry, rawValue: sim.industry },
-      { key: "revenue", label: "연 매출 구간", value: revBucket, rawValue: revBucket },
-    ];
-  };
-  const applySimSelected = (selected: Record<string, number | string>) => {
-    setProfileCloud({ ...profile, ...selected });
-  };
-
   const matched = useMemo(() => {
     return PROGRAMS.map(prog => {
       let score = 0; let max = 0;
@@ -142,7 +128,6 @@ export default function GovSupportPage() {
               <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">마지막 업데이트: 2026.04.07</span>
               <CloudSyncBadge status={status} userId={userId} />
             </div>
-            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           {/* 조건 입력 */}

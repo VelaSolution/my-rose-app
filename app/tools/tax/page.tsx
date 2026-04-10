@@ -6,8 +6,10 @@ import ToolNav from "@/components/ToolNav";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 import SendToSimulator from "@/components/SendToSimulator";
 import CollapsibleTip from "@/components/CollapsibleTip";
+import SimDataPicker from "@/components/SimDataPicker";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fmt } from "@/lib/vela";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 type MonthSnap = { month: string; monthly_sales: number; profit: number; industry: string };
 
@@ -58,6 +60,10 @@ function calcDeductions(hasDependents: number, isBlueReturn: boolean) {
   return d;
 }
 
+const INDUSTRY_LABEL: Record<string, string> = {
+  cafe: "카페", restaurant: "음식점", bar: "술집/바", finedining: "파인다이닝", gogi: "고깃집",
+};
+
 export default function TaxPage() {
   const simData = useSimulatorData();
   const [annualSales, setAnnualSales] = useState("120000000");
@@ -69,6 +75,27 @@ export default function TaxPage() {
   const [meatCostRatio, setMeatCostRatio] = useState("40");
 
   const [monthlySnaps, setMonthlySnaps] = useState<MonthSnap[]>([]);
+
+  // SimDataPicker 필드 정의
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "totalSales", label: "월매출", value: `${fmt(Math.round(sim.totalSales))}원`, rawValue: sim.totalSales },
+    { key: "profit", label: "월 순이익", value: `${fmt(Math.round(sim.profit))}원`, rawValue: sim.profit },
+    { key: "industry", label: "업종", value: INDUSTRY_LABEL[sim.industry] ?? sim.industry, rawValue: sim.industry },
+    { key: "cogsRatio", label: "원가율", value: `${sim.cogsRatio}%`, rawValue: sim.cogsRatio },
+    { key: "rent", label: "임대료", value: `${fmt(Math.round(sim.rent))}원`, rawValue: sim.rent },
+  ];
+
+  const applySimSelected = (selected: Record<string, number | string>) => {
+    if (selected.totalSales !== undefined) {
+      setAnnualSales(String(Math.round(Number(selected.totalSales) * 12)));
+    }
+    if (selected.profit !== undefined) {
+      setAnnualProfit(String(Math.max(0, Math.round(Number(selected.profit) * 12))));
+    }
+    if (selected.industry === "gogi") {
+      setIsDualBiz(true);
+    }
+  };
 
   // 시뮬레이터 데이터 자동 입력
   useEffect(() => {
@@ -157,33 +184,18 @@ export default function TaxPage() {
             <p className="text-slate-500 text-sm">연 매출과 순이익을 입력하면 부가세·종합소득세 예상액을 계산합니다.</p>
           </div>
 
-          {/* 데이터 불러오기 */}
+          {/* 데이터 불러오기 — SimDataPicker 통합 */}
           <div className="rounded-3xl bg-white ring-1 ring-slate-200 p-5 mb-4">
             <h3 className="text-sm font-bold text-slate-900 mb-3">📂 데이터 불러오기</h3>
-            <div className="flex gap-2 flex-wrap">
-              {simData && (
-                <button
-                  onClick={() => { setAnnualSales(String(simData.totalSales * 12)); setAnnualProfit(String(Math.max(0, simData.profit * 12))); if (simData.industry === "gogi") setIsDualBiz(true); }}
-                  className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-2.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
-                >
-                  🧮 시뮬레이터 (월 {fmt(simData.totalSales)}원 × 12)
-                </button>
-              )}
-              {monthlySnaps.length > 0 && (
-                <button
-                  onClick={() => loadFromMonthly(monthlySnaps)}
-                  className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
-                >
-                  📈 월별 매출 ({monthlySnaps.length}개월 합산{monthlySnaps.length < 12 ? " → 연환산" : ""})
-                </button>
-              )}
-              {!simData && monthlySnaps.length === 0 && (
-                <div className="flex items-center gap-3 w-full">
-                  <span className="text-slate-400 text-xs">💡 시뮬레이터 또는 월별 매출을 등록하면 자동으로 불러올 수 있어요.</span>
-                  <Link href="/simulator" className="ml-auto text-xs font-semibold text-blue-500 flex-shrink-0">시뮬레이터 →</Link>
-                </div>
-              )}
-            </div>
+            <SimDataPicker fields={simFields} onApply={applySimSelected} />
+            {monthlySnaps.length > 0 && (
+              <button
+                onClick={() => loadFromMonthly(monthlySnaps)}
+                className="mt-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
+              >
+                📈 월별 매출 ({monthlySnaps.length}개월 합산{monthlySnaps.length < 12 ? " → 연환산" : ""})
+              </button>
+            )}
           </div>
 
           {simData && (

@@ -5,8 +5,6 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { fmt } from "@/lib/vela";
 import CollapsibleTip from "@/components/CollapsibleTip";
-import SimDataPicker from "@/components/SimDataPicker";
-import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -269,14 +267,6 @@ export default function LaborSchedulerPage() {
 
   const [insuranceRate, setInsuranceRate] = useState("9.4"); // 4대보험 사업주 부담 약 9.4%
 
-  const simFields = (sim: SimulatorSnapshot) => [
-    { key: "laborRatio", label: "인건비 비율", value: `${sim.laborRatio}%`, rawValue: sim.laborRatio },
-    { key: "totalSales", label: "월매출 (인건비 예산 참고)", value: `${fmt(Math.round(sim.totalSales))}원`, rawValue: sim.totalSales },
-  ];
-  const applySimSelected = (_selected: Record<string, number | string>) => {
-    // 참고용 데이터 — 직접 적용할 state가 없으므로 알림만 표시
-  };
-
   const addEmployee = useCallback(() => setEmployees(prev => [...prev, makeEmployee()]), []);
   const updateEmployee = useCallback((id: string, updated: Partial<Employee>) => {
     setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...updated } : e));
@@ -308,7 +298,9 @@ export default function LaborSchedulerPage() {
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">인건비 스케줄러</h1>
             <p className="text-slate-500 text-sm">직원별 시급과 근무 시간을 설정하면 주간·월간 인건비를 자동 계산합니다.</p>
-            <SimDataPicker fields={simFields} onApply={applySimSelected} />
+            <Link href="/tools/labor-law" className="inline-flex items-center gap-1 text-sm text-blue-500 hover:text-blue-700 transition mt-2">
+              법정 인건비 계산하기 →
+            </Link>
           </div>
 
           {/* 요약 */}

@@ -4,8 +4,6 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/vela";
 import ToolNav from "@/components/ToolNav";
-import SimDataPicker from "@/components/SimDataPicker";
-import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 // 2026년 기준 (확정)
 const MIN_WAGE = 10320; // 2026 최저시급
@@ -57,14 +55,6 @@ export default function LaborLawPage() {
   const results = useMemo(() => employees.map((e) => ({ ...e, ...calcEmployee(e) })), [employees]);
   const totalMonthlyCost = results.reduce((a, r) => a + r.totalCost, 0);
 
-  const simFields = (sim: SimulatorSnapshot) => [
-    { key: "laborRatio", label: "인건비 비율", value: `${sim.laborRatio}%`, rawValue: sim.laborRatio },
-    { key: "totalSales", label: "월매출", value: `${fmt(Math.round(sim.totalSales))}원`, rawValue: sim.totalSales },
-  ];
-  const applySimSelected = (_selected: Record<string, number | string>) => {
-    // 참고용 데이터 표시
-  };
-
   const updateEmployee = (id: string, field: string, value: number | string | boolean) => {
     setEmployees((prev) => prev.map((e) => e.id === id ? { ...e, [field]: value } : e));
   };
@@ -92,7 +82,9 @@ export default function LaborLawPage() {
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">인건비 계산기 (법정)</h1>
           <p className="text-slate-500 text-sm">주휴수당·야간수당·4대보험을 자동 반영한 실제 인건비를 계산합니다.</p>
           <p className="text-xs text-slate-400 mt-1">2026년 최저시급 {fmt(MIN_WAGE)}원 기준</p>
-          <SimDataPicker fields={simFields} onApply={applySimSelected} />
+          <Link href="/tools/labor" className="inline-flex items-center gap-1 text-sm text-blue-500 hover:text-blue-700 transition mt-2">
+            인건비 스케줄러로 이동 →
+          </Link>
         </div>
 
         {/* 총 비용 요약 */}
@@ -163,6 +155,15 @@ export default function LaborLawPage() {
         <button onClick={addEmployee} className="w-full rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-semibold text-slate-400 hover:border-slate-300 hover:text-slate-600 transition">
           + 직원 추가
         </button>
+
+        {/* 스케줄러 연동 안내 */}
+        <div className="mt-6 rounded-2xl bg-blue-50 border border-blue-100 p-5 text-center">
+          <p className="text-sm text-blue-700 font-semibold mb-1">월 총 인건비: {fmt(totalMonthlyCost)}원</p>
+          <p className="text-xs text-blue-500 mb-3">계산된 인건비를 기반으로 근무 스케줄을 짜보세요.</p>
+          <Link href="/tools/labor" className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 hover:bg-blue-700 transition">
+            스케줄러에서 활용하기 →
+          </Link>
+        </div>
       </div>
     </main>
     </>

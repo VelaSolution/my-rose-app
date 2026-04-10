@@ -57,7 +57,7 @@ const DEFAULT: FormData = {
   taxRate: "3.3",
 };
 
-const INDUSTRIES = ["카페", "일반 음식점", "술집/바", "파인다이닝", "기타"];
+const INDUSTRIES = ["카페", "일반 음식점", "고깃집", "술집/바", "파인다이닝", "기타"];
 
 function InputRow({ label, value, onChange, suffix = "원", hint }: {
   label: string; value: string; onChange: (v: string) => void; suffix?: string; hint?: string;
@@ -80,7 +80,7 @@ function InputRow({ label, value, onChange, suffix = "원", hint }: {
   );
 }
 
-const IND_MAP: Record<string, string> = { cafe: "카페", restaurant: "일반 음식점", bar: "술집/바", finedining: "파인다이닝", gogi: "기타" };
+const IND_MAP: Record<string, string> = { cafe: "카페", restaurant: "일반 음식점", bar: "술집/바", finedining: "파인다이닝", gogi: "고깃집" };
 
 export default function PLReportPage() {
   const [form, setForm] = useState<FormData>(DEFAULT);
@@ -140,7 +140,13 @@ export default function PLReportPage() {
     });
   };
 
-  const set = (key: keyof FormData) => (v: string) => setForm(prev => ({ ...prev, [key]: v }));
+  const set = (key: keyof FormData) => (v: string) => {
+    if (key === "industry" && v === "고깃집") {
+      setForm(prev => ({ ...prev, [key]: v, cogsRate: prev.cogsRate === "30" ? "42" : prev.cogsRate }));
+    } else {
+      setForm(prev => ({ ...prev, [key]: v }));
+    }
+  };
 
   // ─── 계산 ────────────────────────────────────────────────────────────────────
 

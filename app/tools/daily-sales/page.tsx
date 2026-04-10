@@ -8,8 +8,6 @@ import CloudSyncBadge from "@/components/CloudSyncBadge";
 import ToolNav from "@/components/ToolNav";
 import EmptyState from "@/components/EmptyState";
 import { exportCSV } from "@/lib/exportCSV";
-import SimDataPicker from "@/components/SimDataPicker";
-import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -27,17 +25,6 @@ export default function DailySalesPage() {
   const [customers, setCustomers] = useState("");
   const [memo, setMemo] = useState("");
   const [view, setView] = useState<"input" | "stats">("input");
-
-  const INDUSTRY_LABEL: Record<string, string> = {
-    cafe: "카페", restaurant: "음식점", bar: "술집/바", finedining: "파인다이닝", gogi: "고깃집",
-  };
-  const simFields = (sim: SimulatorSnapshot) => [
-    { key: "totalSales", label: "월매출 목표", value: `${fmt(Math.round(sim.totalSales))}원`, rawValue: sim.totalSales },
-    { key: "industry", label: "업종", value: INDUSTRY_LABEL[sim.industry] ?? sim.industry, rawValue: sim.industry },
-  ];
-  const applySimSelected = (_selected: Record<string, number | string>) => {
-    // 참고용 데이터 표시
-  };
 
   const handleSave = () => {
     if (!sales) return;
@@ -99,7 +86,6 @@ export default function DailySalesPage() {
               </button>
             )}
           </div>
-          <SimDataPicker fields={simFields} onApply={applySimSelected} />
         </div>
 
         {/* 탭 */}
@@ -150,9 +136,23 @@ export default function DailySalesPage() {
                         <span className="text-xs text-slate-400 ml-2">({DAYS[new Date(r.date).getDay()]})</span>
                         {r.memo && <span className="text-xs text-slate-400 ml-2">· {r.memo}</span>}
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-slate-900">{fmt(r.sales)}원</p>
-                        {r.customers > 0 && <p className="text-xs text-slate-400">{r.customers}명</p>}
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-slate-900">{fmt(r.sales)}원</p>
+                          {r.customers > 0 && <p className="text-xs text-slate-400">{r.customers}명</p>}
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (!confirm(`${r.date} 기록을 삭제할까요?`)) return;
+                            setRecords(records.filter((rec) => rec.date !== r.date));
+                          }}
+                          className="text-slate-300 hover:text-red-500 transition p-1 rounded-lg hover:bg-red-50 flex-shrink-0"
+                          title="삭제"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   ))}
