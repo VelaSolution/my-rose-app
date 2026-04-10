@@ -464,7 +464,7 @@ function AIBriefingSection({ form, result, plan }: { form: FullForm; result: Ret
                 <div class="stat"><div class="label">순이익률</div><div class="value">${pct(result.netMargin)}</div></div>
               </div>
               ${[{t:"현재 상태",b:briefing.currentStatus},{t:"핵심 문제",b:briefing.mainIssue},{t:"최우선 전략",b:briefing.topAction},{t:"실행 힌트",b:briefing.actionHint}]
-                .map(({t,b})=>`<div class="card"><h3>${t}</h3><p>${b}</p></div>`).join("")}
+                .map(({t,b})=>`<div class="card"><h3>${t.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</h3><p>${(b||"").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p></div>`).join("")}
               <p class="footer">VELA — velaanalytics.com</p>
               </body></html>`);
               w.document.close();

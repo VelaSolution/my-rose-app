@@ -104,7 +104,7 @@ export default function MyStorePage() {
   const latestProfit = latest
     ? (latest.profit ?? latest.monthly_sales - latest.rent - latest.labor_cost - latest.food_cost - latest.utilities - latest.marketing - latest.etc)
     : 0;
-  const momChange = latest && prev
+  const momChange = latest && prev && prev.monthly_sales > 0
     ? ((latest.monthly_sales - prev.monthly_sales) / prev.monthly_sales * 100)
     : 0;
 
