@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import type { HQRole, Task, Goal, TaskComment } from "@/app/hq/types";
-import { sb, I, C, L, B, B2, BADGE, ST } from "@/app/hq/utils";
+import { sb, I, C, L, B, B2, BADGE, ST, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -46,6 +46,7 @@ function isOverdue(deadline: string | null | undefined, status: string): boolean
 }
 
 export default function TaskTab({ userId, userName, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [form, setForm] = useState({ ...EMPTY });
@@ -320,7 +321,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                     </div>
                     <div className="flex items-center gap-3 mt-1">
                       <p className="text-xs text-slate-400">
-                        {t.assignee} &middot; {t.deadline || "마감일 없음"}
+                        {displayName(t.assignee)} &middot; {t.deadline || "마감일 없음"}
                       </p>
                       {progressBar(meta.progress)}
                     </div>
@@ -358,7 +359,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                       <div className="mb-2 space-y-1.5">
                         {tc.map((c) => (
                           <div key={c.id} className="rounded-lg bg-slate-50 px-3 py-2 text-xs">
-                            <span className="font-semibold text-slate-700">{c.author}</span>
+                            <span className="font-semibold text-slate-700">{displayName(c.author)}</span>
                             <span className="ml-2 text-slate-400">{new Date(c.time).toLocaleString("ko-KR")}</span>
                             <p className="mt-0.5 text-slate-600">{c.text}</p>
                           </div>
@@ -413,7 +414,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                           {dDayBadge(t.deadline)}
                         </div>
                         <p className="mt-1 text-xs text-slate-400">
-                          {t.assignee} &middot; {t.deadline || "마감일 없음"}
+                          {displayName(t.assignee)} &middot; {t.deadline || "마감일 없음"}
                         </p>
                         {/* Progress bar */}
                         <div className="mt-1.5">{progressBar(meta.progress)}</div>

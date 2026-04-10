@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { HQRole, BoardPost, BoardComment } from "@/app/hq/types";
-import { sb, today, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, today, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -22,6 +22,7 @@ const categoryColor: Record<string, string> = {
 };
 
 export default function BoardTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [posts, setPosts] = useState<BoardPost[]>([]);
   const [comments, setComments] = useState<BoardComment[]>([]);
 
@@ -238,7 +239,7 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
                     </svg>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-400">
-                    <span>{post.author}</span>
+                    <span>{displayName(post.author)}</span>
                     <span>{post.date}</span>
                     <span>조회 {post.views}</span>
                     <span>좋아요 {post.likes}</span>
@@ -278,11 +279,11 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
                       {postComments.map((c) => (
                         <div key={c.id} className="flex gap-2.5 py-2">
                           <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 flex-shrink-0">
-                            {c.author.charAt(0)}
+                            {displayName(c.author).charAt(0)}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-xs font-semibold text-slate-700">{c.author}</span>
+                              <span className="text-xs font-semibold text-slate-700">{displayName(c.author)}</span>
                               <span className="text-[10px] text-slate-400">{c.date}</span>
                             </div>
                             <p className="text-sm text-slate-600">{c.content}</p>

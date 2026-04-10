@@ -1080,19 +1080,19 @@ function ResultContent() {
                   <SliderGroup values={scenarioB} onChange={setScenarioB} label="시나리오 B (변경안)" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {fields.map(({ label, a, b, isPct }) => {
                   const diff = b - a;
                   const better = isPct ? b > a : b > a;
                   return (
                     <div key={label} className="rounded-2xl bg-slate-50 p-4 text-center">
                       <p className="text-xs text-slate-400 mb-2">{label}</p>
-                      <div className="flex justify-center gap-3 text-sm">
-                        <span className="font-bold text-blue-600">{isPct ? pct(a) : fmt(a)}</span>
-                        <span className="text-slate-300">vs</span>
-                        <span className="font-bold text-emerald-600">{isPct ? pct(b) : fmt(b)}</span>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-sm font-bold text-blue-600">{isPct ? pct(a) : fmt(a)}</span>
+                        <span className="text-[10px] text-slate-300">vs</span>
+                        <span className="text-sm font-bold text-emerald-600">{isPct ? pct(b) : fmt(b)}</span>
                       </div>
-                      <p className={`text-xs font-semibold mt-1 ${better ? "text-emerald-500" : "text-red-400"}`}>
+                      <p className={`text-xs font-semibold mt-1.5 ${better ? "text-emerald-500" : "text-red-400"}`}>
                         {better ? "▲" : "▼"} {isPct ? `${Math.abs(diff).toFixed(1)}%p` : `${fmt(Math.abs(diff))}원`}
                       </p>
                     </div>

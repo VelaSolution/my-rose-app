@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { HQRole, MemoItem } from "@/app/hq/types";
-import { sb, I, C, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, I, C, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -34,6 +34,7 @@ interface EnrichedMemo extends MemoItem {
 const MAX_CHARS = 2000;
 
 export default function MemoTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [memos, setMemos] = useState<EnrichedMemo[]>([]);
   const [content, setContent] = useState("");
   const [color, setColor] = useState<MemoColor>("white");
@@ -269,7 +270,7 @@ export default function MemoTab({ userId, userName, myRole, flash }: Props) {
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
-                <span>{m.author}</span>
+                <span>{displayName(m.author ?? "")}</span>
                 <span>·</span>
                 <span>{m.time}</span>
               </div>

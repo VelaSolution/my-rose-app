@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { HQRole, AttendanceRecord } from "@/app/hq/types";
-import { sb, today, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, today, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -56,6 +56,7 @@ function getMonthDates(): string[] {
 type TeamMember = { name: string; role: string };
 
 export default function AttendanceTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [now, setNow] = useState(new Date());
   const [memo, setMemo] = useState("");
@@ -97,6 +98,9 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
 
   useEffect(() => { loadData(); }, []);
 
+  const [editClockOut, setEditClockOut] = useState(false);
+  const [editClockOutTime, setEditClockOutTime] = useState("");
+
   const todayStr = today();
   const todayRec = records.find(r => r.date === todayStr && r.userName === userName);
 
@@ -133,6 +137,26 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     }).eq("id", todayRec.id);
     if (error) { flash("저장 실패: " + error.message); return; }
     flash(`퇴근 완료 (${time}) - ${hours}시간 근무`);
+    loadData();
+  };
+
+  const updateClockOut = async () => {
+    if (!todayRec || !editClockOutTime) return;
+    const s = sb();
+    if (!s) return;
+    const [h, m] = editClockOutTime.split(":").map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    const hours = diffHours(todayRec.clockIn, editClockOutTime);
+    const isEarly = editClockOutTime < "18:00";
+    const overtime = Math.max(0, +(hours - 8).toFixed(1));
+    const newStatus = isEarly && todayRec.status !== "지각" ? "조퇴" : todayRec.status;
+    const { error } = await s.from("hq_attendance").update({
+      clock_out: d.toISOString(), overtime, status: newStatus,
+    }).eq("id", todayRec.id);
+    if (error) { flash("저장 실패: " + error.message); return; }
+    flash(`퇴근 시간 수정 완료 (${editClockOutTime})`);
+    setEditClockOut(false);
     loadData();
   };
 
@@ -232,7 +256,24 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
           </div>
           <div className="text-center">
             <p className="text-xs text-slate-400 mb-1">퇴근</p>
-            <p className="text-lg font-bold text-slate-800">{todayRec?.clockOut || "--:--"}</p>
+            {editClockOut ? (
+              <div className="flex items-center gap-1 justify-center">
+                <input type="time" value={editClockOutTime} onChange={e => setEditClockOutTime(e.target.value)}
+                  className="border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold text-slate-800 w-24" />
+                <button onClick={updateClockOut} className="text-xs text-[#3182F6] font-bold">확인</button>
+                <button onClick={() => setEditClockOut(false)} className="text-xs text-slate-400">취소</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 justify-center">
+                <p className="text-lg font-bold text-slate-800">{todayRec?.clockOut || "--:--"}</p>
+                {todayRec?.clockOut && (
+                  <button onClick={() => { setEditClockOut(true); setEditClockOutTime(todayRec.clockOut); }}
+                    className="text-xs text-slate-400 hover:text-[#3182F6] transition-colors" title="퇴근 시간 수정">
+                    ✏️
+                  </button>
+                )}
+              </div>
+            )}
           </div>
           <div className="text-center">
             <p className="text-xs text-slate-400 mb-1">근무시간</p>
@@ -382,7 +423,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                     const member = teamMembers.find(m => m.name === name);
                     return (
                       <tr key={name} className="border-b border-slate-50 hover:bg-slate-50/60">
-                        <td className="py-2.5 px-3 font-semibold text-slate-700">{name}</td>
+                        <td className="py-2.5 px-3 font-semibold text-slate-700">{displayName(name)}</td>
                         <td className="py-2.5 px-3 text-slate-500 text-xs">{member?.role ?? "-"}</td>
                         <td className="py-2.5 px-3 text-slate-700">{rec?.clockIn || <span className="text-slate-300">-</span>}</td>
                         <td className="py-2.5 px-3 text-slate-700">{rec?.clockOut || <span className="text-slate-300">-</span>}</td>
@@ -421,7 +462,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                   {teamWeekData.map(tw => (
                     <tr key={tw.name} className="border-b border-slate-50 hover:bg-slate-50/60">
                       <td className="py-2.5 px-3">
-                        <span className="font-semibold text-slate-700">{tw.name}</span>
+                        <span className="font-semibold text-slate-700">{displayName(tw.name)}</span>
                         {tw.role && <span className="text-[10px] text-slate-400 ml-1">{tw.role}</span>}
                       </td>
                       {tw.week.map((r, i) => (
@@ -463,7 +504,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                 <tbody>
                   {teamWeekData.map(tw => (
                     <tr key={tw.name} className="border-b border-slate-50 hover:bg-slate-50/60">
-                      <td className="py-2.5 px-3 font-semibold text-slate-700">{tw.name}</td>
+                      <td className="py-2.5 px-3 font-semibold text-slate-700">{displayName(tw.name)}</td>
                       <td className="text-right py-2.5 px-3 text-emerald-600 font-semibold">{tw.monthStats.workDays}일</td>
                       <td className="text-right py-2.5 px-3 text-amber-600 font-semibold">{tw.monthStats.late}</td>
                       <td className="text-right py-2.5 px-3 text-blue-600 font-semibold">{tw.monthStats.overtime.toFixed(1)}h</td>

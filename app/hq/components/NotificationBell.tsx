@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { HQRole } from "@/app/hq/types";
-import { sb, today, BADGE } from "@/app/hq/utils";
+import { sb, today, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -43,6 +43,7 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function NotificationBell({ userId, userName, myRole, onNavigate }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
@@ -95,7 +96,7 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
     try {
       const { data } = await s.from("hq_chat").select("id, sender, text, created_at").neq("sender", userName).order("created_at", { ascending: false }).limit(10);
       if (data) for (const c of data as any[]) {
-        items.push({ id: `chat-${c.id}`, icon: "💬", title: `${c.sender}: ${(c.text as string).slice(0, 30)}`, time: c.created_at, tab: "chat" });
+        items.push({ id: `chat-${c.id}`, icon: "💬", title: `${displayName(c.sender)}: ${(c.text as string).slice(0, 30)}`, time: c.created_at, tab: "chat" });
       }
     } catch {}
 
@@ -103,7 +104,7 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
     try {
       const { data } = await s.from("hq_dm").select("id, sender, text, created_at").eq("receiver", userName).order("created_at", { ascending: false }).limit(10);
       if (data) for (const d of data as any[]) {
-        items.push({ id: `dm-${d.id}`, icon: "✉️", title: `DM ${d.sender}: ${(d.text as string).slice(0, 30)}`, time: d.created_at, tab: "chat" });
+        items.push({ id: `dm-${d.id}`, icon: "✉️", title: `DM ${displayName(d.sender)}: ${(d.text as string).slice(0, 30)}`, time: d.created_at, tab: "chat" });
       }
     } catch {}
 

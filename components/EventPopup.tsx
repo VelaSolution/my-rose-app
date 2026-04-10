@@ -50,8 +50,8 @@ export default function EventPopup() {
         }}
       >
         {/* 장식 */}
-        <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, background: "radial-gradient(circle,rgba(49,130,246,0.1),transparent)", borderRadius: "50%" }} />
-        <div style={{ position: "absolute", bottom: -20, left: -20, width: 100, height: 100, background: "radial-gradient(circle,rgba(5,150,105,0.08),transparent)", borderRadius: "50%" }} />
+        <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, background: "radial-gradient(circle,rgba(49,130,246,0.1),transparent)", borderRadius: "50%", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -20, left: -20, width: 100, height: 100, background: "radial-gradient(circle,rgba(5,150,105,0.08),transparent)", borderRadius: "50%", pointerEvents: "none" }} />
 
         {/* 헤더 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>

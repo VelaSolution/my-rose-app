@@ -132,6 +132,7 @@ export default function HQPage() {
   const setTab = useCallback((t: Tab) => {
     setTabState(t);
     router.push(`/hq?tab=${t}`, { scroll: false });
+    window.scrollTo(0, 0);
   }, [router]);
 
   // URL 변경 시 탭 동기화

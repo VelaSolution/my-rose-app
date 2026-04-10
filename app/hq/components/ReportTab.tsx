@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { HQRole, ReportStatus, DailyReport, IssueReport, ProjectReport } from "@/app/hq/types";
 import { REPORT_ST } from "@/app/hq/types";
-import { sb, today, fmt, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, today, fmt, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -35,6 +35,7 @@ const TEMPLATES = [
 ];
 
 export default function ReportTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [sub, setSub] = useState<SubTab>("weekly");
   const [showTemplates, setShowTemplates] = useState(false);
 
@@ -371,7 +372,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
               <div key={d.id} className={C}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-800">{d.author ?? userName}</span>
+                    <span className="text-sm font-semibold text-slate-800">{displayName(d.author ?? userName)}</span>
                     <span className="text-xs text-slate-400">{d.date}</span>
                   </div>
                   {statusBadge(d.status ?? "submitted")}
@@ -441,7 +442,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
                 <p className="text-sm text-slate-600 mb-3 line-clamp-2">{iss.description}</p>
                 <div className="flex items-center gap-2 text-xs text-slate-400">
                   <span className={`${BADGE} ${priorityColor[iss.priority] ?? priorityColor["중간"]}`}>{iss.priority}</span>
-                  <span>{iss.author ?? userName}</span>
+                  <span>{displayName(iss.author ?? userName)}</span>
                 </div>
                 {canApprove && iss.reportStatus === "submitted" && iss.author !== userName && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
@@ -505,7 +506,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-slate-400">
-                  <span>{p.author ?? userName}</span>
+                  <span>{displayName(p.author ?? userName)}</span>
                   <span>마감: {p.deadline}</span>
                 </div>
                 {canApprove && p.reportStatus === "submitted" && p.author !== userName && (

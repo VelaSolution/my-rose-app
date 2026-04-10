@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import type { HQRole } from "@/app/hq/types";
-import { sb, C } from "@/app/hq/utils";
+import { sb, C, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -43,6 +43,7 @@ function relativeTime(dateStr: string): string {
 }
 
 export default function AuditLog({ flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>("전체");
@@ -143,7 +144,7 @@ export default function AuditLog({ flash }: Props) {
                         {entry.type}
                       </span>
                       {entry.author && (
-                        <span className="text-[11px] text-slate-400 font-medium">{entry.author}</span>
+                        <span className="text-[11px] text-slate-400 font-medium">{displayName(entry.author)}</span>
                       )}
                     </div>
                     <p className="text-sm text-slate-700 font-medium truncate">{entry.description}</p>

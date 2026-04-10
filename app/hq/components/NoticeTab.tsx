@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { HQRole, Notice } from "@/app/hq/types";
-import { sb, today, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, today, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -38,6 +38,7 @@ function linkify(text: string) {
 }
 
 export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [notices, setNotices] = useState<EnrichedNotice[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -247,7 +248,7 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
                       <h4 className={`text-slate-800 truncate ${isRead ? "font-medium" : "font-bold"}`}>{n.title}</h4>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-slate-400">
-                      <span>{n.author}</span>
+                      <span>{displayName(n.author)}</span>
                       <span>{n.date}</span>
                       <span className={`inline-flex items-center gap-1 ${readCount === teamCount && teamCount > 0 ? "text-emerald-500" : ""}`}>
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

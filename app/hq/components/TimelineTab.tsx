@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { HQRole } from "@/app/hq/types";
-import { sb, C } from "@/app/hq/utils";
+import { sb, C, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -48,6 +48,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function TimelineTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -110,7 +111,7 @@ export default function TimelineTab({ userId, userName, myRole, flash }: Props) 
             type: "task",
             icon: TYPE_ICONS.task,
             title: r.title,
-            description: `담당: ${r.assignee || "-"} · 마감: ${r.deadline || "-"}`,
+            description: `담당: ${displayName(r.assignee || "-")} · 마감: ${r.deadline || "-"}`,
             date: r.deadline || r.created_at || new Date().toISOString(),
           })
         );

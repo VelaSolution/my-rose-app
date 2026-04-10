@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { HQRole, LeaveRequest } from "@/app/hq/types";
-import { sb, today, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, today, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -75,6 +75,7 @@ function getCalendarDays(year: number, month: number) {
 }
 
 export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState<LeaveRequest["type"]>("연차");
@@ -249,7 +250,7 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
                     {leaves.slice(0, 3).map(l => (
                       <div key={l.id} className="flex items-center gap-1 truncate">
                         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${LEAVE_TYPE_COLOR[l.type]}`} />
-                        <span className={`text-[10px] font-medium truncate ${LEAVE_TYPE_TEXT_COLOR[l.type]}`}>{l.requester}</span>
+                        <span className={`text-[10px] font-medium truncate ${LEAVE_TYPE_TEXT_COLOR[l.type]}`}>{displayName(l.requester)}</span>
                       </div>
                     ))}
                     {leaves.length > 3 && (
@@ -378,10 +379,10 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
                   <div className="flex items-center gap-2 mb-1">
                     <span className={`${BADGE} text-[11px] bg-blue-50 text-blue-600`}>{r.type}</span>
                     <span className={`${BADGE} text-[11px] ${STATUS_STYLE[r.status]}`}>{r.status}</span>
-                    {r.approver && <span className="text-[11px] text-slate-400">결재: {r.approver}</span>}
+                    {r.approver && <span className="text-[11px] text-slate-400">결재: {displayName(r.approver)}</span>}
                   </div>
                   <p className="text-sm text-slate-700 font-medium">
-                    {r.requester} &middot; {r.startDate} ~ {r.endDate} ({r.days}일)
+                    {displayName(r.requester)} &middot; {r.startDate} ~ {r.endDate} ({r.days}일)
                   </p>
                   <p className="text-xs text-slate-400 mt-0.5">{r.reason}</p>
                 </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { HQRole } from "@/app/hq/types";
-import { sb, I, C, B, B2 } from "@/app/hq/utils";
+import { sb, I, C, B, B2, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -38,6 +38,7 @@ const colorLight = (c: string) => COLORS.find(x => x.value === c)?.light ?? "bg-
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export default function CalendarTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [taskDates, setTaskDates] = useState<Set<string>>(new Set());
@@ -402,7 +403,7 @@ export default function CalendarTab({ userId, userName, myRole, flash }: Props) 
                 <p className="text-sm font-semibold text-slate-800">{e.title}</p>
                 <p className="text-xs text-slate-400">
                   {e.date}{e.end_date && e.end_date !== e.date ? ` ~ ${e.end_date}` : ""}
-                  {e.author && ` · ${e.author}`}
+                  {e.author && ` · ${displayName(e.author)}`}
                 </p>
                 {e.memo && <p className="text-xs text-slate-500 mt-0.5">{e.memo}</p>}
               </div>

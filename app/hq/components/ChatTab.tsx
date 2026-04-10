@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { HQRole, ChatMsg } from "@/app/hq/types";
-import { sb, I, B, C } from "@/app/hq/utils";
+import { sb, I, B, C, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -87,6 +87,7 @@ function MessageBubble({
   showReactionPicker: string | null;
   setShowReactionPicker: (id: string | null) => void;
 }) {
+  const { displayName } = useTeamDisplayNames();
   const isMe = m.sender === userName;
   const hasReactions = m.reactions && Object.keys(m.reactions).length > 0;
 
@@ -94,14 +95,14 @@ function MessageBubble({
     <div className={`flex items-end gap-2.5 mb-3 ${isMe ? "flex-row-reverse" : ""}`}>
       {!isMe && (
         <div className={`w-8 h-8 rounded-full ${avatarColor(m.sender)} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
-          {m.sender.charAt(0)}
+          {displayName(m.sender).charAt(0)}
         </div>
       )}
       <div className={`max-w-[70%] group ${isMe ? "items-end" : "items-start"}`}>
-        {!isMe && <p className="text-xs font-semibold text-slate-500 mb-1 ml-1">{m.sender}</p>}
+        {!isMe && <p className="text-xs font-semibold text-slate-500 mb-1 ml-1">{displayName(m.sender)}</p>}
         {m.reply_to && (
           <div className={`rounded-lg px-3 py-1.5 mb-1 text-xs border-l-2 ${isMe ? "bg-blue-400/20 border-blue-300 text-blue-100" : "bg-slate-50 border-slate-300 text-slate-500"}`}>
-            <span className="font-semibold">{m.reply_to.sender}</span>
+            <span className="font-semibold">{displayName(m.reply_to.sender)}</span>
             <p className="truncate">{m.reply_to.text}</p>
           </div>
         )}
@@ -148,6 +149,7 @@ function MessageBubble({
 
 // ── 메인 ChatTab ─────────────────────────────────────────
 export default function ChatTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [mode, setMode] = useState<"team" | "dm">("team");
   const [dmTarget, setDmTarget] = useState<TeamMemberSimple | null>(null);
 
@@ -377,7 +379,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
     if (dmChannelRef.current) s.removeChannel(dmChannelRef.current);
 
     const channel = s
-      .channel(`hq_dm_${dmTarget.id}`)
+      .channel(`hq_dm_${dmTarget.id}_${Date.now()}`)
       .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_dm" }, (payload: any) => {
         const newMsg = mapRow(payload.new);
         // Only add if it's part of this conversation
@@ -539,7 +541,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
           {replyTo && (
             <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl mb-2 border border-blue-100">
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-blue-600">{replyTo.sender} 에게 답장</p>
+                <p className="text-xs font-semibold text-blue-600">{displayName(replyTo.sender)} 에게 답장</p>
                 <p className="text-xs text-blue-400 truncate">{replyTo.text}</p>
               </div>
               <button onClick={() => setReplyTo(null)} className="text-blue-400 hover:text-blue-600 flex-shrink-0">
@@ -565,7 +567,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
             <div className="flex gap-2">
               <input ref={inputRef} className={`${I} flex-1`} value={text}
                 onChange={(e) => handleTeamInput(e.target.value)} onKeyDown={handleTeamKeyDown}
-                placeholder={replyTo ? `${replyTo.sender}에게 답장...` : "메시지를 입력하세요... (@으로 멘션)"} />
+                placeholder={replyTo ? `${displayName(replyTo.sender)}에게 답장...` : "메시지를 입력하세요... (@으로 멘션)"} />
               <button className={`${B} flex-shrink-0`} onClick={sendTeam}>전송</button>
             </div>
           </div>
@@ -593,7 +595,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
                       {m.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold truncate ${dmTarget?.id === m.id ? "text-[#3182F6]" : "text-slate-700"}`}>{m.name}</p>
+                      <p className={`text-sm font-semibold truncate ${dmTarget?.id === m.id ? "text-[#3182F6]" : "text-slate-700"}`}>{displayName(m.name)}</p>
                       {dmLastMsgs[m.name] && (
                         <p className="text-xs text-slate-400 truncate">{dmLastMsgs[m.name].text}</p>
                       )}
@@ -626,7 +628,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
                   <div className={`w-8 h-8 rounded-full ${avatarColor(dmTarget.name)} flex items-center justify-center text-white text-xs font-bold`}>
                     {dmTarget.name.charAt(0)}
                   </div>
-                  <span className="text-sm font-bold text-slate-800">{dmTarget.name}</span>
+                  <span className="text-sm font-bold text-slate-800">{displayName(dmTarget.name)}</span>
                 </div>
 
                 {/* DM 메시지 영역 */}
@@ -636,7 +638,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
                   ) : dmMessages.length === 0 ? (
                     <div className="text-center py-12 text-slate-400">
                       <span className="text-3xl block mb-2">👋</span>
-                      <p>{dmTarget.name}님과의 첫 대화를 시작하세요!</p>
+                      <p>{displayName(dmTarget.name)}님과의 첫 대화를 시작하세요!</p>
                     </div>
                   ) : (
                     dmGrouped.map((group, gi) => (
@@ -661,7 +663,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
                 {dmReplyTo && (
                   <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl mb-2 border border-blue-100">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-blue-600">{dmReplyTo.sender} 에게 답장</p>
+                      <p className="text-xs font-semibold text-blue-600">{displayName(dmReplyTo.sender)} 에게 답장</p>
                       <p className="text-xs text-blue-400 truncate">{dmReplyTo.text}</p>
                     </div>
                     <button onClick={() => setDmReplyTo(null)} className="text-blue-400 hover:text-blue-600 flex-shrink-0">
@@ -675,7 +677,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
                   <div className="flex gap-2">
                     <input ref={dmInputRef} className={`${I} flex-1`} value={dmText}
                       onChange={(e) => setDmText(e.target.value)} onKeyDown={handleDmKeyDown}
-                      placeholder={dmReplyTo ? `${dmReplyTo.sender}에게 답장...` : `${dmTarget.name}에게 메시지 보내기...`} />
+                      placeholder={dmReplyTo ? `${displayName(dmReplyTo.sender)}에게 답장...` : `${displayName(dmTarget.name)}에게 메시지 보내기...`} />
                     <button className={`${B} flex-shrink-0`} onClick={sendDm}>전송</button>
                   </div>
                 </div>

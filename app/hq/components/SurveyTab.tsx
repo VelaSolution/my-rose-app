@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { HQRole, SurveyItem, SurveyQuestion, SurveyResponse } from "@/app/hq/types";
-import { sb, today, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, today, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -21,6 +21,7 @@ const STATUS_STYLE: Record<string, string> = {
 type View = "list" | "create" | "answer" | "result";
 
 export default function SurveyTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [surveys, setSurveys] = useState<SurveyItem[]>([]);
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [view, setView] = useState<View>("list");
@@ -589,7 +590,7 @@ export default function SurveyTab({ userId, userName, myRole, flash }: Props) {
                 </div>
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
                   <div className="flex items-center gap-3 text-xs text-slate-400">
-                    <span>{s.author}</span>
+                    <span>{displayName(s.author)}</span>
                     <span>마감: {s.deadline}</span>
                     <span>{s.responses}명 참여</span>
                     {rate && <span className="text-[#3182F6] font-semibold">응답률 {rate.pct}%</span>}

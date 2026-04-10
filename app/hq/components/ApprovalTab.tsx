@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { HQRole, Approval } from "@/app/hq/types";
-import { sb, today, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, today, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -41,6 +41,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
   const [expandedApproval, setExpandedApproval] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const { displayName } = useTeamDisplayNames();
   const canApprove = myRole === "대표" || myRole === "이사" || myRole === "팀장";
 
   const load = async () => {
@@ -265,7 +266,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
                         )}
                       </div>
                       <p className="text-xs text-slate-400">
-                        보고자: <span className="text-slate-600 font-medium">{a.author}</span> → 결재자: <span className="text-slate-600 font-medium">{a.approver}</span>
+                        보고자: <span className="text-slate-600 font-medium">{displayName(a.author)}</span> → 결재자: <span className="text-slate-600 font-medium">{displayName(a.approver)}</span>
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -291,7 +292,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
 
                       {a.comment && (
                         <p className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
-                          💬 <span className="font-semibold">{a.approver}:</span> {a.comment}
+                          💬 <span className="font-semibold">{displayName(a.approver)}:</span> {a.comment}
                         </p>
                       )}
 
@@ -304,7 +305,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
                             <div className="w-2 h-2 rounded-full bg-[#3182F6] mt-1.5 flex-shrink-0" />
                             <div>
                               <p className="text-xs text-slate-600">
-                                <span className="font-semibold">{a.author}</span>이(가) 결재를 요청했습니다
+                                <span className="font-semibold">{displayName(a.author)}</span>이(가) 결재를 요청했습니다
                               </p>
                               <p className="text-[10px] text-slate-400">{formatDateTime(a.date)}</p>
                             </div>
@@ -316,7 +317,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
                               <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${a.status === "승인" ? "bg-emerald-500" : "bg-red-500"}`} />
                               <div>
                                 <p className="text-xs text-slate-600">
-                                  <span className="font-semibold">{a.approver}</span>이(가){" "}
+                                  <span className="font-semibold">{displayName(a.approver)}</span>이(가){" "}
                                   <span className={a.status === "승인" ? "text-emerald-600 font-semibold" : "text-red-600 font-semibold"}>
                                     {a.status}
                                   </span>
@@ -334,7 +335,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
                             <div className="flex items-start gap-2">
                               <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 flex-shrink-0 animate-pulse" />
                               <p className="text-xs text-amber-600">
-                                <span className="font-semibold">{a.approver}</span>의 결재를 대기 중입니다...
+                                <span className="font-semibold">{displayName(a.approver)}</span>의 결재를 대기 중입니다...
                               </p>
                             </div>
                           )}

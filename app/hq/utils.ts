@@ -1,8 +1,40 @@
+import { useState, useEffect } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 export { ST, REPORT_ST } from "./types";
 
 // ── Supabase 헬퍼 ──────────────────────────────────────
 export const sb = () => { try { return createSupabaseBrowserClient(); } catch { return null; } };
+
+// ── 팀원 표시명 (부서 직책 이름) ──────────────────────
+export type TeamInfo = { name: string; role: string; hq_role: string };
+
+export function useTeamDisplayNames() {
+  const [map, setMap] = useState<Record<string, { role: string; hqRole: string }>>({});
+
+  useEffect(() => {
+    (async () => {
+      const s = sb();
+      if (!s) return;
+      const { data } = await s.from("hq_team").select("name, role, hq_role").neq("approved", false);
+      if (data) {
+        const m: Record<string, { role: string; hqRole: string }> = {};
+        for (const t of data as TeamInfo[]) {
+          if (t.name) m[t.name] = { role: t.role || "", hqRole: t.hq_role || "" };
+        }
+        setMap(m);
+      }
+    })();
+  }, []);
+
+  const displayName = (name: string) => {
+    const info = map[name];
+    if (!info) return name;
+    const parts = [info.role, info.hqRole, name].filter(Boolean);
+    return parts.join(" ");
+  };
+
+  return { displayName, teamMap: map };
+}
 
 // ── 포맷팅 ─────────────────────────────────────────────
 export const fmt = (n: number) => n.toLocaleString("ko-KR");

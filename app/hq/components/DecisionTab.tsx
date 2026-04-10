@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { HQRole, Decision } from "@/app/hq/types";
-import { sb, today, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, today, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -36,6 +36,7 @@ interface EnrichedDecision extends Decision {
 }
 
 export default function DecisionTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [list, setList] = useState<EnrichedDecision[]>([]);
   const [title, setTitle] = useState("");
   const [decision, setDecision] = useState("");
@@ -295,7 +296,7 @@ export default function DecisionTab({ userId, userName, myRole, flash }: Props) 
                       </div>
                       <h4 className="text-sm font-bold text-slate-800">{d.title}</h4>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        {d.owner} ·{" "}
+                        {displayName(d.owner)} ·{" "}
                         {new Date(d.date).toLocaleDateString("ko-KR")}
                       </p>
                     </div>
@@ -431,7 +432,7 @@ export default function DecisionTab({ userId, userName, myRole, flash }: Props) 
                     <p className="text-sm text-slate-600 mt-1 line-clamp-2">{d.decision}</p>
                     <div className="flex items-center justify-between mt-2">
                       <p className="text-xs text-slate-400">
-                        {d.owner} · {new Date(d.date).toLocaleDateString("ko-KR")}
+                        {displayName(d.owner)} · {new Date(d.date).toLocaleDateString("ko-KR")}
                       </p>
                       <div className="flex items-center gap-2 text-xs text-slate-400">
                         <span>{"👍"} {d.votes?.up?.length ?? 0}</span>

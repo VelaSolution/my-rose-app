@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { HQRole, WikiArticle } from "@/app/hq/types";
-import { sb, today, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
+import { sb, today, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
   userId: string;
@@ -50,6 +50,7 @@ function extractHeadings(content: string): { level: number; text: string; id: st
 }
 
 export default function WikiTab({ userId, userName, myRole, flash }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const [articles, setArticles] = useState<WikiArticle[]>([]);
   const [view, setView] = useState<View>("list");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -287,13 +288,13 @@ export default function WikiTab({ userId, userName, myRole, flash }: Props) {
                   {/* Prominent last editor info */}
                   <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
                     <div className="w-6 h-6 rounded-full bg-[#3182F6]/10 flex items-center justify-center">
-                      <span className="text-[10px] font-bold text-[#3182F6]">{(selected.lastEditor || selected.author).charAt(0)}</span>
+                      <span className="text-[10px] font-bold text-[#3182F6]">{displayName(selected.lastEditor || selected.author).charAt(0)}</span>
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-slate-700">
-                        마지막 수정: {selected.lastEditor || selected.author}
+                        마지막 수정: {displayName(selected.lastEditor || selected.author)}
                       </p>
-                      <p className="text-[10px] text-slate-400">{selected.updatedAt} (작성자: {selected.author})</p>
+                      <p className="text-[10px] text-slate-400">{selected.updatedAt} (작성자: {displayName(selected.author)})</p>
                     </div>
                   </div>
                 </div>
@@ -538,7 +539,7 @@ export default function WikiTab({ userId, userName, myRole, flash }: Props) {
                     )}
                   </div>
                   <div className="text-right shrink-0 ml-4">
-                    <p className="text-xs text-slate-400">{a.lastEditor || a.author}</p>
+                    <p className="text-xs text-slate-400">{displayName(a.lastEditor || a.author)}</p>
                     <p className="text-[11px] text-slate-300 mt-0.5">{a.updatedAt}</p>
                     <p className="text-[11px] text-slate-300">조회 {a.views}</p>
                   </div>

@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { HQRole, Mett, Metric, Goal, Task, AAR, Tab, Feedback } from "@/app/hq/types";
-import { sb, fmt, today, I, C, B, BADGE, ST } from "@/app/hq/utils";
+import { sb, fmt, today, I, C, B, BADGE, ST, useTeamDisplayNames } from "@/app/hq/utils";
 
 type Comment = { id: string; author: string; text: string; time: string };
 type DetailItem = { type: "task" | "feedback"; id: string; title: string; status: string; extra: Record<string, string> };
@@ -56,10 +56,12 @@ function saveWidgetPrefs(prefs: WidgetPrefs) {
 }
 
 export default function Dashboard({ userId, userName, myRole, flash, onNavigate }: Props) {
+  const { displayName } = useTeamDisplayNames();
   const go = (tab: Tab) => onNavigate?.(tab);
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [todayAttendance, setTodayAttendance] = useState<{ clockIn: string; clockOut: string } | null>(null);
   const [aars, setAars] = useState<AAR[]>([]);
   const [metts, setMetts] = useState<Mett[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -176,13 +178,23 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
       // 오늘 출근 현황
       try {
         const todayStr = today();
-        const { data: attData } = await s.from("hq_attendance").select("id, status").eq("date", todayStr);
+        const { data: attData } = await s.from("hq_attendance").select("id, status, user_name, clock_in, clock_out").eq("date", todayStr);
         if (attData) {
           setAttendanceIn(attData.filter((a: any) => a.status !== "결근").length);
           setAttendanceOut(attData.filter((a: any) => a.status === "결근").length);
+          // 내 출근 기록
+          const myAtt = attData.find((a: any) => a.user_name === userName);
+          if (myAtt) {
+            const toTime = (ts: string | null) => {
+              if (!ts) return "";
+              try { return new Date(ts).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return ""; }
+            };
+            setTodayAttendance({ clockIn: toTime(myAtt.clock_in), clockOut: toTime(myAtt.clock_out) });
+          } else {
+            setTodayAttendance(null);
+          }
         }
-        // 전체 팀원 수에서 출근자를 빼서 미출근 계산
-        const { count: teamCount } = await s.from("hq_team").select("id", { count: "exact", head: true }).eq("status", "active");
+        const { count: teamCount } = await s.from("hq_team").select("id", { count: "exact", head: true }).neq("approved", false);
         if (teamCount && attData) {
           setAttendanceOut(Math.max(0, (teamCount ?? 0) - attData.length));
           setAttendanceIn(attData.length);
@@ -223,10 +235,19 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
     }
   }
 
+  const directiveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   function saveDirective(v: string) {
     setDirective(v);
-    const s = sb();
-    if (s) s.from("hq_directives").upsert({ user_id: userId, content: v, updated_at: new Date().toISOString() }, { onConflict: "user_id" }).then(() => {});
+    if (directiveTimer.current) clearTimeout(directiveTimer.current);
+    directiveTimer.current = setTimeout(async () => {
+      const s = sb();
+      if (!s) return;
+      const { error } = await s.from("hq_directives").upsert(
+        { user_id: userId, content: v, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+      if (error) flash("지시사항 저장 실패: " + error.message);
+    }, 1000);
   }
 
   const latest = metrics[0];
@@ -250,12 +271,12 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
 
   const openTask = (t: Task) => setDetail({
     type: "task", id: t.id, title: t.title, status: t.status,
-    extra: { 담당자: t.assignee || "-", 마감일: t.deadline || "-", 결과: t.result || "-" },
+    extra: { 담당자: displayName(t.assignee || "-"), 마감일: t.deadline || "-", 결과: t.result || "-" },
   });
 
   const openFeedback = (f: Feedback) => setDetail({
     type: "feedback", id: f.id, title: f.title, status: f.status,
-    extra: { 유형: f.type, 우선순위: f.priority, 설명: f.description || "-", 작성자: f.author, 날짜: f.date },
+    extra: { 유형: f.type, 우선순위: f.priority, 설명: f.description || "-", 작성자: displayName(f.author), 날짜: f.date },
   });
 
   // 7-day revenue chart
@@ -270,8 +291,61 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
     );
   }
 
+  // 출근하기
+  const handleQuickClockIn = async () => {
+    const s = sb();
+    if (!s) return;
+    const now = new Date();
+    const time = now.toTimeString().slice(0, 5);
+    const isLate = time > "09:00";
+    const { error } = await s.from("hq_attendance").upsert({
+      user_id: userId, user_name: userName, date: today(),
+      clock_in: now.toISOString(), status: isLate ? "지각" : "정상",
+    }, { onConflict: "user_id,date" });
+    if (error) { flash("출근 저장 실패"); return; }
+    flash(`출근 완료! (${time})`);
+    setTodayAttendance({ clockIn: time, clockOut: "" });
+    load();
+  };
+
   return (
     <div className="space-y-4">
+      {/* 출근 유도 배너 */}
+      {!loading && !todayAttendance && (
+        <div className={`${C} border-[#3182F6] border-2 bg-blue-50/50`}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🕘</span>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">아직 출근 전이에요!</h3>
+                <p className="text-sm text-slate-500">출근 버튼을 눌러 오늘 근무를 시작하세요.</p>
+              </div>
+            </div>
+            <button onClick={handleQuickClockIn} className="rounded-xl bg-[#3182F6] text-white font-bold px-6 py-3 text-sm hover:bg-[#2672DE] active:scale-[0.98] transition-all flex-shrink-0">
+              출근하기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 출근 완료 상태 */}
+      {!loading && todayAttendance && !todayAttendance.clockOut && (
+        <div className={`${C} border-emerald-300 border bg-emerald-50/30`}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">✅</span>
+              <div>
+                <p className="text-sm font-semibold text-emerald-700">출근 완료 · {todayAttendance.clockIn}</p>
+                <p className="text-xs text-slate-400">퇴근 시 근태 탭에서 퇴근하기를 눌러주세요.</p>
+              </div>
+            </div>
+            <button onClick={() => go("attendance")} className="rounded-xl bg-slate-700 text-white font-semibold px-5 py-2.5 text-sm hover:bg-slate-800 transition-all flex-shrink-0">
+              🕕 퇴근하기
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 상세 모달 */}
       {detail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => { setDetail(null); setCommentText(""); }}>
@@ -307,9 +381,9 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
                       <div key={c.id} className="bg-slate-50 rounded-xl px-3 py-2">
                         <div className="flex items-center gap-2 mb-0.5">
                           <div className="w-5 h-5 bg-[#3182F6] rounded-full flex items-center justify-center">
-                            <span className="text-[9px] text-white font-bold">{c.author[0]}</span>
+                            <span className="text-[9px] text-white font-bold">{displayName(c.author)[0]}</span>
                           </div>
-                          <span className="text-xs font-semibold text-slate-700">{c.author}</span>
+                          <span className="text-xs font-semibold text-slate-700">{displayName(c.author)}</span>
                           <span className="text-[10px] text-slate-400">{c.time}</span>
                         </div>
                         <p className="text-sm text-slate-600 pl-7">{c.text}</p>
