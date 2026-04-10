@@ -98,7 +98,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
     const [kpiRes, goalRes, taskRes, aarRes] = await Promise.all([
-      s.from("hq_kpi").select("*").gte("date", sevenDaysAgo.slice(0, 10)).order("date", { ascending: false }),
+      s.from("hq_metrics").select("*").gte("date", sevenDaysAgo.slice(0, 10)).order("date", { ascending: false }),
       s.from("hq_goals").select("*").order("created_at", { ascending: false }).limit(10),
       s.from("hq_tasks").select("*").order("created_at", { ascending: false }).limit(20),
       s.from("hq_aar").select("*").gte("date", sevenDaysAgo.slice(0, 10)).order("date", { ascending: false }),

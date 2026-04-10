@@ -27,6 +27,13 @@ ALTER TABLE hq_notices ADD COLUMN IF NOT EXISTS important BOOLEAN DEFAULT false;
 -- ── hq_team: 승인 여부 (이미 있을 수 있음) ─────────────
 ALTER TABLE hq_team ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT false;
 
+-- ── hq_reports: 피드백 컬럼 ─────────────────────────────
+ALTER TABLE hq_reports ADD COLUMN IF NOT EXISTS feedback TEXT;
+
+-- ── hq_approvals: 긴급/승인시간 ────────────────────────
+ALTER TABLE hq_approvals ADD COLUMN IF NOT EXISTS urgent BOOLEAN DEFAULT false;
+ALTER TABLE hq_approvals ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ;
+
 -- ── hq_files: 보안 등급 (이미 있을 수 있음) ────────────
 ALTER TABLE hq_files ADD COLUMN IF NOT EXISTS security TEXT DEFAULT '내부용';
 
