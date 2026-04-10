@@ -256,7 +256,10 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
   }, [loadTeam]);
 
   useEffect(() => {
-    if (mode === "team" && isAtBottom.current) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (mode === "team" && isAtBottom.current) {
+      const el = scrollContainerRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    }
   }, [messages, mode]);
 
   const handleScroll = () => {
@@ -269,7 +272,8 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
   };
 
   const scrollToBottom = () => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
     setShowScrollBtn(false); setUnreadCount(0); lastSeenCount.current = messages.length;
   };
 
@@ -406,7 +410,10 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
 
   // Auto scroll DM
   useEffect(() => {
-    if (mode === "dm" && dmTarget) dmBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (mode === "dm" && dmTarget) {
+      const el = dmScrollContainerRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    }
   }, [dmMessages, mode, dmTarget]);
 
   const sendDm = async () => {

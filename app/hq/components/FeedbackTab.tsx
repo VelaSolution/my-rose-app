@@ -37,6 +37,26 @@ export default function FeedbackTab({ userId, userName, myRole, flash }: Props) 
   const [selected, setSelected] = useState<Feedback | null>(null);
   const [comments, setComments] = useState<{ id: string; author: string; text: string; time: string }[]>([]);
   const [commentText, setCommentText] = useState("");
+  const [roleMap, setRoleMap] = useState<Record<string, string>>({});
+
+  // 팀원 직책 맵 로드
+  useEffect(() => {
+    (async () => {
+      const s = sb();
+      if (!s) return;
+      const { data } = await s.from("hq_team").select("name, hq_role").neq("approved", false);
+      if (data) {
+        const map: Record<string, string> = {};
+        for (const m of data as any[]) if (m.name && m.hq_role) map[m.name] = m.hq_role;
+        setRoleMap(map);
+      }
+    })();
+  }, []);
+
+  const displayName = (name: string) => {
+    const role = roleMap[name];
+    return role ? `${role} ${name}` : name;
+  };
 
   const load = async () => {
     const s = sb();
@@ -153,7 +173,7 @@ export default function FeedbackTab({ userId, userName, myRole, flash }: Props) 
                 <p className="text-sm text-slate-700 whitespace-pre-wrap">{selected.description || "설명 없음"}</p>
               </div>
               <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>작성자: {selected.author} · {selected.date}</span>
+                <span>작성자: {displayName(selected.author)} · {selected.date}</span>
               </div>
 
               {/* 댓글 */}
@@ -170,7 +190,7 @@ export default function FeedbackTab({ userId, userName, myRole, flash }: Props) 
                             <div className="w-5 h-5 bg-[#3182F6] rounded-full flex items-center justify-center">
                               <span className="text-[9px] text-white font-bold">{c.author[0]}</span>
                             </div>
-                            <span className="text-xs font-semibold text-slate-700">{c.author}</span>
+                            <span className="text-xs font-semibold text-slate-700">{displayName(c.author)}</span>
                             <span className="text-[10px] text-slate-400">{new Date(c.time).toLocaleString("ko-KR")}</span>
                           </div>
                           {c.author === userName && (
@@ -277,7 +297,7 @@ export default function FeedbackTab({ userId, userName, myRole, flash }: Props) 
               <p className="text-sm text-slate-500 mb-3 line-clamp-2">{fb.description}</p>
               <div className="flex items-center justify-between">
                 <div className="text-xs text-slate-400">
-                  <span>{fb.author}</span>
+                  <span>{displayName(fb.author)}</span>
                   <span className="mx-1.5">·</span>
                   <span>{fb.date}</span>
                 </div>

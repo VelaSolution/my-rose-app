@@ -33,10 +33,9 @@ export default function EventPopup() {
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", padding: 16 }}
-      onClick={close}
+      onClick={(e) => { if (e.target === e.currentTarget) close(); }}
     >
       <div
-        onClick={(e) => e.stopPropagation()}
         style={{
           background: "#fff",
           borderRadius: 24,
