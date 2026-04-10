@@ -19,14 +19,14 @@ const STATUS_COLOR: Record<string, string> = {
   "출장": "bg-purple-50 text-purple-700",
 };
 
-const DAY_LABELS = ["월", "화", "수", "목", "금"];
+const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
 
 function getWeekDates(): string[] {
   const now = new Date();
   const day = now.getDay();
   const monday = new Date(now);
   monday.setDate(now.getDate() - ((day === 0 ? 7 : day) - 1));
-  return Array.from({ length: 5 }, (_, i) => {
+  return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     return d.toISOString().slice(0, 10);
