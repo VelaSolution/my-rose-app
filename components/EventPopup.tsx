@@ -1,19 +1,39 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useModalDismiss } from "@/lib/useModalDismiss";
 
 export default function EventPopup() {
-  const { show, dismiss, dismissToday } = useModalDismiss(
-    "vela-event-dismissed", "open-beta-2026-04", "vela-event-today", 800
-  );
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    try {
+      const dismissKey = "vela-event-dismissed";
+      const dismissId = "open-beta-2026-04";
+      const todayKey = "vela-event-today";
+      if (localStorage.getItem(dismissKey) === dismissId) return;
+      if (localStorage.getItem(todayKey) === new Date().toISOString().slice(0, 10)) return;
+      const timer = setTimeout(() => setShow(true), 800);
+      return () => clearTimeout(timer);
+    } catch {}
+  }, []);
+
+  const close = () => {
+    try { localStorage.setItem("vela-event-today", new Date().toISOString().slice(0, 10)); } catch {}
+    setShow(false);
+  };
+
+  const closeForever = () => {
+    try { localStorage.setItem("vela-event-dismissed", "open-beta-2026-04"); } catch {}
+    setShow(false);
+  };
 
   if (!show) return null;
 
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", padding: 16 }}
-      onClick={dismissToday}
+      onClick={close}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -40,7 +60,7 @@ export default function EventPopup() {
             EVENT
           </span>
           <button
-            onClick={(e) => { e.stopPropagation(); dismissToday(); }}
+            onClick={close}
             aria-label="닫기"
             style={{ fontSize: 11, color: "#9EA6B3", background: "#F2F4F6", padding: "3px 10px", borderRadius: 100, fontWeight: 600, border: "none", cursor: "pointer" }}
           >
@@ -98,7 +118,7 @@ export default function EventPopup() {
         {/* CTA */}
         <Link
           href="/event/feedback"
-          onClick={dismiss}
+          onClick={closeForever}
           style={{ display: "block", width: "100%", textAlign: "center", background: "#3182F6", color: "#fff", padding: "14px 0", borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: "none", transition: "background 0.15s" }}
         >
           지금 참여하기
@@ -106,11 +126,11 @@ export default function EventPopup() {
 
         <p style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: "#9EA6B3" }}>
           소요 시간 약 5분 ·{" "}
-          <button onClick={dismiss} style={{ background: "none", border: "none", color: "#9EA6B3", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
+          <button onClick={closeForever} style={{ background: "none", border: "none", color: "#9EA6B3", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
             다시 보지 않기
           </button>
           {" · "}
-          <button onClick={dismissToday} style={{ background: "none", border: "none", color: "#9EA6B3", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
+          <button onClick={close} style={{ background: "none", border: "none", color: "#9EA6B3", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
             오늘 하루 안 보기
           </button>
         </p>

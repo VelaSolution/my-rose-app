@@ -182,17 +182,23 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
   const isAtBottom = useRef(true);
 
   // Load team members
+  const [allMembers, setAllMembers] = useState<TeamMemberSimple[]>([]);
   useEffect(() => {
     (async () => {
       const s = sb();
       if (!s) return;
-      const { data } = await s.from("hq_team").select("id, name").eq("status", "active");
-      if (data) setTeamMembers((data as TeamMemberSimple[]).filter(m => m.name !== userName));
+      const { data } = await s.from("hq_team").select("id, name").neq("approved", false);
+      if (data) {
+        const members = data as TeamMemberSimple[];
+        setAllMembers(members);
+        setTeamMembers(members.filter(m => m.name !== userName));
+      }
     })();
   }, [userName]);
 
+  // 멘션: 전체 팀원 (자신 포함), DM 목록: 자신 제외
   const filteredMembers = mentionQuery !== null
-    ? teamMembers.filter(m => m.name.includes(mentionQuery))
+    ? allMembers.filter(m => m.name.includes(mentionQuery))
     : [];
 
   const insertMention = (name: string) => {

@@ -1023,7 +1023,9 @@ export default function HomePage() {
   return (
     <>
       <EventPopup />
-      {hasHash ? <LandingContent /> : loggedIn ? <MemberHome /> : <LandingContent />}
+      <div className="pb-20 md:pb-0">
+        {hasHash ? <LandingContent /> : loggedIn ? <MemberHome /> : <LandingContent />}
+      </div>
     </>
   );
 }

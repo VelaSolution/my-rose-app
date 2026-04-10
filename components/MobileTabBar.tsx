@@ -17,6 +17,8 @@ export default function MobileTabBar() {
   const pathname = usePathname();
   const [isHqMember, setIsHqMember] = useState(false);
 
+  if (pathname?.startsWith("/hq")) return null;
+
   useEffect(() => {
     (async () => {
       try {

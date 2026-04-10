@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { User } from "@supabase/supabase-js";
 import { getLocale, t, type Locale } from "@/lib/i18n";
@@ -37,11 +38,14 @@ const TOOLS = [
 ] as const;
 
 export default function NavBar() {
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [isHqMember, setIsHqMember] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [locale, setLocaleState] = useState<Locale>("ko");
   useEffect(() => { setLocaleState(getLocale()); }, []);
+
+  if (pathname?.startsWith("/hq")) return null;
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
