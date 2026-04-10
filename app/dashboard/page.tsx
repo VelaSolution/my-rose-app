@@ -197,7 +197,7 @@ export default function DashboardHome() {
 
   const name = user?.user_metadata?.nickname || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "사장님";
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "좋은 아침이에요" : hour < 18 ? "안녕하세요" : "오늘도 수고하셨어요";
+  const greeting = hour < 6 ? "늦은 밤이에요" : hour < 12 ? "좋은 아침이에요" : hour < 18 ? "안녕하세요" : "오늘도 수고하셨어요";
   const latestSnap = snapshots[0];
   const avgCostRate = menus.length > 0 ? menus.reduce((a, m) => a + (m.cost_rate || 0), 0) / menus.length : 0;
   const totalRevenue = snapshots.reduce((a, s) => a + s.total_sales, 0);

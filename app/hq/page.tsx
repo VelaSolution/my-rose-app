@@ -251,12 +251,9 @@ export default function HQPage() {
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition">
               <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
             </button>
-            <button onClick={() => setTab("dashboard")} className="flex items-center gap-2">
-              <svg width="28" height="28" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="512" height="512" rx="100" fill="#3182F6"/>
-                <text x="256" y="340" textAnchor="middle" fill="white" fontSize="280" fontWeight="800" fontFamily="sans-serif">V</text>
-              </svg>
-              <span className="text-base font-bold text-slate-900 tracking-tight hidden sm:block">VELA HQ</span>
+            <button onClick={() => setTab("dashboard")} className="flex items-center gap-1.5">
+              <span className="text-lg font-extrabold text-slate-900 tracking-tight" style={{ letterSpacing: "-0.02em" }}>VELA<span style={{ color: "#3182F6" }}>.</span></span>
+              <span className="text-sm font-bold text-slate-400">HQ</span>
             </button>
           </div>
 
