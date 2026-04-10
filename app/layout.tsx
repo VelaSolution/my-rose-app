@@ -68,6 +68,9 @@ export default function RootLayout({
                 (!localStorage.getItem('vela-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
               document.documentElement.classList.add('dark');
             }
+            if (window.location.pathname.startsWith('/hq')) {
+              document.documentElement.classList.add('is-hq');
+            }
           } catch {}
         ` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({

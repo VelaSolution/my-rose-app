@@ -496,3 +496,8 @@ html.dark .from-blue-50.to-indigo-50 { background: rgba(59,130,246,0.1) !importa
 .vela-theme-toggle:hover { border-color: #333D4B; }
 html.dark .vela-theme-toggle { border-color: #334155 !important; }
 html.dark .vela-theme-toggle:hover { border-color: #94A3B8 !important; }
+
+/* HQ 페이지: NavBar/MobileTabBar 즉시 숨김 (hydration 전) */
+html.is-hq .vela-nav,
+html.is-hq .vela-mobile-tab { display: none !important; }
+html.is-hq body { padding-top: 0 !important; }
