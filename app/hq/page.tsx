@@ -236,7 +236,7 @@ export default function HQPage() {
       `}</style>
 
       {/* ── 헤더 (compact on mobile) ───────────────────── */}
-      <header className="bg-white border-b border-slate-200/80 px-3 lg:px-6 py-2 lg:py-3 sticky top-0 z-50" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <header className="bg-white border-b border-slate-200/80 px-3 lg:px-6 py-2 lg:py-3 fixed top-0 left-0 right-0 z-50" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 lg:gap-3">
             {/* 모바일 햄버거 */}
@@ -337,7 +337,7 @@ export default function HQPage() {
         </aside>
       </div>
 
-      <div className="flex h-[calc(100vh-45px)] lg:h-[calc(100vh-53px)]">
+      <div className="flex mt-[calc(45px+env(safe-area-inset-top))] lg:mt-[calc(53px+env(safe-area-inset-top))]" style={{ height: "calc(100vh - 45px - env(safe-area-inset-top))" }}>
         {/* ── 데스크톱 사이드바 (독립 스크롤) ─────────── */}
         <aside className="hidden md:flex flex-col w-[240px] bg-white border-r border-slate-200/80 overflow-y-auto flex-shrink-0">
           <nav className="flex-1 px-3 py-4">
