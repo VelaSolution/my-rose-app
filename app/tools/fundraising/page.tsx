@@ -111,20 +111,67 @@ export default function FundraisingPage() {
     if (selected.industry !== undefined) setIndustry(selected.industry as string);
   };
 
-  const multiples: Record<string, [number, number]> = { cafe: [1.5, 3], restaurant: [2, 4], bar: [1.5, 3], finedining: [2.5, 5], gogi: [2, 4] };
-  const [mLow, mHigh] = multiples[industry] ?? [2, 4];
+  // 업종별 PSR(매출 멀티플) 범위 — 외식업 기준
+  const PSR: Record<string, [number, number]> = { cafe: [0.8, 1.5], restaurant: [0.6, 1.2], bar: [0.7, 1.3], finedining: [1.0, 2.0], gogi: [0.7, 1.3] };
+  // 업종별 PER(이익 멀티플) 범위
+  const PER: Record<string, [number, number]> = { cafe: [5, 8], restaurant: [4, 7], bar: [4, 7], finedining: [6, 10], gogi: [4, 7] };
+  // 업종별 EV/EBITDA 범위
+  const EBITDA_MULT: Record<string, [number, number]> = { cafe: [3, 6], restaurant: [3, 5], bar: [2.5, 5], finedining: [4, 7], gogi: [3, 5] };
+
+  const [psrL, psrH] = PSR[industry] ?? [0.7, 1.3];
+  const [perL, perH] = PER[industry] ?? [4, 7];
+  const [evL, evH] = EBITDA_MULT[industry] ?? [3, 5];
 
   const valuation = useMemo(() => {
-    const revLow = annualRev * mLow;
-    const revHigh = annualRev * mHigh;
-    const profitLow = annualProfit * 5;
-    const profitHigh = annualProfit * 10;
+    // 1. PSR (Price-to-Sales Ratio) — 매출 기반
+    const psrLow = annualRev * psrL;
+    const psrHigh = annualRev * psrH;
+
+    // 2. PER (Price-to-Earnings Ratio) — 순이익 기반
+    const perLow = annualProfit > 0 ? annualProfit * perL : 0;
+    const perHigh = annualProfit > 0 ? annualProfit * perH : 0;
+
+    // 3. EV/EBITDA — EBITDA 기반 (순이익 + 감가상각 추정 10%)
+    const ebitda = annualProfit > 0 ? annualProfit * 1.1 : 0;
+    const evLow = ebitda * evL;
+    const evHigh = ebitda * evH;
+
+    // 4. 순자산가치법 (자산 기반)
     const assetVal = tangibleAssets;
-    const low = Math.max(revLow, profitLow, assetVal);
-    const high = Math.max(revHigh, profitHigh, assetVal);
-    const equityPct = investAmount > 0 && high > 0 ? Math.round(investAmount / ((low + high) / 2) * 100) : 0;
-    return { revLow, revHigh, profitLow, profitHigh, assetVal, low, high, equityPct };
-  }, [annualRev, annualProfit, tangibleAssets, investAmount, mLow, mHigh]);
+
+    // 5. DCF 간이 (할인율 15%, 5년 기준)
+    const discountRate = 0.15;
+    const growthRate = 0.05; // 보수적 5% 성장
+    let dcfVal = 0;
+    for (let y = 1; y <= 5; y++) {
+      dcfVal += (annualProfit * Math.pow(1 + growthRate, y)) / Math.pow(1 + discountRate, y);
+    }
+    // 잔존가치 (터미널 밸류)
+    const terminalVal = annualProfit > 0
+      ? (annualProfit * Math.pow(1 + growthRate, 5) * (1 + growthRate)) / (discountRate - growthRate) / Math.pow(1 + discountRate, 5)
+      : 0;
+    dcfVal += terminalVal;
+
+    // 종합: 가중평균 (PSR 20%, PER 30%, EV/EBITDA 20%, 자산 10%, DCF 20%)
+    const methods = [
+      { name: "PSR (매출기반)", low: psrLow, high: psrHigh, weight: 0.2 },
+      { name: "PER (이익기반)", low: perLow, high: perHigh, weight: 0.3 },
+      { name: "EV/EBITDA", low: evLow, high: evHigh, weight: 0.2 },
+      { name: "순자산가치", low: assetVal, high: assetVal, weight: 0.1 },
+      { name: "DCF (현금흐름)", low: dcfVal * 0.8, high: dcfVal * 1.2, weight: 0.2 },
+    ];
+
+    const low = Math.round(methods.reduce((s, m) => s + m.low * m.weight, 0));
+    const high = Math.round(methods.reduce((s, m) => s + m.high * m.weight, 0));
+    const mid = Math.round((low + high) / 2);
+
+    // Pre-money / Post-money / 지분율
+    const preMoney = mid;
+    const postMoney = preMoney + investAmount;
+    const equityPct = investAmount > 0 && postMoney > 0 ? Math.round(investAmount / postMoney * 1000) / 10 : 0;
+
+    return { methods, low, high, mid, preMoney, postMoney, equityPct, dcfVal: Math.round(dcfVal) };
+  }, [annualRev, annualProfit, tangibleAssets, investAmount, psrL, psrH, perL, perH, evL, evH]);
 
   const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-blue-400 focus:bg-white outline-none transition";
   const cardCls = "bg-white ring-1 ring-slate-200 rounded-3xl p-6 mb-4";
@@ -190,28 +237,32 @@ export default function FundraisingPage() {
               </div>
               {(annualRev > 0 || annualProfit > 0) && (
                 <div className={cardCls}>
-                  <h3 className="font-bold text-slate-900 text-sm mb-3">📊 추정 밸류에이션</h3>
+                  <h3 className="font-bold text-slate-900 text-sm mb-3">📊 추정 밸류에이션 (5가지 방법론)</h3>
                   <div className="space-y-2 mb-4 text-xs">
-                    <div className="flex justify-between py-2 border-b border-slate-50">
-                      <span className="text-slate-600">매출 멀티플 ({mLow}~{mHigh}x)</span>
-                      <span className="font-bold">{fmt(valuation.revLow)} ~ {fmt(valuation.revHigh)}만원</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-slate-50">
-                      <span className="text-slate-600">순이익 멀티플 (5~10x)</span>
-                      <span className="font-bold">{fmt(valuation.profitLow)} ~ {fmt(valuation.profitHigh)}만원</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-slate-50">
-                      <span className="text-slate-600">자산 기반</span>
-                      <span className="font-bold">{fmt(valuation.assetVal)}만원</span>
-                    </div>
+                    {valuation.methods.map(m => (
+                      <div key={m.name} className="flex justify-between py-2 border-b border-slate-50">
+                        <div>
+                          <span className="text-slate-700 font-medium">{m.name}</span>
+                          <span className="text-slate-400 ml-1">(가중치 {Math.round(m.weight * 100)}%)</span>
+                        </div>
+                        <span className="font-bold">{m.low > 0 ? `${fmt(Math.round(m.low))} ~ ${fmt(Math.round(m.high))}만원` : "-"}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="bg-amber-50 rounded-xl p-4 text-center">
-                    <p className="text-xs text-slate-500 mb-1">종합 추정 밸류에이션</p>
+                  <div className="bg-amber-50 rounded-xl p-4 text-center mb-3">
+                    <p className="text-xs text-slate-500 mb-1">가중평균 기업가치 (Pre-money)</p>
                     <p className="text-xl font-extrabold text-amber-600">{fmt(valuation.low)} ~ {fmt(valuation.high)}만원</p>
-                    {investAmount > 0 && (
-                      <p className="text-xs text-slate-500 mt-2">투자 {fmt(investAmount)}만원 시 예상 지분율: <b className="text-amber-600">{valuation.equityPct}%</b></p>
-                    )}
+                    <p className="text-sm font-bold text-amber-700 mt-1">중간값: {fmt(valuation.mid)}만원</p>
                   </div>
+                  {investAmount > 0 && (
+                    <div className="bg-blue-50 rounded-xl p-4 text-xs space-y-1">
+                      <div className="flex justify-between"><span className="text-slate-600">Pre-money 밸류에이션</span><span className="font-bold text-slate-800">{fmt(valuation.preMoney)}만원</span></div>
+                      <div className="flex justify-between"><span className="text-slate-600">+ 투자금</span><span className="font-bold text-[#3182F6]">{fmt(investAmount)}만원</span></div>
+                      <div className="flex justify-between border-t border-blue-100 pt-1"><span className="text-slate-600">Post-money 밸류에이션</span><span className="font-bold text-slate-800">{fmt(valuation.postMoney)}만원</span></div>
+                      <div className="flex justify-between"><span className="text-slate-600">예상 투자자 지분율</span><span className="font-extrabold text-[#3182F6] text-sm">{valuation.equityPct}%</span></div>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-slate-400 mt-3">※ PSR·PER·EV/EBITDA는 업종별 평균 멀티플, DCF는 할인율 15%·성장률 5% 기준입니다. 실제 투자 심사 시 세부 조정이 필요합니다.</p>
                 </div>
               )}
             </>

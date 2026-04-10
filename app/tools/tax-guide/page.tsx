@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
-import SimDataPicker from "@/components/SimDataPicker";
-import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 const TABS = ["세금 캘린더", "부가세", "종합소득세", "4대보험", "절세 전략"] as const;
 type Tab = (typeof TABS)[number];
@@ -80,16 +78,6 @@ export default function TaxGuidePage() {
   const [tab, setTab] = useState<Tab>("세금 캘린더");
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const simFields = (sim: SimulatorSnapshot) => [
-    { key: "vatSales", label: "월 매출 (부가세용)", value: `${Math.round(sim.totalSales / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales / 10000) },
-    { key: "vatPurchase", label: "월 매입 (부가세용)", value: `${Math.round(sim.totalSales * sim.cogsRatio / 100 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales * sim.cogsRatio / 100 / 10000) },
-    { key: "revenue", label: "연 매출 (소득세용)", value: `${Math.round(sim.totalSales * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales * 12 / 10000) },
-  ];
-  const applySimSelected = (selected: Record<string, number | string>) => {
-    if (selected.vatSales !== undefined) setVatSales(selected.vatSales as number);
-    if (selected.vatPurchase !== undefined) setVatPurchase(selected.vatPurchase as number);
-    if (selected.revenue !== undefined) setRevenue(selected.revenue as number);
-  };
   // 부가세 계산기
   const [vatType, setVatType] = useState<"일반" | "간이">("일반");
   const [vatSales, setVatSales] = useState(0);
@@ -157,7 +145,6 @@ export default function TaxGuidePage() {
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">세무·회계 가이드</h1>
             <p className="text-slate-500 text-sm">외식업 사장님을 위한 세금·회계 실무 가이드</p>
-            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">
