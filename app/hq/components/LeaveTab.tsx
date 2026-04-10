@@ -387,7 +387,7 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
                   <p className="text-xs text-slate-400 mt-0.5">{r.reason}</p>
                 </div>
                 <div className="flex gap-2 ml-3 shrink-0">
-                  {isManager && r.status === "대기" && r.requester !== userName && (
+                  {isManager && r.status === "대기" && (myRole === "대표" || r.requester !== userName) && (
                     <>
                       <button onClick={() => updateStatus(r.id, "승인")} className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 transition-colors">
                         승인
