@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import DataBackup from "@/components/DataBackup";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import ConsentManager from "@/components/ConsentManager";
@@ -258,7 +259,7 @@ export default function ProfilePage() {
           <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200 flex items-center gap-4 flex-wrap">
             <button onClick={()=>fileRef.current?.click()} className="group relative flex-shrink-0">
               {avatar
-                ? <img src={avatar} alt="프로필" className="h-14 w-14 rounded-full object-cover"/>
+                ? <Image src={avatar} alt="프로필" width={56} height={56} className="h-14 w-14 rounded-full object-cover"/>
                 : <div className="h-14 w-14 rounded-full bg-slate-900 flex items-center justify-center text-white text-xl font-bold">
                     {displayName[0]?.toUpperCase()??"U"}
                   </div>
@@ -333,7 +334,7 @@ export default function ProfilePage() {
                 <h3 className="text-sm font-bold text-slate-900">프로필 사진</h3>
                 <div className="flex items-center gap-4">
                   {avatar
-                    ? <img src={avatar} alt="프로필" className="h-16 w-16 rounded-full object-cover"/>
+                    ? <Image src={avatar} alt="프로필" width={64} height={64} className="h-16 w-16 rounded-full object-cover"/>
                     : <div className="h-16 w-16 rounded-full bg-slate-900 flex items-center justify-center text-white text-2xl font-bold">
                         {displayName[0]?.toUpperCase()??"U"}
                       </div>

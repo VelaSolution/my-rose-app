@@ -118,6 +118,17 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
   };
   const handleDragEnd = () => setDragItem(null);
 
+  const moveWidget = (key: SectionKey, dir: -1 | 1) => {
+    updatePrefs(prev => {
+      const order = [...prev.order];
+      const idx = order.indexOf(key);
+      const target = idx + dir;
+      if (target < 0 || target >= order.length) return prev;
+      [order[idx], order[target]] = [order[target], order[idx]];
+      return { ...prev, order };
+    });
+  };
+
   const isSectionVisible = (key: SectionKey) => !widgetPrefs.hidden.includes(key);
 
   useEffect(() => {
@@ -343,7 +354,7 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
         </div>
       )}
 
-      {/* 출근 완료 상태 */}
+      {/* 출근 완료 → 퇴근 대기 */}
       {!loading && todayAttendance && !todayAttendance.clockOut && (
         <div className={`${C} border-emerald-300 border bg-emerald-50/30`}>
           <div className="flex items-center justify-between gap-4">
@@ -357,6 +368,19 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
             <button onClick={() => go("attendance")} className="rounded-xl bg-slate-700 text-white font-semibold px-5 py-2.5 text-sm hover:bg-slate-800 transition-all flex-shrink-0">
               🕕 퇴근하기
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 퇴근 완료 */}
+      {!loading && todayAttendance && todayAttendance.clockOut && (
+        <div className={`${C} border-slate-200 bg-slate-50/50`}>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🏠</span>
+            <div>
+              <p className="text-sm font-semibold text-slate-600">오늘 근무 완료</p>
+              <p className="text-xs text-slate-400">출근 {todayAttendance.clockIn} · 퇴근 {todayAttendance.clockOut}</p>
+            </div>
           </div>
         </div>
       )}
@@ -468,6 +492,8 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
                   </span>
                   <span className="text-sm">{sec.icon}</span>
                   <span className="text-sm font-medium text-slate-700 flex-1">{sec.label}</span>
+                  <button onClick={() => moveWidget(key, -1)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 md:hidden" title="위로">▲</button>
+                  <button onClick={() => moveWidget(key, 1)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 md:hidden" title="아래로">▼</button>
                   <button
                     onClick={() => toggleVisibility(key)}
                     className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${

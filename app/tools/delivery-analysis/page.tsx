@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import * as XLSX from "xlsx";
+// xlsx는 파일 업로드 시에만 동적 로드 (311KB 번들 절감)
 import { fmt } from "@/lib/vela";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
@@ -55,6 +55,7 @@ export default function DeliveryAnalysisPage() {
     setLoading(true); setError("");
 
     try {
+      const XLSX = await import("xlsx");
       const buffer = await file.arrayBuffer();
       const wb = XLSX.read(buffer, { type: "array" });
       const sheet = wb.Sheets[wb.SheetNames[0]];

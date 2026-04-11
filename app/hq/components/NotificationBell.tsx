@@ -42,12 +42,32 @@ function timeAgo(dateStr: string): string {
   return `${d}일 전`;
 }
 
+// 브라우저 알림 보내기
+function sendBrowserNotification(title: string, body: string) {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  if (window.Notification.permission !== "granted") return;
+  if (document.hasFocus()) return; // 탭 활성 상태면 안 보냄
+  try {
+    new window.Notification(title, { body, icon: "/icon.svg", tag: "vela-hq" });
+  } catch {}
+}
+
 export default function NotificationBell({ userId, userName, myRole, onNavigate }: Props) {
   const { displayName } = useTeamDisplayNames();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  // 브라우저 알림 권한 요청
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (window.Notification.permission === "granted") { setPushEnabled(true); return; }
+    if (window.Notification.permission === "default") {
+      window.Notification.requestPermission().then(p => setPushEnabled(p === "granted"));
+    }
+  }, []);
 
   const fetchNotifications = useCallback(async () => {
     const s = sb();
@@ -99,14 +119,26 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
   useEffect(() => {
     const s = sb();
     if (!s) return;
+    const withPush = (title: string) => (payload: any) => {
+      fetchNotifications();
+      const sender = payload.new?.sender || payload.new?.author || "";
+      if (sender && sender !== userName) {
+        sendBrowserNotification("VELA HQ", `${title}: ${sender}`);
+      }
+    };
     const channel = s
       .channel("hq_notifications")
-      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_chat" }, () => fetchNotifications())
-      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_dm" }, () => fetchNotifications())
-      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_approvals" }, () => fetchNotifications())
-      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_notices" }, () => fetchNotifications())
-      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_feedback" }, () => fetchNotifications())
-      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_board" }, () => fetchNotifications())
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_chat" }, withPush("새 팀 채팅"))
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_dm" }, (payload: any) => {
+        fetchNotifications();
+        if (payload.new?.receiver === userName) {
+          sendBrowserNotification("VELA HQ", `DM: ${payload.new.sender}`);
+        }
+      })
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_approvals" }, withPush("새 결재 요청"))
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_notices" }, withPush("새 공지"))
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_feedback" }, withPush("새 피드백"))
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "hq_board" }, withPush("새 게시글"))
       .on("postgres_changes" as any, { event: "UPDATE", schema: "public", table: "hq_leave" }, () => fetchNotifications())
       .subscribe();
     return () => { s.removeChannel(channel); };
@@ -160,12 +192,22 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
       {open && (
         <div className="absolute right-0 top-10 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900">알림</h3>
-            {unreadCount > 0 && (
-              <button onClick={markAllRead} className="text-xs text-[#3182F6] font-semibold hover:underline">
-                모두 읽음
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900">알림</h3>
+              {pushEnabled && <span className="text-[10px] text-emerald-500 font-semibold">푸시 ON</span>}
+            </div>
+            <div className="flex items-center gap-2">
+              {!pushEnabled && typeof window !== "undefined" && "Notification" in window && window.Notification.permission === "default" && (
+                <button onClick={() => window.Notification.requestPermission().then(p => setPushEnabled(p === "granted"))} className="text-[10px] text-slate-400 hover:text-[#3182F6] font-semibold">
+                  푸시 허용
+                </button>
+              )}
+              {unreadCount > 0 && (
+                <button onClick={markAllRead} className="text-xs text-[#3182F6] font-semibold hover:underline">
+                  모두 읽음
+                </button>
+              )}
+            </div>
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (

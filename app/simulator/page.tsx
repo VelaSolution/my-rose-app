@@ -1731,13 +1731,37 @@ export default function Page() {
     }
 
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
+    const localForm = saved ? (() => { try { return sanitizeFullForm(JSON.parse(saved)); } catch { return null; } })() : null;
+    if (localForm) setForm(localForm);
 
-    try {
-      setForm(sanitizeFullForm(JSON.parse(saved)));
-    } catch (error) {
-      console.error("저장값 불러오기 실패", error);
-    }
+    // 클라우드에 더 최신 데이터가 있는지 확인
+    (async () => {
+      try {
+        const sb = createSupabaseBrowserClient();
+        const { data: { user } } = await sb.auth.getUser() as { data: { user: { id: string } | null } };
+        if (!user) return;
+        const { data: rows } = await sb
+          .from("tool_saves")
+          .select("data, updated_at")
+          .eq("user_id", user.id)
+          .eq("tool_key", "vela-form-v3")
+          .limit(1);
+        if (rows && rows.length > 0 && rows[0].data) {
+          const cloudData = rows[0].data;
+          const localStr = localStorage.getItem(STORAGE_KEY);
+          const cloudStr = JSON.stringify(cloudData);
+          if (localStr !== cloudStr) {
+            // 클라우드와 로컬이 다르면 클라우드 데이터로 업데이트 안내
+            const useCloud = confirm("다른 기기에서 저장한 최신 데이터가 있습니다. 불러올까요?");
+            if (useCloud) {
+              const cloudForm = sanitizeFullForm(cloudData);
+              setForm(cloudForm);
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudForm));
+            }
+          }
+        }
+      } catch {}
+    })();
   }, []);
 
   const update = (key: keyof FullForm, value: unknown) => {
@@ -1874,6 +1898,19 @@ export default function Page() {
 
     setStepError("");
     localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
+
+    // 로그인 시 클라우드에도 자동 백업 (비동기, 기다리지 않음)
+    try {
+      const sb = createSupabaseBrowserClient();
+      sb.auth.getUser().then(({ data: { user } }: { data: { user: { id: string } | null } }) => {
+        if (!user) return;
+        sb.from("tool_saves").upsert(
+          { user_id: user.id, tool_key: "vela-form-v3", data: form, updated_at: new Date().toISOString() },
+          { onConflict: "user_id,tool_key" }
+        );
+      });
+    } catch {}
+
     router.push(`/result?${buildQuery(form)}`);
   };
 
