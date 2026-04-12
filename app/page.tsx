@@ -1,511 +1,270 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { PLANS } from "@/lib/plans";
-import EventBanner from "@/components/EventBanner";
 import EventPopup from "@/components/EventPopup";
-import { useTranslation } from "@/lib/i18n";
 
-const MemberHome = dynamic(() => import("@/app/components/MemberHome"), {
-  loading: () => (
-    <div className="min-h-screen bg-slate-50">
-      <div className="flex items-center justify-center h-[80vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
-      </div>
-    </div>
-  ),
-});
-
-function useInView() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold: 0.1 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return { ref, inView };
-}
-
-function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
-  const { ref, inView } = useInView();
-  return (
-    <div ref={ref} className={className} style={{ opacity: inView ? 1 : 0, transform: inView ? "none" : "translateY(24px)", transition: `opacity .6s ease ${delay}ms, transform .6s ease ${delay}ms` }}>
-      {children}
-    </div>
-  );
-}
-
-function HeroMiniSim() {
-  const t = useTranslation();
+/* ── 미니 시뮬레이터 ── */
+function MiniSim() {
   const [seats, setSeats] = useState(28);
   const [spend, setSpend] = useState(20000);
   const [turn, setTurn] = useState(1.4);
   const [cogsRate, setCogsRate] = useState(33);
-  const [rent, setRent] = useState(250);
-  const [labor, setLabor] = useState(600);
+
   const sales = Math.round(seats * spend * turn * 26);
-  const cost = Math.round(sales * cogsRate / 100 + labor * 10000 + rent * 10000 + 500000);
+  const cost = Math.round(sales * cogsRate / 100 + 600 * 10000 + 250 * 10000 + 500000);
   const profit = sales - cost;
   const margin = sales > 0 ? ((profit / sales) * 100).toFixed(1) : "0";
   const fmt = (n: number) => Math.abs(n).toLocaleString("ko-KR");
 
+  const sliders = [
+    { label: "좌석 수", value: seats, display: `${seats}석`, min: 5, max: 80, step: 1, set: setSeats },
+    { label: "객단가", value: spend, display: `${spend.toLocaleString()}원`, min: 3000, max: 100000, step: 1000, set: setSpend },
+    { label: "회전율", value: turn, display: `${turn.toFixed(1)}회`, min: 0.5, max: 6, step: 0.1, set: setTurn },
+    { label: "원가율", value: cogsRate, display: `${cogsRate}%`, min: 15, max: 55, step: 1, set: setCogsRate },
+  ];
+
   return (
-    <div className="hero-mini-sim" style={{background:"var(--gray-50)",borderRadius:24,padding:28,boxShadow:"0 20px 60px rgba(0,0,0,0.08)",border:"1px solid var(--gray-200)",position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",top:0,right:0,width:120,height:120,background:"radial-gradient(circle,rgba(49,130,246,0.08),transparent)",borderRadius:"0 0 0 120px"}} />
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>🔮 {t("hero.preview")}</span>
-        </div>
-        <span style={{fontSize:11,color:"#9EA6B3",background:"#F2F4F6",padding:"3px 10px",borderRadius:100,fontWeight:600}}>{t("hero.drag")}</span>
+    <div className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-lg p-5 sm:p-7">
+      <div className="flex items-center justify-between mb-5">
+        <span className="text-sm font-bold text-slate-900">수익 미리보기</span>
+        <span className="text-[11px] text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full font-semibold">슬라이더를 움직여보세요</span>
       </div>
 
-      <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:20}}>
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>{t("hero.seats")}</span>
-            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{seats}</span>
+      <div className="space-y-4 mb-5">
+        {sliders.map((s) => (
+          <div key={s.label}>
+            <div className="flex justify-between mb-1.5">
+              <span className="text-xs text-slate-500">{s.label}</span>
+              <span className="text-xs font-bold text-slate-900">{s.display}</span>
+            </div>
+            <input
+              type="range" min={s.min} max={s.max} step={s.step} value={s.value}
+              onChange={(e) => s.set(Number(e.target.value))}
+              className="w-full accent-blue-500 h-1.5"
+            />
           </div>
-          <input type="range" min={5} max={80} value={seats} onChange={e=>setSeats(Number(e.target.value))}
-            style={{width:"100%",accentColor:"#3182F6",height:6}} />
-        </div>
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>{t("hero.avgSpend")}</span>
-            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{spend.toLocaleString()} KRW</span>
-          </div>
-          <input type="range" min={3000} max={100000} step={1000} value={spend} onChange={e=>setSpend(Number(e.target.value))}
-            style={{width:"100%",accentColor:"#3182F6",height:6}} />
-        </div>
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>{t("hero.turnover")}</span>
-            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{turn.toFixed(1)}x</span>
-          </div>
-          <input type="range" min={0.5} max={6} step={0.1} value={turn} onChange={e=>setTurn(Number(e.target.value))}
-            style={{width:"100%",accentColor:"#3182F6",height:6}} />
-        </div>
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>원가율</span>
-            <span style={{fontSize:14,fontWeight:700,color:cogsRate>40?"#EF4444":"#191F28"}}>{cogsRate}%</span>
-          </div>
-          <input type="range" min={15} max={55} value={cogsRate} onChange={e=>setCogsRate(Number(e.target.value))}
-            style={{width:"100%",accentColor:"#3182F6",height:6}} />
-        </div>
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>월 임대료</span>
-            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{rent}만원</span>
-          </div>
-          <input type="range" min={50} max={1500} step={10} value={rent} onChange={e=>setRent(Number(e.target.value))}
-            style={{width:"100%",accentColor:"#3182F6",height:6}} />
-        </div>
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <span style={{fontSize:13,color:"#6B7684",fontWeight:500}}>월 인건비</span>
-            <span style={{fontSize:14,fontWeight:700,color:"#191F28"}}>{labor}만원</span>
-          </div>
-          <input type="range" min={100} max={2000} step={10} value={labor} onChange={e=>setLabor(Number(e.target.value))}
-            style={{width:"100%",accentColor:"#3182F6",height:6}} />
-        </div>
+        ))}
       </div>
 
-      <div style={{background:"#F9FAFB",borderRadius:16,padding:16,marginBottom:12}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <span style={{fontSize:12,color:"#9EA6B3",fontWeight:600}}>{t("hero.monthlySales")}</span>
-          <span style={{fontSize:20,fontWeight:800,color:"#191F28",letterSpacing:-1}}>{fmt(sales)} KRW</span>
+      <div className="rounded-xl bg-slate-50 p-4 mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs text-slate-400 font-semibold">예상 월 매출</span>
+          <span className="text-lg font-extrabold text-slate-900">{fmt(sales)}원</span>
         </div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:12,color:"#9EA6B3",fontWeight:600}}>{t("hero.profit")}</span>
-          <span style={{fontSize:22,fontWeight:800,color:profit>=0?"#059669":"#EF4444",letterSpacing:-1}}>{profit>=0?"+":"-"}{fmt(profit)} KRW</span>
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-slate-400 font-semibold">예상 순이익</span>
+          <span className={`text-xl font-extrabold ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+            {profit >= 0 ? "+" : "-"}{fmt(profit)}원
+          </span>
         </div>
-        <div style={{marginTop:8,height:4,borderRadius:4,background:"#E5E8EB",overflow:"hidden"}}>
-          <div style={{height:"100%",borderRadius:4,background:profit>=0?"#059669":"#EF4444",width:`${Math.min(Math.max(Number(margin),0),100)}%`,transition:"width 0.3s"}} />
+        <div className="mt-2.5 h-1 rounded-full bg-slate-200 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-300 ${profit >= 0 ? "bg-emerald-500" : "bg-red-500"}`}
+            style={{ width: `${Math.min(Math.max(Number(margin), 0), 100)}%` }}
+          />
         </div>
-        <div style={{textAlign:"right",marginTop:4}}>
-          <span style={{fontSize:11,color:profit>=0?"#059669":"#EF4444",fontWeight:600}}>{t("hero.margin")} {margin}%</span>
-        </div>
+        <p className={`text-right text-[11px] font-semibold mt-1 ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+          순이익률 {margin}%
+        </p>
       </div>
 
-      <Link href="/simulator" style={{display:"block",width:"100%",textAlign:"center",background:"#3182F6",color:"#fff",padding:"13px 0",borderRadius:12,fontSize:14,fontWeight:700,textDecoration:"none",transition:"background 0.15s"}}>
-        {t("hero.analyze")}
+      <Link
+        href="/simulator"
+        className="block w-full text-center bg-blue-600 text-white py-3.5 rounded-xl text-sm font-bold active:scale-[0.98] transition"
+      >
+        상세 분석하기 →
       </Link>
     </div>
   );
 }
 
+/* ── FadeIn ── */
+function FadeIn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.1 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{ opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)", transition: "opacity 0.5s ease, transform 0.5s ease" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ── 랜딩 콘텐츠 ── */
 function LandingContent() {
-  const t = useTranslation();
   const formMsgRef = useRef<HTMLParagraphElement>(null);
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
 
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const btn = submitBtnRef.current;
     const msg = formMsgRef.current;
     if (!btn || !msg) return;
-
-    const name = nameRef.current?.value ?? "";
-    const email = emailRef.current?.value ?? "";
-    const message = messageRef.current?.value ?? "";
-
-    btn.textContent = "전송 중...";
-    btn.disabled = true;
-    msg.style.display = "none";
-
+    btn.textContent = "전송 중..."; btn.disabled = true; msg.style.display = "none";
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name: nameRef.current?.value, email: emailRef.current?.value, message: messageRef.current?.value }),
       });
-
       if (res.ok) {
-        btn.textContent = "전송 완료 ✓";
-        msg.style.display = "block";
-        msg.style.color = "#059669";
-        msg.textContent = "문의가 접수되었습니다. 빠르게 연락드리겠습니다.";
+        btn.textContent = "전송 완료 ✓"; msg.style.display = "block"; msg.style.color = "#059669"; msg.textContent = "문의가 접수되었습니다.";
         (e.target as HTMLFormElement).reset();
-      } else {
-        btn.textContent = "재시도";
-        msg.style.display = "block";
-        msg.style.color = "#ef4444";
-        msg.textContent = "전송에 실패했습니다. 잠시 후 다시 시도해 주세요.";
-        btn.disabled = false;
-      }
-    } catch {
-      btn.textContent = "재시도";
-      msg.style.display = "block";
-      msg.style.color = "#ef4444";
-      msg.textContent = "네트워크 오류가 발생했습니다.";
-      btn.disabled = false;
-    }
-
-    setTimeout(() => {
-      if (btn && btn.textContent === "전송 완료 ✓") {
-        btn.textContent = "문의 보내기";
-        btn.disabled = false;
-      }
-    }, 4000);
+      } else { btn.textContent = "재시도"; msg.style.display = "block"; msg.style.color = "#ef4444"; msg.textContent = "전송 실패. 다시 시도해주세요."; btn.disabled = false; }
+    } catch { btn.textContent = "재시도"; msg.style.display = "block"; msg.style.color = "#ef4444"; msg.textContent = "네트워크 오류"; btn.disabled = false; }
+    setTimeout(() => { if (btn?.textContent === "전송 완료 ✓") { btn.textContent = "문의 보내기"; btn.disabled = false; } }, 4000);
   }
+
+  const FEATURES = [
+    { icon: "🧮", title: "메뉴별 원가 계산", desc: "식재료 원가 → 원가율·건당 순익 자동 계산", tag: "원가" },
+    { icon: "🛵", title: "배달앱 매출 분석", desc: "정산서 업로드 → 수수료·실매출 AI 자동 분석", tag: "AI" },
+    { icon: "💳", title: "카드매출 자동 수집", desc: "사업자번호만 입력하면 카드사별 매출 조회", tag: "자동" },
+    { icon: "📊", title: "리뷰 감정 분석", desc: "네이버·배민 리뷰 → AI 감정·키워드 분석", tag: "AI" },
+    { icon: "📱", title: "SNS 콘텐츠 생성", desc: "메뉴·이벤트 → 인스타 캡션 AI 자동 생성", tag: "AI" },
+    { icon: "🧾", title: "세금 계산기", desc: "부가세·종소세 예상액 자동 산출", tag: "세금" },
+    { icon: "📄", title: "손익계산서 PDF", desc: "시뮬레이션 데이터 → P&L 리포트 즉시 출력", tag: "PDF" },
+    { icon: "🗺️", title: "AI 상권 분석", desc: "입지 조건 → 상권 적합도 AI 리포트", tag: "AI" },
+    { icon: "📈", title: "매출 예측 AI", desc: "과거 데이터 기반 3개월 매출 자동 예측", tag: "AI" },
+  ];
 
   return (
     <>
-      <style>{`
-        *{box-sizing:border-box;margin:0;padding:0}
-        :root{--blue:#3182F6;--blue-dark:#2563EB;--blue-light:#EBF3FF;--gray-50:#F9FAFB;--gray-100:#F2F4F6;--gray-200:#E5E8EB;--gray-400:#9EA6B3;--gray-600:#6B7684;--gray-700:#4B5563;--gray-800:#333D4B;--gray-900:#191F28}
-        html.dark{--blue-light:rgba(49,130,246,0.15);--gray-50:#0F172A;--gray-100:#1E293B;--gray-200:#334155;--gray-400:#64748B;--gray-600:#94A3B8;--gray-700:#CBD5E1;--gray-800:#E2E8F0;--gray-900:#F1F5F9}
-        html{scroll-behavior:smooth}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-        @keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-        @keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(49,130,246,0.4)}50%{box-shadow:0 0 0 8px rgba(49,130,246,0)}}
-        @keyframes gradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-        @keyframes featureFadeIn{from{opacity:0;transform:translateY(30px) scale(0.97)}to{opacity:1;transform:none}}
-        @keyframes statPop{0%{opacity:0;transform:scale(0.7) translateY(20px)}60%{transform:scale(1.05) translateY(-4px)}100%{opacity:1;transform:none}}
-        @keyframes floatOrb{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(30px,-20px) scale(1.1)}50%{transform:translate(-10px,20px) scale(0.95)}75%{transform:translate(-30px,-10px) scale(1.05)}}
-        .fade-init{opacity:0;animation:fadeUp .7s ease forwards}
-        .d1{animation-delay:.1s}.d2{animation-delay:.25s}.d3{animation-delay:.4s}.d4{animation-delay:.55s}
-        .step-card-hover:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(0,0,0,.08);border-color:transparent}
-        .hero{min-height:100vh;display:flex;align-items:center;padding:120px 24px 80px;position:relative;overflow:hidden;background:linear-gradient(135deg,#f8faff 0%,#eef4ff 25%,#f0f0ff 50%,#f8faff 75%,#eef6ff 100%);background-size:400% 400%;animation:gradientMove 15s ease infinite}
-        .hero-bg{position:absolute;top:-200px;right:-200px;width:800px;height:800px;background:radial-gradient(ellipse,rgba(49,130,246,0.12) 0%,transparent 70%);pointer-events:none;filter:blur(40px);animation:floatOrb 20s ease-in-out infinite}
-        .hero-bg2{position:absolute;bottom:-100px;left:-100px;width:500px;height:500px;background:radial-gradient(ellipse,rgba(99,102,241,0.1) 0%,transparent 70%);pointer-events:none;filter:blur(40px);animation:floatOrb 25s ease-in-out infinite reverse}
-        .hero-bg3{position:absolute;top:50%;left:50%;width:600px;height:600px;background:radial-gradient(ellipse,rgba(16,185,129,0.05) 0%,transparent 70%);pointer-events:none;filter:blur(50px);animation:floatOrb 18s ease-in-out infinite 5s}
-        .hero-inner{max-width:1100px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative;z-index:1}
-        .hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--blue-light);color:var(--blue);font-size:13px;font-weight:600;padding:6px 14px;border-radius:100px;margin-bottom:24px}
-        .hero-tag-dot{width:6px;height:6px;background:var(--blue);border-radius:50%}
-        .hero-title{font-size:clamp(40px,5vw,64px);font-weight:900;line-height:1.1;color:var(--gray-900);margin-bottom:24px;letter-spacing:-0.03em}
-        .hero-title span{background:linear-gradient(135deg,var(--blue),#7C3AED);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .hero-desc{font-size:18px;color:var(--gray-600);line-height:1.7;margin-bottom:40px}
-        .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
-        .btn-primary{background:linear-gradient(135deg,var(--blue),#2563EB);color:#fff;padding:16px 32px;border-radius:14px;font-size:16px;font-weight:700;text-decoration:none;transition:all .25s cubic-bezier(.34,1.56,.64,1);display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(49,130,246,0.35)}
-        .btn-primary:hover{background:linear-gradient(135deg,#2563EB,#1554b8);transform:translateY(-3px) scale(1.02);box-shadow:0 8px 28px rgba(49,130,246,0.45)}
-        .btn-secondary{background:var(--gray-100);color:var(--gray-800);padding:16px 28px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;transition:background .15s;display:inline-flex;align-items:center;gap:8px}
-        .btn-secondary:hover{background:var(--gray-200)}
-        .hero-stats{display:flex;gap:32px;margin-top:48px;padding-top:40px;border-top:1px solid var(--gray-200)}
-        .stat-num{font-size:36px;font-weight:900;color:var(--gray-900);letter-spacing:-0.03em;animation:statPop .8s ease forwards;opacity:0}
-        .stat-num span{background:linear-gradient(135deg,var(--blue),#7C3AED);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .hero-stats > div:nth-child(1) .stat-num{animation-delay:.4s}
-        .hero-stats > div:nth-child(2) .stat-num{animation-delay:.6s}
-        .hero-stats > div:nth-child(3) .stat-num{animation-delay:.8s}
-        .hero-stats > div:nth-child(4) .stat-num{animation-delay:1s}
-        .stat-label{font-size:13px;color:var(--gray-400);margin-top:2px}
-        .hero-card{background:var(--gray-50);border-radius:24px;padding:32px;border:1px solid var(--gray-200)}
-        .hero-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-        .hero-card-title{font-size:14px;font-weight:600;color:var(--gray-600)}
-        .hero-card-badge{background:#ECFDF5;color:#059669;font-size:12px;font-weight:600;padding:4px 10px;border-radius:100px}
-        .hero-metric-label{font-size:13px;color:var(--gray-400);margin-bottom:6px}
-        .hero-metric-value{font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-bottom:16px}
-        .green{color:#059669}.red{color:#DC2626}
-        .hero-bar-wrap{height:8px;background:var(--gray-200);border-radius:100px;overflow:hidden;margin-bottom:24px}
-        .hero-bar{height:100%;background:var(--blue);border-radius:100px;width:68%}
-        .hero-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--gray-100);font-size:14px}
-        .hero-row-label{color:var(--gray-600)}
-        .hero-row-value{font-weight:600;color:var(--gray-900)}
-        section{padding:100px 24px}
-        .section-inner{max-width:1100px;margin:0 auto}
-        .section-tag{display:inline-block;background:var(--blue-light);color:var(--blue);font-size:13px;font-weight:600;padding:5px 14px;border-radius:100px;margin-bottom:16px}
-        .section-title{font-size:clamp(32px,4vw,52px);font-weight:900;letter-spacing:-0.03em;color:var(--gray-900);margin-bottom:16px;line-height:1.15}
-        .section-desc{font-size:17px;color:var(--gray-600);line-height:1.7;max-width:500px}
-        .features-bg{background:var(--gray-50)}
-        .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:56px}
-        .feature-card{background:#fff;border-radius:20px;padding:32px;border:1px solid var(--gray-200);transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease,border-color .3s ease;opacity:0;animation:featureFadeIn .6s ease forwards}
-        .feature-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 20px 60px rgba(49,130,246,.15),0 8px 24px rgba(0,0,0,.06);border-color:var(--blue)}
-        .features-grid > div:nth-child(1) .feature-card{animation-delay:.05s}
-        .features-grid > div:nth-child(2) .feature-card{animation-delay:.1s}
-        .features-grid > div:nth-child(3) .feature-card{animation-delay:.15s}
-        .features-grid > div:nth-child(4) .feature-card{animation-delay:.2s}
-        .features-grid > div:nth-child(5) .feature-card{animation-delay:.25s}
-        .features-grid > div:nth-child(6) .feature-card{animation-delay:.3s}
-        .features-grid > div:nth-child(7) .feature-card{animation-delay:.35s}
-        .features-grid > div:nth-child(8) .feature-card{animation-delay:.4s}
-        .features-grid > div:nth-child(9) .feature-card{animation-delay:.45s}
-        .feature-icon{width:48px;height:48px;border-radius:14px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:20px;transition:transform .3s ease,background .3s ease}
-        .feature-card:hover .feature-icon{transform:scale(1.15) rotate(-3deg);background:var(--blue);filter:brightness(1.1)}
-        .feature-title{font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:10px}
-        .feature-desc{font-size:14px;color:var(--gray-600);line-height:1.7}
-        .feature-tag{display:inline-block;margin-top:16px;font-size:12px;font-weight:600;color:var(--blue);background:var(--blue-light);padding:4px 10px;border-radius:100px}
-        .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:56px;text-align:center}
-        .step-num{width:56px;height:56px;background:var(--blue);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin:0 auto 20px}
-        .step-title{font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:8px}
-        .step-desc{font-size:14px;color:var(--gray-600);line-height:1.7}
-        .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px}
-        .pricing-card{background:#fff;border:2px solid var(--gray-200);border-radius:24px;padding:36px 32px;position:relative;transition:all .25s}
-        .pricing-card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.08)}
-        .pricing-card.popular{border-color:var(--blue)}
-        .pricing-popular-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:12px;font-weight:700;padding:5px 16px;border-radius:100px;white-space:nowrap}
-        .pricing-plan{font-size:14px;font-weight:600;color:var(--gray-600);margin-bottom:8px}
-        .pricing-price{font-size:40px;font-weight:800;color:var(--gray-900);letter-spacing:-0.02em;margin-bottom:4px}
-        .pricing-price span{font-size:18px;font-weight:500;color:var(--gray-400)}
-        .pricing-desc{font-size:14px;color:var(--gray-600);margin-bottom:28px}
-        .pricing-features{list-style:none;margin-bottom:28px}
-        .pricing-features li{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--gray-700);padding:8px 0;border-bottom:1px solid var(--gray-100)}
-        .pricing-features li:last-child{border-bottom:none}
-        .pricing-check{width:20px;height:20px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:#059669}
-        .pricing-btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:600;text-align:center;text-decoration:none;display:block;transition:all .15s;border:none;cursor:pointer;font-family:inherit}
-        .pricing-btn-blue{background:var(--blue);color:#fff}
-        .pricing-btn-blue:hover{background:var(--blue-dark)}
-        .pricing-btn-gray{background:var(--gray-100);color:var(--gray-800)}
-        .pricing-btn-gray:hover{background:var(--gray-200)}
-        .testi-bg{background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)}
-        .testi-bg .section-title{color:#fff}
-        .testi-bg .section-desc{color:rgba(255,255,255,.5)}
-        .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px}
-        .testi-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:32px;transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;backdrop-filter:blur(10px)}
-        .testi-card:hover{transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,.3);border-color:rgba(49,130,246,.4)}
-        .testi-stars{color:#F59E0B;font-size:16px;margin-bottom:16px;letter-spacing:2px}
-        .testi-text{font-size:15px;color:rgba(255,255,255,.85);line-height:1.8;margin-bottom:24px;font-style:italic}
-        .testi-author{display:flex;align-items:center;gap:12px}
-        .testi-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
-        .testi-name{font-size:14px;font-weight:600;color:#fff}
-        .testi-role{font-size:12px;color:var(--gray-400)}
-        .stats-section{background:linear-gradient(135deg,var(--blue) 0%,#2563EB 40%,#7C3AED 100%);padding:80px 24px}
-        .stats-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:center}
-        .stats-item{opacity:0;animation:statPop .7s ease forwards}
-        .stats-item:nth-child(1){animation-delay:.1s}
-        .stats-item:nth-child(2){animation-delay:.25s}
-        .stats-item:nth-child(3){animation-delay:.4s}
-        .stats-item:nth-child(4){animation-delay:.55s}
-        .stats-number{font-size:clamp(40px,5vw,64px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1}
-        .stats-number span{font-size:clamp(24px,3vw,36px)}
-        .stats-unit{font-size:16px;font-weight:600;color:rgba(255,255,255,.9);margin-top:8px}
-        .stats-desc{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
-        .cta-bg{background:var(--blue);text-align:center}
-        .cta-title{font-size:clamp(28px,4vw,48px);font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:16px}
-        .cta-desc{font-size:18px;color:rgba(255,255,255,.8);margin-bottom:40px}
-        .btn-white{background:#fff;color:var(--blue);padding:16px 32px;border-radius:12px;font-size:16px;font-weight:700;text-decoration:none;display:inline-block;transition:transform .15s}
-        .btn-white:hover{transform:translateY(-2px)}
-        .contact-layout{display:grid;grid-template-columns:1fr 1.4fr;gap:80px;align-items:start;margin-top:56px}
-        .contact-info{display:flex;flex-direction:column;gap:28px}
-        .contact-label{font-size:12px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
-        .contact-value{font-size:15px;color:var(--gray-700)}
-        .contact-form{display:flex;flex-direction:column;gap:14px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-        .field-label{display:block;font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:6px}
-        .field-input{width:100%;padding:13px 16px;background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:10px;font-family:'Pretendard',sans-serif;font-size:14px;color:var(--gray-900);outline:none;transition:border-color .15s,background .15s}
-        .field-input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(49,130,246,.1)}
-        textarea.field-input{resize:vertical;min-height:120px;line-height:1.6}
-        .form-submit{background:var(--blue);color:#fff;padding:15px 28px;border-radius:10px;font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:'Pretendard',sans-serif;transition:background .15s;align-self:flex-start}
-        .form-submit:hover{background:var(--blue-dark)}
-        .form-msg{font-size:13px;color:var(--blue);display:none;margin-top:4px}
-        footer{background:linear-gradient(180deg,#0f172a 0%,var(--gray-900) 100%);padding:60px 24px 40px}
-        .footer-inner{max-width:1100px;margin:0 auto}
-        .footer-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}
-        .footer-logo{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.02em}
-        .footer-logo span{color:var(--blue)}
-        .footer-links{display:flex;gap:24px}
-        .footer-links a{font-size:14px;color:var(--gray-400);text-decoration:none;transition:color .15s}
-        .footer-links a:hover{color:#fff}
-        .footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid rgba(255,255,255,.08)}
-        .footer-copy{font-size:13px;color:var(--gray-400)}
-        .footer-legal{display:flex;gap:16px}
-        .footer-legal a{font-size:14px;color:var(--gray-400);text-decoration:none;padding:8px 0}
-        .footer-legal a:hover{color:#fff}
-        @media(max-width:1024px){.hero-inner{grid-template-columns:1fr;gap:48px}.features-grid,.pricing-grid,.testi-grid{grid-template-columns:1fr 1fr}.steps-grid{grid-template-columns:1fr 1fr}.contact-layout{grid-template-columns:1fr;gap:48px}.stats-grid{grid-template-columns:repeat(2,1fr);gap:24px}}
-        @media(max-width:640px){.features-grid,.pricing-grid,.testi-grid,.steps-grid{grid-template-columns:1fr}.hero-stats{flex-direction:column;gap:20px}.form-row{grid-template-columns:1fr}.footer-top{flex-direction:column;gap:24px}.footer-bottom{flex-direction:column;gap:16px;text-align:center}.hero-actions{flex-direction:column}.stats-grid{grid-template-columns:repeat(2,1fr);gap:20px}}
-
-        /* Landing page dark mode */
-        html.dark .hero{background:linear-gradient(135deg,#0F172A 0%,#1E293B 25%,#0F172A 50%,#1E293B 75%,#0F172A 100%);background-size:400% 400%}
-        html.dark .hero-bg{background:radial-gradient(ellipse,rgba(49,130,246,0.2) 0%,transparent 70%)}
-        html.dark .hero-bg2{background:radial-gradient(ellipse,rgba(99,102,241,0.15) 0%,transparent 70%)}
-        html.dark .hero-bg3{background:radial-gradient(ellipse,rgba(16,185,129,0.1) 0%,transparent 70%)}
-        html.dark .hero-card{background:#1E293B;border-color:#334155}
-        html.dark .hero-card-badge{background:rgba(16,185,129,0.15);color:#6EE7B7}
-        html.dark .hero-metric-value{color:#F1F5F9}
-        html.dark .hero-row{border-top-color:#334155}
-        html.dark .btn-secondary{background:#334155;color:#E2E8F0}
-        html.dark .btn-secondary:hover{background:#475569}
-        html.dark .features-bg{background:#0F172A}
-        html.dark .feature-card{background:#1E293B;border-color:#334155}
-        html.dark .feature-card:hover{border-color:#3182F6;box-shadow:0 20px 60px rgba(59,130,246,.15),0 8px 24px rgba(0,0,0,.2)}
-        html.dark .feature-icon{background:rgba(49,130,246,0.15)}
-        html.dark .feature-tag{background:rgba(49,130,246,0.15);color:#93C5FD}
-        html.dark .step-num{box-shadow:0 4px 14px rgba(49,130,246,0.3)}
-        html.dark .step-card-hover{background:#1E293B !important;border-color:#334155 !important}
-        html.dark .pricing-card{background:#1E293B;border-color:#334155}
-        html.dark .pricing-card:hover{box-shadow:0 12px 36px rgba(0,0,0,.3)}
-        html.dark .pricing-card.popular{border-color:#3182F6}
-        html.dark .pricing-check{background:rgba(16,185,129,0.15);color:#6EE7B7}
-        html.dark .pricing-features li{border-bottom-color:#334155;color:#CBD5E1}
-        html.dark .pricing-btn-gray{background:#334155;color:#E2E8F0}
-        html.dark .pricing-btn-gray:hover{background:#475569}
-        html.dark .field-input{background:#1E293B;border-color:#334155;color:#E2E8F0}
-        html.dark .field-input:focus{border-color:#3182F6;background:#1E293B;box-shadow:0 0 0 3px rgba(59,130,246,.2)}
-        html.dark section{background-color:#0F172A}
-        html.dark .green{color:#6EE7B7}
-        html.dark .red{color:#FCA5A5}
-        html.dark .hero-social-proof{color:#94A3B8}
-        @media(prefers-reduced-motion: reduce) {
-          .hero-bg, .hero-bg2, .hero-bg3 { animation: none !important; }
-          .hero { animation: none !important; background-size: 100% 100% !important; }
-        }
-        @media(max-width: 768px) {
-          .hero-bg, .hero-bg2, .hero-bg3 { display: none; }
-          .hero { background-size: 100% 100%; animation: none; }
-        }
-      `}</style>
-
-      
-
-
-      {/* HERO */}
-      <section className="hero" id="home">
-        <div className="hero-bg" /><div className="hero-bg2" /><div className="hero-bg3" />
-        <div className="hero-inner">
-          <div>
-            <div className="fade-init d1">
-              <div className="hero-tag"><span className="hero-tag-dot" style={{animation:"pulse-glow 2s infinite"}} />{t("hero.tag")}</div>
-              <h1 className="hero-title">{t("hero.title1")}<br /><span>{t("hero.title2")}</span></h1>
-              <p className="hero-desc">{t("hero.desc")}</p>
-              <div className="hero-actions">
-                <Link href="/signup" className="btn-primary" style={{padding:"18px 36px",fontSize:17,borderRadius:16,animation:"pulse-glow 3s infinite 2s"}}>무료로 시작하기</Link>
-                <Link href="/tools" className="btn-secondary" style={{padding:"18px 32px",fontSize:17,borderRadius:16}}>도구 둘러보기</Link>
+      {/* ── HERO ── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 px-4 pt-24 pb-16 sm:pt-32 sm:pb-24 md:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            {/* 좌측 텍스트 */}
+            <div>
+              <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                외식업 AI 경영 분석
               </div>
-              <p style={{fontSize:13,color:"var(--gray-400)",marginTop:16,display:"flex",alignItems:"center",gap:8}}>
-                <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:"#059669",animation:"pulse-glow 2s infinite"}} />
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.15] mb-5">
+                매장 수익을<br />
+                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">한눈에 파악하세요</span>
+              </h1>
+              <p className="text-slate-500 text-sm sm:text-base leading-relaxed mb-7 max-w-md">
+                좌석 수, 객단가, 비용만 입력하면 AI가 수익성을 분석하고 맞춤 전략을 제안합니다. 30개 이상의 경영 도구를 무료로 시작하세요.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 mb-5">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-7 py-4 rounded-2xl text-sm font-bold shadow-lg shadow-blue-600/25 active:scale-[0.98] transition"
+                >
+                  무료로 시작하기
+                </Link>
+                <Link
+                  href="/tools"
+                  className="inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 px-7 py-4 rounded-2xl text-sm font-bold active:scale-[0.98] transition"
+                >
+                  도구 둘러보기
+                </Link>
+              </div>
+              <p className="flex items-center gap-2 text-xs text-slate-400">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 카카오 로그인 3초 · 무료 플랜 제공
               </p>
-              <div className="hero-stats">
-                <div><div className="stat-num">30<span>+</span></div><div className="stat-label">경영 도구</div></div>
-                <div><div className="stat-num">5<span>개</span></div><div className="stat-label">업종 지원</div></div>
-                <div><div className="stat-num">20<span>+</span></div><div className="stat-label">재무 지표</div></div>
-                <div><div className="stat-num">AI</div><div className="stat-label">실시간 전략</div></div>
-              </div>
+            </div>
+
+            {/* 우측 미니 시뮬레이터 */}
+            <div className="hidden sm:block">
+              <MiniSim />
             </div>
           </div>
-          <div className="fade-init d2">
-            <HeroMiniSim />
+
+          {/* 통계 바 */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12 sm:mt-16 pt-8 border-t border-slate-200">
+            {[
+              { num: "30+", label: "경영 도구" },
+              { num: "5", label: "업종 지원" },
+              { num: "20+", label: "재무 지표" },
+              { num: "AI", label: "실시간 전략" },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <p className="text-2xl sm:text-3xl font-black text-slate-900">{s.num}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 이벤트 배너 — 랜딩 */}
-      <section style={{ padding: "0 24px" }}>
-        <div className="section-inner">
-          <FadeIn>
-            <EventBanner />
+      {/* 모바일 미니 시뮬레이터 */}
+      <section className="sm:hidden px-4 -mt-4 mb-8">
+        <MiniSim />
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section id="features" className="bg-white px-4 py-16 sm:py-24 md:px-8">
+        <div className="mx-auto max-w-6xl">
+          <FadeIn className="text-center mb-10 sm:mb-14">
+            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+              핵심 기능
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">사장님에게 필요한 모든 도구</h2>
+            <p className="text-sm text-slate-500 max-w-md mx-auto">원가 계산부터 AI 분석까지, 매장 운영에 필요한 도구를 한곳에서.</p>
+          </FadeIn>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {FEATURES.map((f) => (
+              <FadeIn key={f.title}>
+                <div className="rounded-2xl bg-slate-50 p-5 sm:p-6 ring-1 ring-slate-100 hover:ring-blue-200 hover:shadow-md transition group">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+                    {f.icon}
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 mb-1">{f.title}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mb-2">{f.desc}</p>
+                  <span className="inline-block text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{f.tag}</span>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+          <FadeIn className="text-center mt-8">
+            <Link href="/tools" className="text-sm font-semibold text-blue-600 active:text-blue-800 transition">
+              전체 도구 보기 →
+            </Link>
           </FadeIn>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section id="features" className="features-bg">
-        <div className="section-inner">
-          <FadeIn><span className="section-tag">{t("features.tag")}</span><h2 className="section-title">{t("features.title")}</h2><p className="section-desc">{t("features.desc")}</p></FadeIn>
-          <div className="features-grid">
+      {/* ── HOW IT WORKS ── */}
+      <section className="bg-slate-50 px-4 py-16 sm:py-24 md:px-8">
+        <div className="mx-auto max-w-4xl">
+          <FadeIn className="text-center mb-10 sm:mb-14">
+            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+              이용 방법
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">3분이면 충분합니다</h2>
+          </FadeIn>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { icon:"🧮", title:"메뉴별 원가 계산기",  desc:"식재료 원가 입력 → 원가율·건당 순익 자동 계산. 메뉴 가격 결정에 바로 활용하세요.",      tag:"원가 계산",  href:"/tools/menu-cost" },
-              { icon:"💰", title:"AI 메뉴 가격 추천",   desc:"원가 + 경쟁 가격대 입력 → AI가 적정 메뉴 가격과 가격 전략을 추천합니다.",              tag:"AI · NEW",   href:"/tools/menu-pricing" },
-              { icon:"⚖️", title:"인건비 계산기 (법정)", desc:"주휴수당·야간수당·4대보험까지 자동 반영. 실제 인건비를 정확하게 파악하세요.",            tag:"법정 계산",  href:"/tools/labor-law" },
-              { icon:"🛵", title:"배달앱 매출 분석기",   desc:"배민·쿠팡이츠 정산서 업로드 → 수수료·실매출·건당 이익을 AI가 자동 분석합니다.",         tag:"AI · NEW",   href:"/tools/delivery-analysis" },
-              { icon:"📊", title:"리뷰 감정 분석",      desc:"네이버·배민 리뷰 붙여넣기 → AI가 감정·키워드·개선점을 분석해 한눈에 보여줍니다.",       tag:"AI · NEW",   href:"/tools/review-analysis" },
-              { icon:"💳", title:"카드매출 자동 수집",   desc:"사업자등록번호만 입력하면 여신금융협회를 통해 카드사별 매출을 자동으로 조회합니다.",       tag:"자동 연동",  href:"/tools/card-sales" },
-              { icon:"📝", title:"일일 매출 기록",       desc:"매일 매출·고객수만 입력하면 월간 자동 집계 + 요일별 매출 패턴을 분석합니다.",           tag:"매출 관리",  href:"/tools/daily-sales" },
-              { icon:"📱", title:"SNS 콘텐츠 생성기",   desc:"메뉴·이벤트 정보 입력 → 인스타 캡션 AI 자동 생성. 매일 고민하는 SNS 포스팅 해결.",     tag:"AI · SNS",   href:"/tools/sns-content" },
-              { icon:"💬", title:"리뷰 답변 생성기",     desc:"고객 리뷰 붙여넣기 → AI가 맞춤 답변 초안 작성. 악성 리뷰도 프로답게 대응하세요.",        tag:"AI · 리뷰",  href:"/tools/review-reply" },
-              { icon:"🗺️", title:"상권 분석 도우미",    desc:"입지 조건 입력 → AI 상권 적합도 평가 리포트. 창업 전 상권 리스크를 미리 파악하세요.",    tag:"AI · 상권",  href:"/tools/area-analysis" },
-              { icon:"🧾", title:"세금 계산기",          desc:"매출 기반 부가세·종합소득세 예상액 자동 산출. 세금 폭탄 없이 미리 준비하세요.",           tag:"세금 예측",  href:"/tools/tax" },
-              { icon:"📄", title:"손익계산서 PDF",       desc:"시뮬레이션 데이터로 월별 P&L 리포트 PDF 출력. 투자자·세무사에게 바로 공유 가능.",        tag:"PDF 출력",   href:"/tools/pl-report" },
-              { icon:"🔍", title:"경쟁매장 가격 조사",   desc:"주변 매장 메뉴 가격을 기록하고 내 가격 포지셔닝을 파악하세요.",                          tag:"경쟁 분석",  href:"/tools/competitor-pricing" },
-              { icon:"🔄", title:"인수인계 체크리스트",   desc:"매장 양도양수 시 빠뜨리면 안 되는 36개 필수 항목을 체크하세요.",                          tag:"인수인계",   href:"/tools/handover" },
-              { icon:"🧾", title:"세무사 연결",          desc:"외식업 전문 세무사 매칭. 시뮬레이션 데이터 기반으로 정확한 세무 상담을 받으세요.",          tag:"세무 상담",  href:"/tools/tax-advisor" },
-              { icon:"🤝", title:"식자재 공동구매",       desc:"같은 동네 사장님끼리 식자재 공동구매하면 단가를 10~20% 낮출 수 있어요.",                 tag:"공동구매",   href:"/tools/group-buy" },
-              { icon:"🎁", title:"사장님 추천 프로그램",   desc:"친구를 초대하면 양쪽 모두 스탠다드 플랜 1개월 무료 혜택!",                              tag:"추천 보상",  href:"/referral" },
-              // 창업 도우미 (i18n)
-              { icon:"📝", title:"사업계획서 도우미",     desc:"6단계로 사업계획서 작성 → 미리보기·복사. 투자자용·정부지원금용 모두 대응.",               tag:"창업 · NEW", href:"/tools/business-plan", i18nKey:"businessPlan" },
-              { icon:"🏛️", title:"정부 지원사업 매칭",    desc:"사업 단계·지역·조건 입력하면 20개 이상 정부 지원 프로그램 중 내게 맞는 것을 매칭.",       tag:"창업 · NEW", href:"/tools/gov-support",   i18nKey:"govSupport" },
-              { icon:"🏢", title:"법인 설립 가이드",      desc:"개인 vs 법인 세금 비교 계산 + 설립 절차 체크리스트 + 비용 시뮬레이터.",                  tag:"창업 · NEW", href:"/tools/incorporation", i18nKey:"incorporation" },
-              { icon:"📈", title:"재무 시뮬레이션",       desc:"런웨이·BEP·12개월 현금흐름 시뮬레이션. 보수적/기본/낙관적 3가지 시나리오 비교.",         tag:"창업 · NEW", href:"/tools/financial-sim",  i18nKey:"financialSim" },
-              { icon:"💎", title:"투자 유치 도구",        desc:"밸류에이션 계산기 + IR 덱 12슬라이드 가이드 + 투자자 미팅 준비 체크리스트.",              tag:"창업 · NEW", href:"/tools/fundraising",   i18nKey:"fundraising" },
-              { icon:"🧾", title:"세무·회계 가이드",      desc:"세금 캘린더 + 부가세·소득세·4대보험 계산기 + 외식업 절세 전략 10선.",                    tag:"세무 · NEW", href:"/tools/tax-guide",     i18nKey:"taxGuide" },
-              { icon:"👥", title:"인력 채용 도구",        desc:"급여 계산기 + 근로계약서 자동 생성 + 업종별 채용공고 템플릿 3종.",                       tag:"인사 · NEW", href:"/tools/hiring",        i18nKey:"hiring" },
-            ].map((f, i) => {
-              const fTitle = "i18nKey" in f && f.i18nKey ? t(`tool.${f.i18nKey}.title`) : f.title;
-              const fDesc  = "i18nKey" in f && f.i18nKey ? t(`tool.${f.i18nKey}.descFull`) : f.desc;
-              return (
-                <FadeIn key={f.title} delay={i * 60}>
-                  <Link href={f.href} style={{ textDecoration: "none" }}>
-                    <div className="feature-card">
-                      <div className="feature-icon">{f.icon}</div>
-                      <div className="feature-title">{fTitle}</div>
-                      <div className="feature-desc">{fDesc}</div>
-                      <span className="feature-tag">{f.tag}</span>
-                    </div>
-                  </Link>
-                </FadeIn>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* HOW */}
-      <section>
-        <div className="section-inner">
-          <FadeIn><div style={{ textAlign: "center" }}><span className="section-tag">{t("steps.tag")}</span><h2 className="section-title" style={{ textAlign: "center" }}>{t("steps.title")}</h2></div></FadeIn>
-          <div className="steps-grid">
-            {[
-              { num: "1", icon: "📝", title: "3분 만에 입력", desc: "업종·좌석·객단가·비용 구조를 3단계로 간단하게 입력합니다. POS 파일이 있으면 바로 업로드해도 됩니다.", delay: 0, accent: "#3182F6" },
-              { num: "2", icon: "🤖", title: "AI가 즉시 분석", desc: "입력 즉시 20개 이상의 재무 지표가 계산되고 AI가 현재 상태를 진단합니다.", delay: 100, accent: "#7C3AED" },
-              { num: "3", icon: "🚀", title: "바로 실행", desc: "AI 추천 전략을 확인하고 채팅으로 추가 질문하며 바로 실행 계획을 세웁니다.", delay: 200, accent: "#059669" },
+              { step: "1", icon: "📝", title: "3분 만에 입력", desc: "업종·좌석·객단가·비용을 입력하세요. POS 파일 업로드도 가능합니다.", color: "bg-blue-600" },
+              { step: "2", icon: "🤖", title: "AI가 즉시 분석", desc: "20개 이상 재무 지표를 계산하고 현재 상태를 진단합니다.", color: "bg-indigo-600" },
+              { step: "3", icon: "🚀", title: "바로 실행", desc: "AI 추천 전략을 확인하고 실행 계획을 세우세요.", color: "bg-emerald-600" },
             ].map((s) => (
-              <FadeIn key={s.num} delay={s.delay}>
-                <div style={{background:"#fff",borderRadius:24,padding:"36px 28px",border:"2px solid #E5E8EB",transition:"all 0.25s",position:"relative",overflow:"hidden"}} className="step-card-hover">
-                  <div style={{position:"absolute",top:0,left:0,width:"100%",height:4,background:s.accent}} />
-                  <div style={{fontSize:40,marginBottom:12}}>{s.icon}</div>
-                  <div style={{display:"inline-block",background:s.accent+"18",color:s.accent,fontSize:12,fontWeight:700,padding:"4px 12px",borderRadius:100,marginBottom:12}}>STEP {s.num}</div>
-                  <div className="step-title">{s.title}</div>
-                  <div className="step-desc">{s.desc}</div>
+              <FadeIn key={s.step}>
+                <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-200 text-center relative overflow-hidden">
+                  <div className={`absolute top-0 left-0 w-full h-1 ${s.color}`} />
+                  <div className="text-3xl mb-3">{s.icon}</div>
+                  <div className={`inline-block ${s.color} text-white text-[10px] font-bold px-3 py-1 rounded-full mb-3`}>STEP {s.step}</div>
+                  <h3 className="text-sm font-bold text-slate-900 mb-2">{s.title}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">{s.desc}</p>
                 </div>
               </FadeIn>
             ))}
@@ -513,20 +272,48 @@ function LandingContent() {
         </div>
       </section>
 
-      {/* PRICING */}
-      <section id="pricing" className="features-bg">
-        <div className="section-inner">
-          <FadeIn><span className="section-tag">{t("pricing.tag")}</span><h2 className="section-title">{t("pricing.title")}</h2><p className="section-desc">{t("pricing.desc")}</p></FadeIn>
-          <div className="pricing-grid">
+      {/* ── PRICING ── */}
+      <section id="pricing" className="bg-white px-4 py-16 sm:py-24 md:px-8">
+        <div className="mx-auto max-w-3xl">
+          <FadeIn className="text-center mb-10 sm:mb-14">
+            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+              요금제
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">심플한 요금제</h2>
+            <p className="text-sm text-slate-500">무료로 시작하고, 필요할 때 업그레이드하세요.</p>
+          </FadeIn>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {PLANS.map((p) => (
               <FadeIn key={p.plan}>
-                <div className={`pricing-card${p.popular ? " popular" : ""}`}>
-                  {p.popular && <div className="pricing-popular-badge">가장 인기</div>}
-                  <div className="pricing-plan">{p.plan}</div>
-                  <div className="pricing-price">{p.price}<span>{p.unit}</span></div>
-                  <div className="pricing-desc">{p.desc}</div>
-                  <ul className="pricing-features">{p.landingFeatures.map((f: string) => <li key={f}><span className="pricing-check">✓</span>{f}</li>)}</ul>
-                  <Link href={p.href} className={`pricing-btn ${p.cls}`}>{p.btn}</Link>
+                <div className={`rounded-2xl p-6 sm:p-8 relative ${p.popular ? "bg-slate-900 text-white ring-2 ring-blue-600" : "bg-slate-50 ring-1 ring-slate-200"}`}>
+                  {p.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full">
+                      가장 인기
+                    </div>
+                  )}
+                  <p className={`text-xs font-semibold mb-1 ${p.popular ? "text-slate-400" : "text-slate-500"}`}>{p.plan}</p>
+                  <p className="text-3xl font-black mb-1">
+                    {p.price}<span className={`text-sm font-medium ${p.popular ? "text-slate-400" : "text-slate-400"}`}>{p.unit}</span>
+                  </p>
+                  <p className={`text-xs mb-6 ${p.popular ? "text-slate-400" : "text-slate-500"}`}>{p.desc}</p>
+                  <ul className="space-y-2.5 mb-6">
+                    {p.landingFeatures.map((f: string) => (
+                      <li key={f} className={`flex items-center gap-2 text-xs ${p.popular ? "text-slate-300" : "text-slate-600"}`}>
+                        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] flex-shrink-0 ${p.popular ? "bg-blue-600 text-white" : "bg-emerald-100 text-emerald-600"}`}>✓</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={p.href}
+                    className={`block w-full text-center py-3.5 rounded-xl text-sm font-bold transition active:scale-[0.98] ${
+                      p.popular
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-200 text-slate-700"
+                    }`}
+                  >
+                    {p.btn}
+                  </Link>
                 </div>
               </FadeIn>
             ))}
@@ -534,52 +321,44 @@ function LandingContent() {
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="stats-section">
-        <div className="stats-grid">
+      {/* ── STATS BANNER ── */}
+      <section className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-4 py-12 sm:py-16 md:px-8">
+        <div className="mx-auto max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-6 text-center text-white">
           {[
-            { num: "30", suffix: "+", unit: "경영 도구", desc: "원가 계산부터 AI 분석까지" },
-            { num: "무료", suffix: "", unit: "시작 가능", desc: "카카오 3초 로그인" },
-            { num: "5", suffix: "", unit: "업종 지원", desc: "카페, 음식점, 베이커리 등" },
-            { num: "24/7", suffix: "", unit: "AI 상담", desc: "언제든 경영 질문 가능" },
-          ].map((s, i) => (
-            <FadeIn key={s.unit} delay={i * 120}>
-              <div className="stats-item">
-                <div className="stats-number">{s.num}<span>{s.suffix}</span></div>
-                <div className="stats-unit">{s.unit}</div>
-                <div className="stats-desc">{s.desc}</div>
-              </div>
+            { num: "30+", label: "경영 도구", sub: "원가부터 AI까지" },
+            { num: "무료", label: "시작 가능", sub: "카카오 3초 로그인" },
+            { num: "5", label: "업종 지원", sub: "카페·음식점·바 등" },
+            { num: "24/7", label: "AI 상담", sub: "언제든 질문 가능" },
+          ].map((s) => (
+            <FadeIn key={s.label}>
+              <p className="text-2xl sm:text-4xl font-black">{s.num}</p>
+              <p className="text-xs sm:text-sm font-semibold mt-1 text-white/90">{s.label}</p>
+              <p className="text-[10px] sm:text-xs text-white/50 mt-0.5">{s.sub}</p>
             </FadeIn>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="cta-bg">
-        <div className="section-inner">
-          <FadeIn>
-            <h2 className="cta-title">{t("cta.title")}</h2>
-            <p className="cta-desc">{t("cta.desc")}</p>
-            <Link href="/signup" className="btn-white">{t("cta.btn")}</Link>
+      {/* ── FAQ ── */}
+      <section id="faq" className="bg-slate-50 px-4 py-16 sm:py-24 md:px-8">
+        <div className="mx-auto max-w-2xl">
+          <FadeIn className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+              FAQ
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">자주 묻는 질문</h2>
           </FadeIn>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq">
-        <div className="section-inner">
-          <FadeIn><span className="section-tag">FAQ</span><h2 className="section-title">자주 묻는 질문</h2></FadeIn>
-          <div style={{ maxWidth: 700, margin: "40px auto 0", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="space-y-3">
             {[
-              { q: "VELA는 어떤 서비스인가요?", a: "VELA는 외식업 사장님을 위한 AI 기반 경영 분석 도구입니다. 수익 시뮬레이션, AI 브리핑, 메뉴 원가 분석 등 매장 운영에 필요한 핵심 기능을 제공합니다." },
-              { q: "무료 플랜에서 유료로 전환하면 데이터가 유지되나요?", a: "네, 기존에 저장한 시뮬레이션 데이터는 모두 유지됩니다. 플랜 변경 후 추가 기능이 즉시 활성화됩니다." },
-              { q: "언제든지 구독을 취소할 수 있나요?", a: "네, 구독은 언제든 취소 가능합니다. 취소 후에도 결제된 기간 동안은 유료 기능을 계속 사용하실 수 있습니다." },
+              { q: "VELA는 어떤 서비스인가요?", a: "외식업 사장님을 위한 AI 기반 경영 분석 도구입니다. 수익 시뮬레이션, AI 브리핑, 메뉴 원가 분석 등 매장 운영에 필요한 핵심 기능을 제공합니다." },
+              { q: "무료 플랜에서 유료로 전환하면 데이터가 유지되나요?", a: "네, 기존에 저장한 시뮬레이션 데이터는 모두 유지됩니다." },
+              { q: "언제든지 구독을 취소할 수 있나요?", a: "네, 언제든 취소 가능합니다. 취소 후에도 결제 기간까지 유료 기능을 사용할 수 있습니다." },
               { q: "결제는 어떤 방법으로 가능한가요?", a: "신용카드, 체크카드 등 토스페이먼츠를 통한 다양한 결제 방법을 지원합니다." },
             ].map((faq) => (
               <FadeIn key={faq.q}>
-                <div style={{ background: "#fff", border: "1px solid var(--gray-200)", borderRadius: 16, padding: "20px 24px" }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--gray-900)", marginBottom: 8 }}>Q. {faq.q}</div>
-                  <div style={{ fontSize: 14, color: "var(--gray-600)", lineHeight: 1.7 }}>{faq.a}</div>
+                <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+                  <p className="text-sm font-bold text-slate-900 mb-1.5">Q. {faq.q}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{faq.a}</p>
                 </div>
               </FadeIn>
             ))}
@@ -587,70 +366,103 @@ function LandingContent() {
         </div>
       </section>
 
-      {/* CONTACT */}
-      <section id="contact">
-        <div className="section-inner">
-          <FadeIn><span className="section-tag">문의</span><h2 className="section-title">궁금한 게 있으신가요?</h2><p className="section-desc">서비스 도입, 기능 제안, 파트너십 등 편하게 남겨주세요.</p></FadeIn>
-          <div className="contact-layout">
-            <FadeIn>
-              <div className="contact-info">
-                {[{ label: "이메일", value: "mnhyuk@velaanalytics.com" }, { label: "운영 시간", value: "평일 10:00 — 18:00" }, { label: "응답 시간", value: "영업일 기준 1일 이내" }].map((c) => (
-                  <div key={c.label}><div className="contact-label">{c.label}</div><div className="contact-value">{c.value}</div></div>
-                ))}
-                <div style={{ paddingTop: 16, borderTop: "1px solid var(--gray-200)" }}>
-                  <div className="contact-label" style={{ marginBottom: 12 }}>바로 시작하고 싶다면</div>
-                  <Link href="/signup" className="btn-primary" style={{ display: "inline-flex" }}>무료로 시작하기</Link>
+      {/* ── CTA ── */}
+      <section className="bg-slate-900 px-4 py-16 sm:py-20 md:px-8 text-center">
+        <div className="mx-auto max-w-lg">
+          <FadeIn>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-3">지금 바로 시작하세요</h2>
+            <p className="text-sm text-slate-400 mb-8">카카오 로그인 3초면 모든 도구를 무료로 사용할 수 있습니다.</p>
+            <Link
+              href="/signup"
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-2xl text-sm font-bold shadow-lg shadow-blue-600/25 active:scale-[0.98] transition"
+            >
+              무료로 시작하기
+            </Link>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ── CONTACT ── */}
+      <section id="contact" className="bg-white px-4 py-16 sm:py-24 md:px-8">
+        <div className="mx-auto max-w-4xl">
+          <FadeIn className="mb-10">
+            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+              문의
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">궁금한 게 있으신가요?</h2>
+            <p className="text-sm text-slate-500">서비스 도입, 기능 제안, 파트너십 등 편하게 남겨주세요.</p>
+          </FadeIn>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+            <div className="md:col-span-2 space-y-5">
+              {[
+                { label: "이메일", value: "mnhyuk@velaanalytics.com" },
+                { label: "운영 시간", value: "평일 10:00 — 18:00" },
+                { label: "응답 시간", value: "영업일 기준 1일 이내" },
+              ].map((c) => (
+                <div key={c.label}>
+                  <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-1">{c.label}</p>
+                  <p className="text-sm text-slate-700">{c.value}</p>
+                </div>
+              ))}
+            </div>
+            <form className="md:col-span-3 space-y-3" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">이름</label>
+                  <input ref={nameRef} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white transition" placeholder="홍길동" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">연락처</label>
+                  <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white transition" placeholder="010-0000-0000" />
                 </div>
               </div>
-            </FadeIn>
-            <FadeIn delay={100}>
-              <form className="contact-form" onSubmit={handleSubmit}>
-                <div className="form-row">
-                  <div><label className="field-label">이름</label><input ref={nameRef} className="field-input" type="text" placeholder="홍길동" required /></div>
-                  <div><label className="field-label">연락처</label><input className="field-input" type="text" placeholder="010-0000-0000" /></div>
-                </div>
-                <div><label className="field-label">이메일</label><input ref={emailRef} className="field-input" type="email" placeholder="your@email.com" required /></div>
-                <div><label className="field-label">문의 내용</label><textarea ref={messageRef} className="field-input" placeholder="궁금한 점을 자유롭게 적어주세요." required /></div>
-                <button ref={submitBtnRef} type="submit" className="form-submit">문의 보내기</button>
-                <p ref={formMsgRef} className="form-msg" />
-              </form>
-            </FadeIn>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">이메일</label>
+                <input ref={emailRef} type="email" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white transition" placeholder="your@email.com" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">문의 내용</label>
+                <textarea ref={messageRef} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white transition resize-y min-h-[120px]" placeholder="궁금한 점을 자유롭게 적어주세요." required />
+              </div>
+              <button ref={submitBtnRef} type="submit" className="bg-blue-600 text-white px-6 py-3.5 rounded-xl text-sm font-bold active:scale-[0.98] transition">
+                문의 보내기
+              </button>
+              <p ref={formMsgRef} className="text-xs hidden" />
+            </form>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer>
-        <div className="footer-inner">
-          <div className="footer-top">
-            <div>
-              <div className="footer-logo">VELA<span>.</span></div>
-            </div>
-            <div className="footer-links">
-              <a href="#features">도구</a>
-              <Link href="/simulator">시뮬레이터</Link>
-              <Link href="/community">커뮤니티</Link>
-              <Link href="/game">게임</Link>
-              <a href="#pricing">요금제</a>
-              <a href="#faq">FAQ</a>
-              <a href="#contact">문의</a>
+      {/* ── FOOTER ── */}
+      <footer className="bg-slate-900 px-4 py-12 md:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8">
+            <p className="text-lg font-black text-white">VELA<span className="text-blue-500">.</span></p>
+            <div className="flex flex-wrap gap-4">
+              {[
+                { label: "도구", href: "#features" },
+                { label: "시뮬레이터", href: "/simulator" },
+                { label: "커뮤니티", href: "/community" },
+                { label: "요금제", href: "#pricing" },
+                { label: "FAQ", href: "#faq" },
+                { label: "문의", href: "#contact" },
+              ].map((l) => (
+                <Link key={l.label} href={l.href} className="text-xs text-slate-400 hover:text-white transition">{l.label}</Link>
+              ))}
             </div>
           </div>
-          <div style={{fontSize:"12px",color:"var(--gray-400)",lineHeight:"1.6",marginBottom:"24px"}}>
+          <div className="text-[11px] text-slate-500 leading-relaxed mb-6">
             상호명: 벨라솔루션 | 대표자: 김민혁<br />
-            사업자등록번호: 777-17-02386<br />
-            통신판매업 신고번호: 제2026-대전중구-0222호<br />
+            사업자등록번호: 777-17-02386 | 통신판매업 신고번호: 제2026-대전중구-0222호<br />
             주소: 대전광역시 중구 당디로96번길 9, 204호(유천동)<br />
-            전화번호: 010-2863-3754 | 이메일: mnhyuk@velaanalytics.com<br />
-            호스팅 서비스 제공자: Vercel Inc.
+            전화번호: 010-2863-3754 | 이메일: mnhyuk@velaanalytics.com
           </div>
-          <div className="footer-bottom">
-            <div className="footer-copy">© {new Date().getFullYear()} VELA. All rights reserved.</div>
-            <div className="footer-legal">
-              <Link href="/terms">이용약관</Link>
-              <Link href="/privacy">개인정보처리방침</Link>
-              <Link href="/refund">환불 정책</Link>
-              <a href="#contact">문의</a>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-6 border-t border-slate-800">
+            <p className="text-xs text-slate-500">© {new Date().getFullYear()} VELA. All rights reserved.</p>
+            <div className="flex gap-4">
+              <Link href="/terms" className="text-xs text-slate-500 hover:text-white transition">이용약관</Link>
+              <Link href="/privacy" className="text-xs text-slate-500 hover:text-white transition">개인정보처리방침</Link>
+              <Link href="/refund" className="text-xs text-slate-500 hover:text-white transition">환불 정책</Link>
             </div>
           </div>
         </div>
@@ -659,15 +471,12 @@ function LandingContent() {
   );
 }
 
-// ── 라우터 ────────────────────────────────────────────────────
+/* ── 라우터 ── */
 export default function HomePage() {
-  // Supabase 세션 localStorage에서 즉시 읽기 → 깜빡임 없음
-  const [loggedIn, setLoggedIn] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    // Supabase는 sb-{ref}-auth-token 키로 세션 저장
-    const sbKey = Object.keys(localStorage).find(
-      k => k.startsWith("sb-") && k.endsWith("-auth-token")
-    );
+  const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(() => {
+    if (typeof window === "undefined") return null;
+    const sbKey = Object.keys(localStorage).find(k => k.startsWith("sb-") && k.endsWith("-auth-token"));
     if (sbKey) {
       try { return !!JSON.parse(localStorage.getItem(sbKey) ?? "null"); } catch { return false; }
     }
@@ -680,17 +489,26 @@ export default function HomePage() {
       const val = !!data.user;
       setLoggedIn(val);
       localStorage.setItem("vela-logged-in", val ? "1" : "0");
+      if (val) router.replace("/dashboard");
     });
-  }, []);
+  }, [router]);
 
-  // 해시 앵커(#features 등) 접근 시 랜딩페이지 표시
+  // 해시 앵커(#features 등) 접근 시 랜딩 표시
   const hasHash = typeof window !== "undefined" && window.location.hash.length > 0;
+
+  // 로그인 확인 중 또는 리다이렉트 중
+  if (loggedIn && !hasHash) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <>
       <EventPopup />
-      <div className="pb-20 md:pb-0">
-        {hasHash ? <LandingContent /> : loggedIn ? <MemberHome /> : <LandingContent />}
-      </div>
+      <LandingContent />
     </>
   );
 }

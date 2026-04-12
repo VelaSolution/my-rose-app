@@ -6,36 +6,40 @@ import ToolNav from "@/components/ToolNav";
 
 const INTEGRATIONS = [
   {
-    id: "toss-pos",
-    name: "토스 POS",
-    desc: "토스 POS 매출 데이터 자동 연동",
-    status: "coming" as const,
-    icon: "🔵",
-    color: "bg-blue-50 ring-blue-200",
-  },
-  {
     id: "baemin",
     name: "배달의민족",
-    desc: "배민 주문·정산 데이터 자동 수집",
-    status: "coming" as const,
+    desc: "배민 정산서 업로드 → AI 자동 분석",
+    status: "active" as const,
     icon: "🟦",
     color: "bg-sky-50 ring-sky-200",
-  },
-  {
-    id: "coupang",
-    name: "쿠팡이츠",
-    desc: "쿠팡이츠 매출·수수료 자동 연동",
-    status: "coming" as const,
-    icon: "🟩",
-    color: "bg-green-50 ring-green-200",
+    href: "/sales-connect",
   },
   {
     id: "yogiyo",
     name: "요기요",
-    desc: "요기요 정산 데이터 자동 수집",
-    status: "coming" as const,
+    desc: "요기요 정산서 업로드 → AI 자동 분석",
+    status: "active" as const,
     icon: "🟥",
     color: "bg-red-50 ring-red-200",
+    href: "/sales-connect",
+  },
+  {
+    id: "coupang",
+    name: "쿠팡이츠",
+    desc: "쿠팡이츠 정산서 업로드 → AI 자동 분석",
+    status: "active" as const,
+    icon: "🟩",
+    color: "bg-green-50 ring-green-200",
+    href: "/sales-connect",
+  },
+  {
+    id: "excel",
+    name: "POS 엑셀 업로드",
+    desc: "POS 매출 데이터 엑셀 파일 AI 분석",
+    status: "active" as const,
+    icon: "📊",
+    color: "bg-emerald-50 ring-emerald-200",
+    href: "/sales-connect",
   },
   {
     id: "card-sales",
@@ -47,13 +51,12 @@ const INTEGRATIONS = [
     href: "/tools/card-sales",
   },
   {
-    id: "excel",
-    name: "POS 엑셀 업로드",
-    desc: "POS 데이터 엑셀 파일 AI 분석",
-    status: "active" as const,
-    icon: "📊",
-    color: "bg-emerald-50 ring-emerald-200",
-    href: "/simulator",
+    id: "toss-pos",
+    name: "토스 POS API 연동",
+    desc: "토스 POS 매출 데이터 자동 연동 (API)",
+    status: "coming" as const,
+    icon: "🔵",
+    color: "bg-blue-50 ring-blue-200",
   },
 ];
 
@@ -76,7 +79,7 @@ export default function IntegrationsPage() {
           <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
             <span>🔗</span> 연동 관리
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">외부 서비스 연동</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">외부 서비스 연동</h1>
           <p className="text-slate-500 text-sm">POS, 배달앱, 카드매출을 연동하여 매출 데이터를 자동으로 가져옵니다.</p>
         </div>
 

@@ -90,7 +90,7 @@ export default function BusinessPlanPage() {
             <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>📝</span> 사업계획서 도우미
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">사업계획서 작성 도우미</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">사업계획서 작성 도우미</h1>
             <div className="flex items-center gap-2">
               <p className="text-slate-500 text-sm">단계별로 작성하고 한 번에 미리보기 · 복사할 수 있습니다.</p>
               <CloudSyncBadge status={status} userId={userId} />

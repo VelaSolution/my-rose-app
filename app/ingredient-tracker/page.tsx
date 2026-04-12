@@ -107,7 +107,7 @@ export default function IngredientTrackerPage() {
             <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>🥬</span> 식재료 가격 트래커
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">식재료 가격 트래커</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">식재료 가격 트래커</h1>
             <p className="text-slate-500 text-sm">주요 식재료 가격을 기록하고 변동 추이를 확인하세요.</p>
           </div>
 

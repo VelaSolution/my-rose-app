@@ -68,7 +68,7 @@ export default function DailySalesPage() {
             <span>📝</span> 일일 매출
           </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">일일 매출 기록</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">일일 매출 기록</h1>
             <CloudSyncBadge status={status} userId={userId} />
           </div>
           <div className="flex items-center gap-2">

@@ -221,7 +221,7 @@ export default function TaxPage() {
               <span>🧾</span> 세금 계산기
             </div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">세금 계산기</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">세금 계산기</h1>
               <CloudSyncBadge status={syncStatus} userId={syncUserId} />
             </div>
             <p className="text-slate-500 text-sm">연 매출과 순이익을 입력하면 부가세·종합소득세 예상액을 계산합니다.</p>

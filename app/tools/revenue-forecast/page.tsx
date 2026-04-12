@@ -232,7 +232,7 @@ ${revenueHistory}
             <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>📈</span> AI 예측
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
               매출 예측 AI
             </h1>
             <p className="text-slate-500 text-sm">
@@ -288,7 +288,7 @@ ${revenueHistory}
 
             {/* Quick stats */}
             {snapshots.length > 0 && (
-              <div className="grid grid-cols-3 gap-3 mt-6 pt-5 border-t border-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-5 border-t border-slate-100">
                 <div className="text-center">
                   <p className="text-xs text-slate-400">평균 매출</p>
                   <p className="text-sm font-bold text-slate-900 mt-1">

@@ -181,7 +181,7 @@ ${dataContext}
             <div className="inline-flex items-center gap-2 bg-pink-50 text-pink-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>📱</span> AI 콘텐츠 생성기
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">SNS 콘텐츠 생성기</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">SNS 콘텐츠 생성기</h1>
             <p className="text-slate-500 text-sm">메뉴·이벤트 정보를 입력하면 AI가 맞춤 SNS 게시글을 작성해드립니다.</p>
           </div>
 

@@ -699,7 +699,7 @@ function ResultContent() {
               {isProfit ? "현재 흑자 구조입니다" : "현재 적자 구조입니다"}
             </div>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-2 print:hidden">
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2 print:hidden">
             <button onClick={() => router.push("/simulator")} className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">← 입력으로 돌아가기</button>
             <button onClick={() => window.print()} className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">PDF로 저장</button>
             <button onClick={() => navigator.clipboard.writeText(window.location.href).then(() => setSaveMsg("링크 복사됨!")).catch(console.error)} className="w-full rounded-2xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-500">링크 복사</button>

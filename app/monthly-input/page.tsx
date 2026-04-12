@@ -180,7 +180,7 @@ export default function MonthlyInputPage() {
             <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               📅 월별 입력
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">매장 현황 입력</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">매장 현황 입력</h1>
             <p className="text-slate-500 text-sm">월별 데이터를 저장하면 트렌드 분석이 가능합니다.</p>
           </div>
 

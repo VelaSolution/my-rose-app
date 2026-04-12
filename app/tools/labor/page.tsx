@@ -318,7 +318,7 @@ export default function LaborSchedulerPage() {
               <span>👥</span> 인건비 스케줄러
             </div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">인건비 스케줄러</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">인건비 스케줄러</h1>
               <CloudSyncBadge status={syncStatus} userId={syncUserId} />
             </div>
             <p className="text-slate-500 text-sm">직원별 시급과 근무 시간을 설정하면 주간·월간 인건비를 자동 계산합니다.</p>

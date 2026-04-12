@@ -324,7 +324,7 @@ function PosUploader({
       <div className="p-5 space-y-4">
         {/* 드래그 드롭 영역 */}
         <div
-          className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center transition cursor-pointer ${
+          className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-4 sm:p-8 text-center transition cursor-pointer ${
             dragging ? "border-blue-400 bg-blue-50" : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100"
           } ${status === "parsing" || status === "analyzing" ? "pointer-events-none opacity-60" : ""}`}
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -731,7 +731,7 @@ function Step1({
               value={form.storeName}
               onChange={(e) => update("storeName", e.target.value)}
               placeholder="예: 민혁이네 카페"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] text-slate-900 outline-none transition focus:bg-white focus:border-blue-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-900 outline-none transition focus:bg-white focus:border-blue-500"
             />
           </div>
           <div>
@@ -740,7 +740,7 @@ function Step1({
               value={form.storeLocation}
               onChange={(e) => update("storeLocation", e.target.value)}
               placeholder="예: 서울 마포구 서교동"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] text-slate-900 outline-none transition focus:bg-white focus:border-blue-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-900 outline-none transition focus:bg-white focus:border-blue-500"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -750,7 +750,7 @@ function Step1({
                 type="time"
                 value={form.openTime}
                 onChange={(e) => update("openTime", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] text-slate-900 outline-none transition focus:bg-white focus:border-blue-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-900 outline-none transition focus:bg-white focus:border-blue-500"
               />
             </div>
             <div>
@@ -759,7 +759,7 @@ function Step1({
                 type="time"
                 value={form.closeTime}
                 onChange={(e) => update("closeTime", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] text-slate-900 outline-none transition focus:bg-white focus:border-blue-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-900 outline-none transition focus:bg-white focus:border-blue-500"
               />
             </div>
           </div>
@@ -773,7 +773,7 @@ function Step1({
         <h2 className="text-[17px] font-bold text-slate-900 mb-1">업종 선택</h2>
         <p className="text-xs text-slate-400 mb-4">업종에 맞는 기준값이 자동 적용됩니다.</p>
 
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {VALID_INDUSTRIES.map((key) => (
             <button
               key={key}

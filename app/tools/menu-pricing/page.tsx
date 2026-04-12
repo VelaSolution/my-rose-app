@@ -106,7 +106,7 @@ JSON 형식: {"recommendedPrice":number,"minPrice":number,"maxPrice":number,"tar
             <span>💰</span> AI 가격 추천
           </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">AI 메뉴 가격 추천</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">AI 메뉴 가격 추천</h1>
             <CloudSyncBadge status={syncStatus} userId={syncUserId} />
           </div>
           <p className="text-slate-500 text-sm">원가와 경쟁 가격대를 입력하면 AI가 적정 가격을 추천합니다.</p>

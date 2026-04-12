@@ -223,7 +223,7 @@ export default function MyStorePage() {
                 <div className="flex gap-1.5">
                   {(["sales", "profit", "cost"] as const).map(tab => (
                     <button key={tab} onClick={() => setActiveChart(tab)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+                      className={`px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
                         activeChart === tab
                           ? "bg-slate-900 text-white"
                           : "bg-slate-100 text-slate-500 hover:bg-slate-200"
@@ -308,7 +308,7 @@ export default function MyStorePage() {
                 <div className="flex gap-1.5 flex-wrap mb-4">
                   {categories.map(cat => (
                     <button key={cat} onClick={() => setMenuCategory(cat)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                      className={`px-3 py-2.5 rounded-full text-xs font-semibold transition ${
                         menuCategory === cat ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                       }`}>
                       {cat}

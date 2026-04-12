@@ -131,7 +131,7 @@ export default function AreaAnalysisPage() {
             <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>🗺️</span> AI 상권 분석
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">상권 분석 도우미</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">상권 분석 도우미</h1>
             <p className="text-slate-500 text-sm">입지 조건을 입력하면 AI가 창업 적합성과 전략을 분석합니다.</p>
           </div>
 

@@ -74,7 +74,7 @@ export default function FinancialSimPage() {
           {/* 입력 */}
           <div className={cardCls}>
             <h3 className="font-bold text-slate-900 text-sm mb-4">⚙️ 시뮬레이션 조건</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {([
                 ["cash", "보유 현금 (만원)"], ["initInvest", "초기 투자금 (만원)"],
                 ["monthlyFixed", "월 고정비 (만원)"], ["variableRate", "변동비율 (%)"],

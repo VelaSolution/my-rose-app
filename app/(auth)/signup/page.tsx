@@ -191,22 +191,22 @@ function SignUpForm() {
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">이름</label>
                 <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="홍길동"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-slate-400 focus:bg-white transition" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">이메일</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-slate-400 focus:bg-white transition" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">비밀번호</label>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="8자 이상"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-slate-400 focus:bg-white transition" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">비밀번호 확인</label>
                 <input type="password" value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)} placeholder="다시 입력"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-slate-400 focus:bg-white transition" />
               </div>
 
               {error && <p className="text-xs text-red-500 bg-red-50 rounded-xl px-4 py-3">{error}</p>}
@@ -257,7 +257,7 @@ function SignUpForm() {
                   매장명 <span className="text-slate-300 normal-case font-normal">(선택)</span>
                 </label>
                 <input type="text" value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="예) 홍대 카페 베이글"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-slate-400 focus:bg-white transition" />
               </div>
 
               {/* 좌석수 & 주소 */}
@@ -268,7 +268,7 @@ function SignUpForm() {
                   </label>
                   <div className="relative">
                     <input type="number" value={seats} onChange={e => setSeats(e.target.value)} placeholder="20"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-right pr-8 outline-none focus:border-slate-400 focus:bg-white transition" />
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-right pr-8 outline-none focus:border-slate-400 focus:bg-white transition" />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">석</span>
                   </div>
                 </div>
@@ -277,7 +277,7 @@ function SignUpForm() {
                     지역 <span className="text-slate-300 normal-case font-normal">(선택)</span>
                   </label>
                   <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="예) 서울 마포구"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-slate-400 focus:bg-white transition" />
                 </div>
               </div>
 

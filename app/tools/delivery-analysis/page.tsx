@@ -89,7 +89,7 @@ export default function DeliveryAnalysisPage() {
           <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
             <span>🛵</span> 배달 매출 분석
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">배달앱 매출 분석기</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">배달앱 매출 분석기</h1>
           <div className="flex items-center gap-2">
             <p className="text-slate-500 text-sm">배달앱 정산서를 업로드하면 수수료·실매출·건당 이익을 자동 분석합니다.</p>
             <CloudSyncBadge status={syncStatus} userId={syncUserId} />

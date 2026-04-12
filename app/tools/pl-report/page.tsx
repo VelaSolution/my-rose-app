@@ -225,7 +225,7 @@ export default function PLReportPage() {
               <span>📄</span> 손익계산서
             </div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">손익계산서 PDF 출력</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">손익계산서 PDF 출력</h1>
               <CloudSyncBadge status={syncStatus} userId={syncUserId} />
             </div>
             <p className="text-slate-500 text-sm">수익 데이터를 입력하면 정식 손익계산서 형식으로 PDF 출력이 가능합니다.</p>

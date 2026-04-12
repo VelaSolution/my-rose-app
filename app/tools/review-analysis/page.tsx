@@ -71,7 +71,7 @@ JSON 형식:
           <div className="inline-flex items-center gap-2 bg-pink-50 text-pink-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
             <span>💬</span> 리뷰 분석
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">고객 리뷰 감정 분석</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">고객 리뷰 감정 분석</h1>
           <p className="text-slate-500 text-sm">네이버/배민/구글 리뷰를 붙여넣으면 AI가 키워드·감정·개선점을 분석합니다.</p>
         </div>
 

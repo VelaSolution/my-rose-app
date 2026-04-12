@@ -274,7 +274,7 @@ export default function ToolsPage() {
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-slate-900 to-slate-700 text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-4 shadow-lg shadow-slate-900/10">
               🛠️ VELA 도구 모음
             </div>
-            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
               사업에 필요한 모든 도구
             </h1>
             <p className="text-slate-500 text-base">

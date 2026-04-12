@@ -84,10 +84,10 @@ function LoginForm() {
           <form onSubmit={handleEmailLogin} className="space-y-3">
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="이메일" required aria-label="이메일"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-slate-400 focus:bg-white transition" />
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="비밀번호" required aria-label="비밀번호"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white transition" />
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-slate-400 focus:bg-white transition" />
             {error && <p className="text-xs text-red-500 bg-red-50 rounded-xl px-4 py-3">{error}</p>}
             <button type="submit" disabled={loading}
               className="w-full rounded-2xl bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50">

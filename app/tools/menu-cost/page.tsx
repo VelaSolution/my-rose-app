@@ -743,7 +743,7 @@ export default function MenuCostPage() {
               <span>🧮</span> 원가 계산기
             </div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
                 메뉴별 원가 계산기
               </h1>
               <CloudSyncBadge status={syncStatus} userId={syncUserId} />
