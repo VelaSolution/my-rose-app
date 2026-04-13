@@ -65,7 +65,7 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
         .map((t: any) => ({
           id: `team-${t.id}`, name: t.name,
           department: t.role || "", position: t.hq_role || "팀원",
-          phone: "", email: t.email || "",
+          phone: t.phone || "", email: t.email || "",
           extension: "", manager: undefined,
         }));
 
