@@ -55,7 +55,7 @@ const TOOL_CATEGORIES = [
       { icon:"🎮", label:"경영 시뮬레이션 게임", desc:"90일 가상 매장 운영 체험",        href:"/game" },
     ],
   },
-] as const;
+];
 
 // 모바일 메뉴 등에서 flat 리스트가 필요할 때 사용
 const TOOLS = TOOL_CATEGORIES.flatMap(cat => cat.tools);
