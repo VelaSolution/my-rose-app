@@ -12,6 +12,163 @@ import EventBanner from "@/components/EventBanner";
 const IND: Record<string, string> = { cafe:"☕", restaurant:"🍽️", bar:"🍺", finedining:"✨", gogi:"🥩" };
 const IND_LABEL: Record<string, string> = { cafe:"카페", restaurant:"음식점", bar:"술집/바", finedining:"파인다이닝", gogi:"고깃집" };
 
+/* ── 시장 동향 위젯 ── */
+type IndexData = { price: string; date: string } | null;
+type NewsItem = { title: string; summary: string; source: string; url: string; tag?: string; insight?: string; date?: string };
+
+const NEWS_TAGS = [
+  { key: "all", label: "전체", color: "bg-slate-900 text-white" },
+  { key: "외식업", label: "🍽️ 외식업", color: "bg-orange-500 text-white" },
+  { key: "경제", label: "📈 경제", color: "bg-blue-500 text-white" },
+];
+const TAG_COLORS: Record<string, string> = { "외식업": "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300", "경제": "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" };
+
+function MarketWidget() {
+  const [stocks, setStocks] = useState<{ kospi: IndexData; kosdaq: IndexData; usdkrw: IndexData } | null>(null);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [newsLoad, setNewsLoad] = useState(true);
+  const [loaded, setLoaded] = useState(false);
+  const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    fetch("/api/home")
+      .then(r => r.json())
+      .then(d => {
+        if (d.stocks) setStocks(d.stocks);
+        if (d.news) setNews(d.news);
+      })
+      .catch(() => {})
+      .finally(() => { setLoaded(true); setNewsLoad(false); });
+  }, []);
+
+  const filtered = filter === "all" ? news : news.filter(n => n.tag === filter);
+  const cards = [
+    { label: "KOSPI", icon: "📈", data: stocks?.kospi },
+    { label: "KOSDAQ", icon: "📊", data: stocks?.kosdaq },
+    { label: "달러/원", icon: "💵", data: stocks?.usdkrw },
+  ];
+
+  return (
+    <div className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 p-5">
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">📈 시장 동향</h3>
+
+      {/* 지수 */}
+      <div className="grid grid-cols-3 gap-2 mb-5">
+        {cards.map(({ label, icon, data }) => (
+          <div key={label} className="rounded-xl bg-slate-50 dark:bg-slate-900 px-3 py-2.5">
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-xs">{icon}</span>
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{label}</p>
+            </div>
+            {!loaded ? (
+              <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-16 animate-pulse" />
+            ) : data ? (
+              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{data.price}</p>
+            ) : (
+              <p className="text-xs text-slate-400">—</p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* 뉴스 */}
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-bold text-slate-900 dark:text-white">📰 오늘의 뉴스</p>
+        <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">AI 요약</span>
+      </div>
+      <div className="flex gap-1 mb-3 overflow-x-auto">
+        {NEWS_TAGS.map(t => (
+          <button key={t.key} onClick={() => setFilter(t.key)}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap transition ${
+              filter === t.key ? t.color : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+            }`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {newsLoad ? (
+        <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 bg-slate-100 dark:bg-slate-700 rounded-xl animate-pulse" />)}</div>
+      ) : filtered.length === 0 ? (
+        <p className="text-xs text-slate-400 text-center py-4">뉴스가 없어요.</p>
+      ) : (
+        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+          {filtered.slice(0, 5).map((n, i) => (
+            <a key={i} href={n.url || "#"} target="_blank" rel="noopener noreferrer"
+              className="block rounded-xl border border-slate-100 dark:border-slate-700 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition group">
+              <div className="flex items-center gap-1.5 mb-1">
+                {n.tag && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${TAG_COLORS[n.tag] ?? "bg-slate-100 text-slate-600"}`}>{n.tag}</span>}
+                <span className="text-[10px] text-slate-400">{n.source}</span>
+              </div>
+              <p className="text-xs font-semibold text-slate-900 dark:text-white leading-snug group-hover:text-blue-600 transition">{n.title}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{n.summary}</p>
+              {n.insight && (
+                <div className="mt-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-2 py-1">
+                  <p className="text-[10px] text-amber-800 dark:text-amber-300">💡 {n.insight}</p>
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── 경영 팁 위젯 ── */
+function TipsWidget() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const day = now.getDay();
+  const date = now.getDate();
+
+  const seasonalTips: Record<number, { title: string; tips: string[] }> = {
+    1: { title: "1월 — 신년", tips: ["연초 메뉴 리뉴얼 시기입니다. 하위 20% 메뉴를 정리하세요.", "난방비가 최고인 달. 에어커튼으로 열손실 20% 줄일 수 있어요."] },
+    2: { title: "2월 — 비수기", tips: ["비수기에 원가율 1% 낮추면 연간 수백만원 절약.", "발렌타인데이 특별 메뉴를 2주 전부터 SNS에 노출하세요."] },
+    3: { title: "3월 — 봄 준비", tips: ["제철 식재료(냉이, 달래) 활용하면 원가를 낮출 수 있어요.", "테라스 정비하세요. 4월부터 회전율 2배."] },
+    4: { title: "4월 — 성수기", tips: ["4월은 외식 지출 연중 최고. 신메뉴 출시 골든타임.", "네이버 플레이스 리뷰 관리 집중. 봄 검색량 급증."] },
+    5: { title: "5월 — 가정의 달", tips: ["어버이날 코스 메뉴가 객단가 50% 올립니다.", "5월 매출이 BEP 달성 여부를 결정합니다."] },
+    6: { title: "6월 — 여름 대비", tips: ["장마 전 배달 메뉴 강화. 비 오면 배달 1.5배.", "에어컨 점검. 여름 전기료 월 50만원+ 증가 가능."] },
+    7: { title: "7월 — 성수기", tips: ["식자재 온도 매일 체크. 선입선출 철저히.", "파트타이머 7월 초에 확보해야 8월 안정적."] },
+    8: { title: "8월 — 휴가", tips: ["사장님도 3일이라도 쉬세요.", "8월 식재료 가격 연중 최고. 메뉴 가격 조정 고려."] },
+    9: { title: "9월 — 가을", tips: ["추석 선물세트가 의외의 매출원.", "런치 세트 재정비. 9월부터 점심 매출 회복."] },
+    10: { title: "10월 — 4분기", tips: ["올해 목표 매출 달성률 체크하세요.", "식재료비 재협상 적기."] },
+    11: { title: "11월 — 연말 준비", tips: ["12월 송년회 예약 11월부터 받으세요.", "겨울 메뉴 11월 중순 출시가 이상적."] },
+    12: { title: "12월 — 연말", tips: ["예약 노쇼 방지 예약금 제도 도입.", "매출 20%는 1월 비수기 대비 유보."] },
+  };
+
+  const dailyTips: Record<number, string> = {
+    1: "월요일: 식재료 발주·재고 정리에 집중하세요.",
+    2: "화요일: 신메뉴 테스트 적합일. 직원과 시식 평가해보세요.",
+    3: "수요일: 주말 이벤트를 SNS에 미리 올려두세요.",
+    4: "목요일: 주말 식재료 준비 시작. 금요일 발주는 늦어요.",
+    5: "금요일: 예약 vs 워크인 비율 체크. 회전율이 핵심.",
+    6: "토요일: 매출 최고일. 재고 수시 확인.",
+    0: "일요일: 가족 단위 세트 메뉴가 객단가를 올립니다.",
+  };
+
+  const season = seasonalTips[month] ?? seasonalTips[4];
+  const tipIndex = date % season.tips.length;
+
+  return (
+    <div className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">💡 사장님 경영 팁</h3>
+        <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">{season.title}</span>
+      </div>
+      <div className="space-y-2">
+        <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 px-3 py-2.5">
+          <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 mb-0.5">이번 달</p>
+          <p className="text-xs text-blue-900 dark:text-blue-200 leading-relaxed">{season.tips[tipIndex]}</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 dark:bg-slate-900 px-3 py-2.5">
+          <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">오늘의 할 일</p>
+          <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{dailyTips[day]}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const TOOLS = [
   { icon:"🧮", label:"원가 계산기",    href:"/tools/menu-cost" },
   { icon:"👥", label:"인건비 스케줄러", href:"/tools/labor" },
@@ -50,9 +207,9 @@ export default function DashboardHome() {
   const [todaySaved, setTodaySaved] = useState(false);
   const [showWidgetSettings, setShowWidgetSettings] = useState(false);
 
-  type WidgetKey = "alerts" | "today" | "goal" | "chart" | "trend" | "forecast" | "sims" | "tools" | "menus" | "community" | "notes";
+  type WidgetKey = "alerts" | "market" | "tips" | "today" | "goal" | "chart" | "trend" | "forecast" | "sims" | "tools" | "menus" | "community" | "notes";
   const WIDGET_LABELS: Record<WidgetKey, string> = {
-    alerts: "🔔 알림", today: "📊 오늘의 매출", goal: "🎯 월 목표", chart: "📈 월별 매출",
+    alerts: "🔔 알림", market: "📈 시장 동향", tips: "💡 경영 팁", today: "📊 오늘의 매출", goal: "🎯 월 목표", chart: "📈 월별 매출",
     trend: "📊 추이 차트", forecast: "🔮 매출 예측", sims: "📊 시뮬레이션",
     tools: "🛠️ 도구 바로가기", menus: "🧮 메뉴 원가", community: "👥 커뮤니티", notes: "📝 노트",
   };
@@ -309,6 +466,14 @@ export default function DashboardHome() {
               </div>
             );
           })()}
+
+          {/* 시장 동향 + 경영 팁 */}
+          {(w("market") || w("tips")) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {w("market") && <MarketWidget />}
+              {w("tips") && <TipsWidget />}
+            </div>
+          )}
 
           {/* 핵심 지표 4개 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
