@@ -489,7 +489,16 @@ export default function HomePage() {
       const val = !!data.user;
       setLoggedIn(val);
       localStorage.setItem("vela-logged-in", val ? "1" : "0");
-      if (val) router.replace("/dashboard");
+      if (val) {
+        // 신규 가입 → 온보딩
+        const params = new URLSearchParams(window.location.search);
+        const onboarded = localStorage.getItem("vela-onboarded") === "1";
+        if (params.get("signup") === "success" && !onboarded) {
+          router.replace("/onboarding");
+        } else {
+          router.replace("/dashboard");
+        }
+      }
     });
   }, [router]);
 

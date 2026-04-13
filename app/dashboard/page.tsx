@@ -232,6 +232,29 @@ export default function DashboardHome() {
       <main className="px-4 py-8 md:px-8">
         <div className="mx-auto max-w-6xl space-y-6">
 
+          {/* 첫 방문 가이드 배너 */}
+          {snapshots.length === 0 && sims.length === 0 && (
+            <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-5 text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold mb-1">처음이시네요! 뭐부터 할까요?</p>
+                  <p className="text-xs text-white/70 mb-3">아래 중 하나만 해보면 대시보드가 채워져요.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Link href="/simulator" className="inline-flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-2 rounded-xl text-xs font-semibold active:scale-[0.98] transition">
+                      🔮 시뮬레이터
+                    </Link>
+                    <Link href="/sales-connect" className="inline-flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-2 rounded-xl text-xs font-semibold active:scale-[0.98] transition">
+                      📊 매출 입력
+                    </Link>
+                    <Link href="/tools/menu-cost" className="inline-flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-2 rounded-xl text-xs font-semibold active:scale-[0.98] transition">
+                      🧮 원가 계산
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 인사말 헤더 */}
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
