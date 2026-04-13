@@ -132,16 +132,31 @@ function LandingContent() {
     setTimeout(() => { if (btn?.textContent === "전송 완료 ✓") { btn.textContent = "문의 보내기"; btn.disabled = false; } }, 4000);
   }
 
-  const FEATURES = [
-    { icon: "🧮", title: "메뉴별 원가 계산", desc: "식재료 원가 → 원가율·건당 순익 자동 계산", tag: "원가" },
-    { icon: "🛵", title: "배달앱 매출 분석", desc: "정산서 업로드 → 수수료·실매출 AI 자동 분석", tag: "AI" },
-    { icon: "💳", title: "카드매출 자동 수집", desc: "사업자번호만 입력하면 카드사별 매출 조회", tag: "자동" },
-    { icon: "📊", title: "리뷰 감정 분석", desc: "네이버·배민 리뷰 → AI 감정·키워드 분석", tag: "AI" },
-    { icon: "📱", title: "SNS 콘텐츠 생성", desc: "메뉴·이벤트 → 인스타 캡션 AI 자동 생성", tag: "AI" },
-    { icon: "🧾", title: "세금 계산기", desc: "부가세·종소세 예상액 자동 산출", tag: "세금" },
-    { icon: "📄", title: "손익계산서 PDF", desc: "시뮬레이션 데이터 → P&L 리포트 즉시 출력", tag: "PDF" },
-    { icon: "🗺️", title: "AI 상권 분석", desc: "입지 조건 → 상권 적합도 AI 리포트", tag: "AI" },
-    { icon: "📈", title: "매출 예측 AI", desc: "과거 데이터 기반 3개월 매출 자동 예측", tag: "AI" },
+  const FEATURE_CATEGORIES = [
+    {
+      key: "revenue", label: "💰 수익 분석", desc: "매출·원가·인건비·세금 시뮬레이션",
+      items: [
+        { icon: "🧮", title: "메뉴별 원가 계산", desc: "식재료 원가 → 원가율·건당 순익 자동 계산", tag: "원가" },
+        { icon: "👥", title: "인건비 스케줄러", desc: "직원별 시급·근무시간 → 월간 인건비 예측", tag: "원가" },
+        { icon: "🧾", title: "세금 계산기", desc: "부가세·종소세 예상액 자동 산출", tag: "세금" },
+      ],
+    },
+    {
+      key: "ai", label: "🤖 AI 도구", desc: "AI가 자동으로 생성·분석",
+      items: [
+        { icon: "🛵", title: "배달앱 매출 분석", desc: "정산서 업로드 → 수수료·실매출 AI 자동 분석", tag: "AI" },
+        { icon: "📊", title: "리뷰 감정 분석", desc: "네이버·배민 리뷰 → AI 감정·키워드 분석", tag: "AI" },
+        { icon: "📱", title: "SNS 콘텐츠 생성", desc: "메뉴·이벤트 → 인스타 캡션 AI 자동 생성", tag: "AI" },
+      ],
+    },
+    {
+      key: "startup", label: "🚀 창업 준비", desc: "사업계획·자금·법인·인수인계",
+      items: [
+        { icon: "🗺️", title: "AI 상권 분석", desc: "입지 조건 → 상권 적합도 AI 리포트", tag: "AI" },
+        { icon: "📄", title: "손익계산서 PDF", desc: "시뮬레이션 데이터 → P&L 리포트 즉시 출력", tag: "PDF" },
+        { icon: "📈", title: "매출 예측 AI", desc: "과거 데이터 기반 3개월 매출 자동 예측", tag: "AI" },
+      ],
+    },
   ];
 
   return (
@@ -221,20 +236,35 @@ function LandingContent() {
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">사장님에게 필요한 모든 도구</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">원가 계산부터 AI 분석까지, 매장 운영에 필요한 도구를 한곳에서.</p>
           </FadeIn>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {FEATURES.map((f) => (
-              <FadeIn key={f.title}>
-                <div className="rounded-2xl bg-slate-50 dark:bg-slate-800 p-5 sm:p-6 ring-1 ring-slate-100 dark:ring-slate-700 hover:ring-blue-200 hover:shadow-md transition group">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
-                    {f.icon}
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{f.title}</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-2">{f.desc}</p>
-                  <span className="inline-block text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{f.tag}</span>
+          {FEATURE_CATEGORIES.map((cat) => (
+            <FadeIn key={cat.key} className="mb-10">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl flex-shrink-0">
+                  {cat.label.split(" ")[0]}
                 </div>
-              </FadeIn>
-            ))}
-          </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">{cat.label}</h3>
+                    <span className="text-xs font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{cat.items.length}개</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">{cat.desc}</p>
+                </div>
+              </div>
+              <div className="h-px bg-gradient-to-r from-slate-200 dark:from-slate-700 via-slate-200 dark:via-slate-700 to-transparent mb-5" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {cat.items.map((f) => (
+                  <div key={f.title} className="rounded-2xl bg-slate-50 dark:bg-slate-800 p-5 sm:p-6 ring-1 ring-slate-100 dark:ring-slate-700 hover:ring-blue-200 hover:shadow-md transition group">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+                      {f.icon}
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{f.title}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-2">{f.desc}</p>
+                    <span className="inline-block text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{f.tag}</span>
+                  </div>
+                ))}
+              </div>
+            </FadeIn>
+          ))}
           <FadeIn className="text-center mt-8">
             <Link href="/tools" className="text-sm font-semibold text-blue-600 active:text-blue-800 transition">
               전체 도구 보기 →

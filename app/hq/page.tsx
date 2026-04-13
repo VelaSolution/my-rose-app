@@ -231,7 +231,7 @@ export default function HQPage() {
 
   return (
     <TeamDisplayProvider>
-    <div className={`min-h-screen bg-[#F7F8FA]${darkMode ? " hq-dark" : ""}`}>
+    <div className={`h-screen flex flex-col overflow-hidden bg-[#F7F8FA]${darkMode ? " hq-dark" : ""}`}>
       <meta name="theme-color" content={darkMode ? "#0F172A" : "#ffffff"} />
       <style>{`
         .hq-header{position:-webkit-sticky;position:sticky;top:0;z-index:100;height:56px;background:rgba(255,255,255,0.97);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #E5E8EB;display:flex;align-items:center;padding:0 12px}
@@ -341,7 +341,7 @@ export default function HQPage() {
         </aside>
       </div>
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* ── 데스크톱 사이드바 (독립 스크롤) ─────────── */}
         <aside className="hidden md:flex flex-col w-[240px] bg-white border-r border-slate-200/80 overflow-y-auto flex-shrink-0">
           <nav className="flex-1 px-3 py-4">
@@ -380,7 +380,7 @@ export default function HQPage() {
         </aside>
 
         {/* ── 메인 콘텐츠 (독립 스크롤) ─────────────────── */}
-        <main className="flex-1 min-w-0 pb-16 md:pb-0">
+        <main className="flex-1 min-w-0 pb-16 md:pb-0 overflow-y-auto">
           {/* 탭 콘텐츠 */}
           <div className="px-3 lg:px-6 pt-2 lg:pt-3 pb-10">
             {userId && tab === "dashboard" ? (
