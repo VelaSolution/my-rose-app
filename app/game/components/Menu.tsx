@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { S } from "../types";
 import { G50, G100, G200, G400, G600, G800, G900, B } from "../constants";
 
-export default function Menu({onNew,onLoad,saved}:{onNew:()=>void;onLoad:()=>void;saved:S|null}) {
+export default function Menu({onNew,onLoad,saved,cloudSaved,onCloudLoad}:{onNew:()=>void;onLoad:()=>void;saved:S|null;cloudSaved?:S|null;onCloudLoad?:()=>void}) {
   return (
     <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}>
 
@@ -22,6 +22,14 @@ export default function Menu({onNew,onLoad,saved}:{onNew:()=>void;onLoad:()=>voi
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span>📂 이어하기</span>
                 <span style={{fontSize:13,color:G400}}>{saved.name} · {saved.day}일차{saved.savedAt?" · "+new Date(saved.savedAt).toLocaleDateString("ko-KR"):""}</span>
+              </div>
+            </button>
+          )}
+          {cloudSaved && onCloudLoad && (
+            <button onClick={onCloudLoad} style={{padding:"15px 20px",borderRadius:14,border:"1px solid "+G200,background:"#fff",color:G800,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span>☁️ 클라우드 이어하기</span>
+                <span style={{fontSize:13,color:G400}}>{cloudSaved.name} · {cloudSaved.day}일차</span>
               </div>
             </button>
           )}
