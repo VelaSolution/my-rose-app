@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { apiError, apiSuccess } from "@/lib/api-error";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: "잘못된 요청입니다." }, { status: 400 });
+      return apiError("잘못된 요청입니다.", 400);
     }
 
     const {

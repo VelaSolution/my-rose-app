@@ -233,7 +233,7 @@ export default function ProfilePage() {
   if(loading) return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       
-      <div className="mx-auto max-w-2xl px-4 py-8 md:px-8 space-y-4 animate-pulse">
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 space-y-4 animate-pulse">
         <div className="h-20 bg-slate-200 rounded-3xl" />
         <div className="h-12 bg-slate-200 rounded-2xl" />
         <div className="h-48 bg-slate-200 rounded-3xl" />
@@ -253,7 +253,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       
       <main className="px-4 py-8 md:px-8">
-        <div className="mx-auto max-w-2xl space-y-5">
+        <div className="mx-auto max-w-5xl space-y-5">
 
           {/* 상단 프로필 카드 */}
           <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200 flex items-center gap-4 flex-wrap">

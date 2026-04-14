@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { apiError, apiSuccess } from "@/lib/api-error";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     const { bizNumber } = await req.json();
 
     if (!bizNumber || String(bizNumber).replace(/-/g, "").length !== 10) {
-      return NextResponse.json({ error: "사업자등록번호 10자리를 입력해주세요." }, { status: 400 });
+      return apiError("사업자등록번호 10자리를 입력해주세요.", 400);
     }
 
     const apiKey = process.env.CREFIA_API_KEY; // 여신금융협회 API 키
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-    return NextResponse.json({
+    return apiSuccess({
       period: thisMonth,
       totalSales: 18500000,
       totalCount: 1240,
@@ -70,6 +71,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (e) {
     console.error("Card sales error:", e);
-    return NextResponse.json({ error: "서버 오류" }, { status: 500 });
+    return apiError("서버 오류", 500);
   }
 }

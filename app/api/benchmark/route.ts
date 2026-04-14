@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { apiError, apiSuccess } from "@/lib/api-error";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -28,11 +29,11 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     console.error("Benchmark query error:", error);
-    return NextResponse.json({ error: "조회 실패" }, { status: 500 });
+    return apiError("조회 실패", 500);
   }
 
   if (!snapshots || snapshots.length === 0) {
-    return NextResponse.json({
+    return apiSuccess({
       industry,
       totalStores: 0,
       message: "아직 비교할 데이터가 충분하지 않습니다.",
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
   const salesSorted = [...snapshots].sort((a, b) => (b.total_sales ?? 0) - (a.total_sales ?? 0));
   const profitSorted = [...snapshots].sort((a, b) => (b.net_profit ?? 0) - (a.net_profit ?? 0));
 
-  return NextResponse.json({
+  return apiSuccess({
     industry,
     totalStores: new Set(snapshots.map(() => "store")).size, // 익명 처리
     sampleCount: n,

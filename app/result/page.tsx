@@ -681,7 +681,7 @@ function ResultContent() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 print:bg-white">
       
       <main className="px-4 py-6 md:px-8 print:px-0">
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
 
         {/* 헤더 */}
         <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 print:rounded-none print:shadow-none">

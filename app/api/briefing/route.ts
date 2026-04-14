@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { apiError } from "@/lib/api-error";
+import { apiError, apiSuccess } from "@/lib/api-error";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "edge";
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) return rateLimitResponse();
   const body = await req.json().catch(() => null);
   if (!body?.form || !body?.result) {
-    return new Response(JSON.stringify({ error: "입력값이 올바르지 않습니다." }), { status: 400 });
+    return apiError("입력값이 올바르지 않습니다.", 400);
   }
   const { form, result } = body;
 
@@ -84,12 +84,12 @@ AI 전략 추천과는 다릅니다 — 브리핑은 "현재 상태 진단 + 가
 
   try {
     const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-    return new Response(JSON.stringify(parsed), { headers: { "Content-Type": "application/json" } });
+    return apiSuccess(parsed);
   } catch {
     return apiError("응답 파싱에 실패했습니다.", 500);
   }
   } catch (e) {
     console.error("Briefing error:", e);
-    return new Response(JSON.stringify({ error: "서버 오류" }), { status: 500 });
+    return apiError("서버 오류", 500);
   }
 }

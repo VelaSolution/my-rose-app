@@ -123,6 +123,6 @@ ${existingList || "(없음)"}
   }
   } catch (e) {
     console.error("AI strategy error:", e);
-    return new Response(JSON.stringify({ error: "서버 오류" }), { status: 500, headers: { "Content-Type": "application/json" } });
+    return apiError("서버 오류", 500);
   }
 }

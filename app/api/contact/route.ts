@@ -1,6 +1,6 @@
 // app/api/contact/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-error";
+import { NextRequest } from "next/server";
+import { apiError, apiSuccess } from "@/lib/api-error";
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: true });
+    return apiSuccess({ ok: true });
   } catch (e) {
     console.error(e);
     return apiError("서버 오류가 발생했습니다.", 500);
