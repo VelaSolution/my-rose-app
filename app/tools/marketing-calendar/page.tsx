@@ -56,7 +56,7 @@ export default function MarketingCalendarPage() {
               <span>📅</span> 마케팅 캘린더
             </div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">시즌 마케팅 캘린더</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">시즌 마케팅 캘린더</h1>
               <CloudSyncBadge status={syncStatus} userId={syncUserId} />
             </div>
             <p className="text-slate-500 text-sm">매월 놓치면 안 되는 이벤트와 마케팅 전략을 확인하세요.</p>

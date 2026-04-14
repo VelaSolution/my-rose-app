@@ -41,9 +41,9 @@ export default function CardSalesPage() {
     <>
       <ToolNav />
       <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4 md:pl-60">
-        <div className="mx-auto max-w-md text-center py-16">
+        <div className="mx-auto max-w-3xl text-center py-16">
           <p className="text-5xl mb-6">🚀</p>
-          <h1 className="text-2xl font-extrabold text-slate-900 mb-2">카드매출 자동 수집</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">카드매출 자동 수집</h1>
           <p className="text-sm text-slate-500 mb-2">사업자등록번호만 입력하면 여신금융협회를 통해 카드사별 매출을 자동으로 조회합니다. 곧 출시됩니다!</p>
           <div className="mb-8">
             <CloudSyncBadge status={syncStatus} userId={syncUserId} />

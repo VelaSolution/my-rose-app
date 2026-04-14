@@ -174,7 +174,7 @@ export default function FundraisingPage() {
             <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>💎</span> 투자 유치 도구
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">투자 유치 도구</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">투자 유치 도구</h1>
             <div className="flex items-center gap-2">
               <p className="text-slate-500 text-sm">밸류에이션, IR 덱, 투자자 미팅까지 한 번에 준비하세요.</p>
               <CloudSyncBadge status={status} userId={userId} />

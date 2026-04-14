@@ -85,7 +85,7 @@ export default function HandoverPage() {
     <>
     <ToolNav />
     <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4 md:pl-60">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-3xl">
         <Link href="/tools" className="text-sm text-slate-400 hover:text-slate-700 transition">← 도구 목록</Link>
 
         <div className="mt-6 mb-8">
@@ -93,7 +93,7 @@ export default function HandoverPage() {
             <span>🔄</span> 인수인계
           </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">매장 인수인계 체크리스트</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">매장 인수인계 체크리스트</h1>
             <CloudSyncBadge status={status} userId={userId} />
           </div>
           <p className="text-slate-500 text-sm">매장 양도양수 시 빠뜨리면 안 되는 항목들을 체크하세요.</p>

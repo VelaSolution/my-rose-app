@@ -95,7 +95,7 @@ export default function LaborLawPage() {
             <span>⚖️</span> 근로기준법 반영
           </div>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">인건비 계산기 (법정)</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">인건비 계산기 (법정)</h1>
             <CloudSyncBadge status={syncStatus} userId={syncUserId} />
           </div>
           <p className="text-slate-500 text-sm">주휴수당·야간수당·4대보험을 자동 반영한 실제 인건비를 계산합니다.</p>

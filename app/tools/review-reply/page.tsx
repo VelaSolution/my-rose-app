@@ -134,7 +134,7 @@ ${review}
             <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>💬</span> AI 리뷰 답변
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">리뷰 답변 생성기</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">리뷰 답변 생성기</h1>
             <p className="text-slate-500 text-sm">고객 리뷰를 붙여넣으면 AI가 플랫폼·톤에 맞는 답변 초안을 작성합니다.</p>
           </div>
 

@@ -158,7 +158,7 @@ export default function DeliveryMenuPage() {
               <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
                 <span>🛵</span> AI 메뉴 최적화
               </div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
                 배달앱 메뉴 설명 최적화
               </h1>
               <p className="text-slate-500 text-sm">

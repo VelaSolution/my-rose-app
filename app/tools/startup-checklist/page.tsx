@@ -238,7 +238,7 @@ export default function StartupChecklistPage() {
                 <span>✅</span> 창업 체크리스트
               </div>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">창업 체크리스트</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">창업 체크리스트</h1>
                 <CloudSyncBadge status={status} userId={userId} />
               </div>
               <p className="text-slate-500 text-sm">업종별 인허가·준비사항을 단계별로 확인하세요.</p>

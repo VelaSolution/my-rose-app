@@ -351,8 +351,8 @@ export default function Page() {
           )}
         </section>
 
-        {/* 모바일 플로팅 미리보기 — NavBar 바로 아래 고정 */}
-        <div className="lg:hidden sticky top-0 z-40 mb-3 -mx-4 px-3 pt-1 pb-1 bg-slate-50/95 backdrop-blur-sm">
+        {/* 미리보기 — 모바일: sticky, 데스크톱: 폼 상단 */}
+        <div className="sticky top-0 z-40 mb-4 -mx-4 px-3 pt-1 pb-1 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-sm lg:mx-0 lg:px-0 lg:static lg:bg-transparent lg:backdrop-blur-none">
           <PreviewBar form={form} />
         </div>
 
@@ -396,7 +396,6 @@ export default function Page() {
 
           <div className="hidden lg:block relative">
             <div className="fixed top-20 w-[284px] space-y-3" style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}>
-              <PreviewBar form={form} />
               <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">입력 단계</p>
                 <div className="space-y-2">

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { apiError } from "@/lib/api-error";
+import { apiError, apiSuccess } from "@/lib/api-error";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "edge";
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) return rateLimitResponse();
   const body = await req.json().catch(() => null);
   if (!body?.form || !body?.result) {
-    return new Response(JSON.stringify({ error: "입력값 누락" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    return apiError("입력값 누락", 400);
   }
   const { form, result, existingStrategies } = body;
 
@@ -117,9 +117,7 @@ ${existingList || "(없음)"}
       parsed._titles = parsed.strategies.map((s: { title: string }) => s.title);
     }
 
-    return new Response(JSON.stringify(parsed), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return apiSuccess(parsed);
   } catch {
     return apiError("응답 파싱에 실패했습니다.", 500);
   }

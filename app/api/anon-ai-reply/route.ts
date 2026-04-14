@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { apiError, apiSuccess, sanitizeUserInput } from "@/lib/api-error";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
     const rl = checkRateLimit(ip, { key: "anon-ai-reply", limit: 5 });
     if (!rl.ok) return rateLimitResponse();
     const { postId } = await req.json();
-    if (!postId) return NextResponse.json({ error: "postId 필요" }, { status: 400 });
+    if (!postId) return apiError("postId 필요", 400);
 
     // 이미 AI 답변이 있는지 확인
     const { data: existing } = await supabaseAdmin
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (existing && existing.length > 0) {
-      return NextResponse.json({ ok: true, skipped: true });
+      return apiSuccess({ ok: true, skipped: true });
     }
 
     // 게시글 조회
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
       .eq("id", postId)
       .single();
 
-    if (!post) return NextResponse.json({ error: "게시글 없음" }, { status: 404 });
+    if (!post) return apiError("게시글 없음", 404);
 
     const systemPrompt = `당신은 VELA의 외식업 전문 경영 컨설턴트 AI입니다.
 외식업 사장님의 익명 고민 상담에 답변합니다.
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
 수치가 없어도 일반적인 경영 원칙과 실무 경험을 바탕으로 도움이 되는 답변을 해주세요.`;
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: "API 키 없음" }, { status: 500 });
+    if (!apiKey) return apiError("API 키가 설정되지 않았습니다.", 500);
 
     // 비스트리밍으로 완전한 답변 받기
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -66,20 +67,20 @@ export async function POST(req: NextRequest) {
         model: "claude-haiku-4-5-20251001",
         max_tokens: 2048,
         system: systemPrompt,
-        messages: [{ role: "user", content: `${post.title}\n\n${post.content}` }],
+        messages: [{ role: "user", content: sanitizeUserInput(`${post.title}\n\n${post.content}`, 3000) }],
       }),
     });
 
     if (!res.ok) {
       console.error("AI reply error:", await res.text());
-      return NextResponse.json({ error: "AI 응답 실패" }, { status: 500 });
+      return apiError("AI 응답 실패", 500);
     }
 
     const data = await res.json();
     const aiText = data.content?.[0]?.text ?? "";
 
     if (!aiText.trim()) {
-      return NextResponse.json({ error: "빈 응답" }, { status: 500 });
+      return apiError("빈 응답", 500);
     }
 
     // DB에 저장
@@ -99,9 +100,9 @@ export async function POST(req: NextRequest) {
       .update({ comment_count: allComments?.length ?? 1 })
       .eq("id", postId);
 
-    return NextResponse.json({ ok: true });
+    return apiSuccess({ ok: true });
   } catch (e) {
     console.error("Anon AI reply error:", e);
-    return NextResponse.json({ error: "서버 오류" }, { status: 500 });
+    return apiError("서버 오류", 500);
   }
 }

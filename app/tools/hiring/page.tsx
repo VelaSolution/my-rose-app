@@ -165,7 +165,7 @@ export default function HiringPage() {
             <div className="inline-flex items-center gap-2 bg-teal-50 text-teal-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>👥</span> 인력 채용 도구
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">인력 채용 도구</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">인력 채용 도구</h1>
             <div className="flex items-center gap-2">
               <p className="text-slate-500 text-sm">급여 계산, 근로계약서, 채용공고까지 한 번에</p>
               <CloudSyncBadge status={status} userId={userId} />

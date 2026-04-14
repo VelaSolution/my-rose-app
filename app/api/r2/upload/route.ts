@@ -13,7 +13,6 @@ async function getUser(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  console.log("R2 ENV:", { endpoint: process.env.R2_ENDPOINT, bucket: process.env.R2_BUCKET, publicUrl: process.env.R2_PUBLIC_URL, hasKey: !!process.env.R2_ACCESS_KEY_ID, hasSecret: !!process.env.R2_SECRET_ACCESS_KEY });
   try {
     const user = await getUser(req);
     if (!user) return NextResponse.json({ error: "인증 필요" }, { status: 401 });

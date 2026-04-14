@@ -122,7 +122,7 @@ export default function GovSupportPage() {
             <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>🏛️</span> 정부 지원사업
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">정부 지원사업 매칭</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">정부 지원사업 매칭</h1>
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-slate-500 text-sm">내 조건에 맞는 정부 지원 프로그램을 찾아드립니다.</p>
               <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">마지막 업데이트: 2026.04.07</span>

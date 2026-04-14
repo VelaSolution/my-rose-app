@@ -80,7 +80,7 @@ export default function IncorporationPage() {
             <div className="inline-flex items-center gap-2 bg-violet-50 text-violet-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>🏢</span> 법인 설립 가이드
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">법인 설립 가이드</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">법인 설립 가이드</h1>
             <div className="flex items-center gap-2">
               <p className="text-slate-500 text-sm">개인 vs 법인 비교부터 설립 절차, 비용까지 한 번에 확인하세요.</p>
               <CloudSyncBadge status={status} userId={userId} />

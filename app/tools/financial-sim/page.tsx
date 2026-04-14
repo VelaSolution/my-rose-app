@@ -53,7 +53,7 @@ export default function FinancialSimPage() {
             <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>📈</span> 재무 시뮬레이션
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">재무 시뮬레이션</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">재무 시뮬레이션</h1>
             <div className="flex items-center gap-2">
               <p className="text-slate-500 text-sm">런웨이, 손익분기점, 현금 흐름을 시뮬레이션합니다.</p>
               <button

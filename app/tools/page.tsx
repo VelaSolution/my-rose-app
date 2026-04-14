@@ -268,7 +268,7 @@ export default function ToolsPage() {
     <>
       <OnboardingModal />
       <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 pt-20 pb-16 px-4">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-5xl">
           {/* Hero header */}
           <div className="mt-6 mb-10">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-slate-900 to-slate-700 text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-4 shadow-lg shadow-slate-900/10">

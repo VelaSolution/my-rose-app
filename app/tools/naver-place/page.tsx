@@ -160,7 +160,7 @@ export default function NaverPlacePage() {
               <span>🟢</span> 무료 가이드
             </div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
                 네이버 플레이스 최적화 체크리스트
               </h1>
               <CloudSyncBadge status={status} userId={userId} />

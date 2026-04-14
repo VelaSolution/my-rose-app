@@ -66,7 +66,7 @@ export default function CompetitorPricingPage() {
     <>
     <ToolNav />
     <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4 md:pl-60">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-3xl">
         <Link href="/tools" className="text-sm text-slate-400 hover:text-slate-700 transition">← 도구 목록</Link>
 
         <div className="mt-6 mb-8">
@@ -74,7 +74,7 @@ export default function CompetitorPricingPage() {
             <span>🔍</span> 경쟁 분석
           </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">경쟁매장 가격 조사</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">경쟁매장 가격 조사</h1>
             <CloudSyncBadge status={status} userId={userId} />
           </div>
           <div className="flex items-center gap-2">

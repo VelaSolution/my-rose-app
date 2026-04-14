@@ -143,7 +143,7 @@ export default function TaxGuidePage() {
             <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>🧾</span> 세무·회계 가이드
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">세무·회계 가이드</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">세무·회계 가이드</h1>
             <p className="text-slate-500 text-sm">외식업 사장님을 위한 세금·회계 실무 가이드</p>
           </div>
 
