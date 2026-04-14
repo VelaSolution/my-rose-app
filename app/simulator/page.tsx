@@ -356,6 +356,7 @@ export default function Page() {
           <PreviewBar form={form} />
         </div>
 
+        {/* 데스크톱: 2컬럼 — 사이드바는 폼 영역 내에서만 sticky */}
         <div className="lg:grid lg:grid-cols-[1fr_300px] lg:gap-8 lg:items-start">
 
           <div className="space-y-6">
@@ -378,7 +379,7 @@ export default function Page() {
               </div>
             </section>
 
-            {/* 모바일 네비게이션 — 콘텐츠 하단 (고정 아님) */}
+            {/* 모바일 네비게이션 */}
             <div className="lg:hidden mt-4 mb-6">
               {stepError && <p className="text-xs text-red-500 text-center mb-2">{stepError}</p>}
               <div className="flex gap-3">
@@ -394,7 +395,8 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="hidden lg:block">
+          {/* 사이드바: 폼 영역 안에서 sticky — 폼 콘텐츠 끝에서 자연스럽게 멈춤 */}
+          <div className="hidden lg:block self-start">
             <div className="sticky top-20 space-y-3" style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}>
               <PreviewBar form={form} />
               <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
@@ -403,7 +405,7 @@ export default function Page() {
                   {(["매출 정보", "운영 비용", "초기비용 & 부채"] as const).map((label, i) => {
                     const s = i + 1;
                     return (
-                      <div key={s} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition ${step === s ? "bg-slate-900 text-white font-semibold" : step > s ? "bg-emerald-50 text-emerald-700" : "bg-slate-50 text-slate-400"}`}>
+                      <div key={s} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition cursor-pointer ${step === s ? "bg-slate-900 text-white font-semibold" : step > s ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-slate-50 text-slate-400 hover:bg-slate-100"}`} onClick={() => { if (s <= step || s === step + 1) { const error = s > step ? getCurrentStepError() : ""; if (error) { setStepError(error); return; } setStepError(""); setStep(s); window.scrollTo(0, 0); } }}>
                         <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${step === s ? "bg-white text-slate-900" : step > s ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"}`}>
                           {step > s ? "✓" : s}
                         </span>
