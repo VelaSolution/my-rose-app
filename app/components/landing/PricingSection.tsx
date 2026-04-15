@@ -3,7 +3,7 @@ import { FadeIn } from "./LandingUtils";
 
 const PLANS = [
   { plan: "무료", price: "0", unit: "원/월", desc: "혼자 운영하는 소규모 매장", features: ["수익 시뮬레이터", "월 3회 AI 브리핑", "기본 차트 및 분석", "링크 공유"], btn: "무료로 시작", cls: "pricing-btn-gray", href: "/signup", popular: false },
-  { plan: "프로", price: "29,900", unit: "원/월", desc: "매장 경영의 모든 것을 AI로", features: ["무료 플랜 모든 기능", "모든 도구 무제한", "AI 브리핑·전략 무제한", "POS 분석 · PDF · 대시보드", "우선 고객 지원"], btn: "프로 시작", cls: "pricing-btn-blue", href: "/pricing", popular: true },
+  { plan: "프로", price: "29,900", unit: "원/월", desc: "매출부터 전략까지, 제대로 관리하고 싶은 사장님", features: ["무료 플랜 모든 기능", "모든 도구 무제한", "AI 브리핑·전략 무제한", "POS 분석 · PDF · 대시보드", "우선 고객 지원"], btn: "프로 시작", cls: "pricing-btn-blue", href: "/pricing", popular: true },
 ];
 
 export function PricingSection() {

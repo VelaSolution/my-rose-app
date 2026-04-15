@@ -30,7 +30,7 @@ export const PLANS = [
     annualPrice: "24,900",
     annualPriceNum: 24900,
     annualUnit: "원/월 (연간 결제)",
-    desc: "매장 경영의 모든 것을 AI로",
+    desc: "매출부터 전략까지, 제대로 관리하고 싶은 사장님",
     features: [
       { text: "수익 시뮬레이터 (무제한)", included: true },
       { text: "전체 도구 무제한 이용", included: true },
