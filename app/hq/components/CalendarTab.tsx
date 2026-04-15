@@ -270,6 +270,9 @@ export default function CalendarTab({ userId, userName, myRole, flash }: Props) 
 
         {viewMode === "week" && (
           <>
+            <p className="md:hidden text-xs text-slate-400 mb-2">← 좌우로 스크롤하세요</p>
+            <div className="overflow-x-auto">
+            <div className="min-w-[640px]">
             {/* Week view headers */}
             <div className="grid grid-cols-8 border-b border-slate-200">
               <div className="w-14 shrink-0" />
@@ -315,6 +318,8 @@ export default function CalendarTab({ userId, userName, myRole, flash }: Props) 
                   })}
                 </div>
               ))}
+            </div>
+            </div>
             </div>
           </>
         )}

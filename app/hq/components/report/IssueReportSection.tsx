@@ -32,6 +32,9 @@ interface Props {
   submitFeedback: (id: string) => void;
   saveEdit: (id: string, type: "daily" | "issue" | "project") => void;
   addComment: (id: string) => void;
+  // Delete permissions (HQ 권한 관리)
+  canDelete?: boolean;
+  deleteReport?: (id: string) => void;
 }
 
 export default function IssueReportSection(props: Props) {
@@ -43,6 +46,7 @@ export default function IssueReportSection(props: Props) {
     feedbackId, feedbackText, setFeedbackId, setFeedbackText,
     commentMap, commentTarget, commentText, setCommentTarget, setCommentText,
     addIssue, approveReport, checkReport, submitFeedback, saveEdit, addComment,
+    canDelete, deleteReport,
   } = props;
 
   return (
@@ -107,6 +111,9 @@ export default function IssueReportSection(props: Props) {
                   <span>{displayName(iss.author ?? userName)}</span>
                   {iss.author === userName && iss.reportStatus !== "approved" && (
                     <button onClick={() => { setEditId(iss.id); setEditTitle(iss.title); setEditDesc(iss.description); }} className="text-slate-400 hover:text-[#3182F6] font-semibold">수정</button>
+                  )}
+                  {canDelete && deleteReport && (
+                    <button onClick={() => deleteReport(iss.id)} className="text-slate-400 hover:text-red-500 font-semibold">삭제</button>
                   )}
                 </div>
               </>

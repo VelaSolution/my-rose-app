@@ -67,6 +67,28 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const canViewTeam = myRole === "대표" || myRole === "이사" || myRole === "팀장";
 
+  // 출근 기준 시간 설정
+  const [workStartTime, setWorkStartTime] = useState("09:00");
+  const [editStartTime, setEditStartTime] = useState(false);
+  const [tempStartTime, setTempStartTime] = useState("09:00");
+
+  const loadWorkStartTime = async () => {
+    const s = sb();
+    if (!s) return;
+    const { data } = await s.from("hq_settings").select("value").eq("key", "work_start_time").single();
+    if (data?.value) { setWorkStartTime(data.value); setTempStartTime(data.value); }
+  };
+
+  const saveWorkStartTime = async () => {
+    const s = sb();
+    if (!s) return;
+    const { error } = await s.from("hq_settings").upsert({ key: "work_start_time", value: tempStartTime, updated_by: userName, updated_at: new Date().toISOString() });
+    if (error) { flash("저장 실패: " + error.message); return; }
+    setWorkStartTime(tempStartTime);
+    setEditStartTime(false);
+    flash(`출근 기준 시간이 ${tempStartTime}으로 변경되었습니다`);
+  };
+
   // Live clock
   useEffect(() => {
     timerRef.current = setInterval(() => setNow(new Date()), 1000);
@@ -98,7 +120,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); loadWorkStartTime(); }, []);
 
   const [editClockOut, setEditClockOut] = useState(false);
   const [editClockOutTime, setEditClockOutTime] = useState("");
@@ -115,7 +137,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     const s = sb();
     if (!s) return;
     const time = now.toTimeString().slice(0, 5);
-    const isLate = time > "09:00";
+    const isLate = time > workStartTime;
     const timestamp = new Date().toISOString();
     const { error } = await s.from("hq_attendance").upsert({
       user_id: userId, user_name: userName, date: todayStr,
@@ -227,6 +249,25 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
             {now.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
           </p>
         </div>
+
+        <div className="flex items-center justify-center gap-2 mt-3">
+            <span className="text-xs text-slate-400">출근 기준</span>
+            {editStartTime ? (
+              <>
+                <input type="time" value={tempStartTime} onChange={e => setTempStartTime(e.target.value)}
+                  className="border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold text-slate-800 w-24" />
+                <button onClick={saveWorkStartTime} className="text-xs text-[#3182F6] font-bold">확인</button>
+                <button onClick={() => { setEditStartTime(false); setTempStartTime(workStartTime); }} className="text-xs text-slate-400">취소</button>
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-bold text-slate-700">{workStartTime}</span>
+                {myRole === "대표" && (
+                  <button onClick={() => setEditStartTime(true)} className="text-xs text-slate-400 hover:text-[#3182F6] transition-colors" title="출근 기준 시간 수정">✏️</button>
+                )}
+              </>
+            )}
+          </div>
 
         <div className="flex gap-3 justify-center mt-5">
           <button

@@ -170,10 +170,11 @@ export default function NavBar() {
         {!user && <a href="/#features" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>서비스</a>}
         {user && <Link href="/home" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>🏠 홈</Link>}
         <div style={{ borderBottom:"1px solid #F2F4F6", paddingBottom:"8px" }}>
-          <p style={{ fontSize:"11px", fontWeight:700, color:"#9EA6B3", padding:"12px 0 6px", letterSpacing:"0.5px" }}>도구</p>
+          <p style={{ fontSize:"12px", fontWeight:700, color:"#9EA6B3", padding:"14px 4px 8px", letterSpacing:"0.5px" }}>도구</p>
           {TOOLS.map(item => (
-            <Link key={item.href} href={item.href} className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-              <span>{item.icon}</span>{"i18nKey" in item ? t(`tool.${item.i18nKey}.title`, locale) : item.label}
+            <Link key={item.href} href={item.href} className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"center", gap:"10px", padding:"12px 4px" }}>
+              <span style={{ fontSize:"18px" }}>{item.icon}</span>
+              <span>{"i18nKey" in item ? t(`tool.${item.i18nKey}.title`, locale) : item.label}</span>
             </Link>
           ))}
         </div>
@@ -183,24 +184,27 @@ export default function NavBar() {
         {user ? (
           <>
             <Link href="/profile" className="vela-mobile-link" onClick={() => setMenuOpen(false)}
-              style={{ fontSize:"16px", fontWeight:700, color:"#191F28", paddingTop:16, paddingBottom:8 }}>
+              style={{ fontSize:"16px", fontWeight:700, color:"#191F28", paddingTop:18, paddingBottom:10 }}>
               {user.user_metadata?.nickname ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "내 계정"}
             </Link>
             <Link href="/dashboard" className="vela-mobile-link" onClick={() => setMenuOpen(false)}
-              style={{ fontSize:"13px", color:"#6B7684" }}>대시보드</Link>
+              style={{ fontSize:"14px", color:"#6B7684" }}>대시보드</Link>
             <Link href="/simulator" className="vela-mobile-link" onClick={() => setMenuOpen(false)}
-              style={{ fontSize:"13px", color:"#6B7684" }}>시뮬레이터</Link>
-            <button className="vela-mobile-link" style={{ background:"none", border:"none", textAlign:"left", cursor:"pointer", fontFamily:"inherit", fontSize:"13px", fontWeight:"500", color:"#9EA6B3", padding:"12px 0" }} onClick={() => { handleLogout(); setMenuOpen(false); }}>로그아웃</button>
+              style={{ fontSize:"14px", color:"#6B7684" }}>시뮬레이터</Link>
+            <button className="vela-mobile-link" style={{ background:"none", border:"none", textAlign:"left", cursor:"pointer", fontFamily:"inherit", fontSize:"14px", fontWeight:"500", color:"#9EA6B3", padding:"14px 4px", minHeight:"44px" }} onClick={() => { handleLogout(); setMenuOpen(false); }}>로그아웃</button>
           </>
         ) : (
-          <>
-            <Link href="/login" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>로그인</Link>
-            <Link href="/signup" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>무료로 시작하기</Link>
-          </>
+          <div style={{ paddingTop:8 }}>
+            <Link href="/login" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{ fontSize:"15px" }}>로그인</Link>
+            <Link href="/signup" onClick={() => setMenuOpen(false)}
+              style={{ display:"block", textAlign:"center", background:"#3182F6", color:"#fff", padding:"14px", borderRadius:"14px", fontSize:"15px", fontWeight:700, textDecoration:"none", marginTop:"8px" }}>
+              무료로 시작하기
+            </Link>
+          </div>
         )}
-        <div style={{borderTop:"1px solid #E5E8EB",marginTop:12,paddingTop:12,display:"flex",gap:16,alignItems:"center"}}>
-          <Link href="/terms" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0}}>이용약관</Link>
-          <Link href="/privacy" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0}}>개인정보처리방침</Link>
+        <div style={{borderTop:"1px solid #E5E8EB",marginTop:16,paddingTop:14,display:"flex",gap:20,alignItems:"center"}}>
+          <Link href="/terms" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0,minHeight:"auto"}}>이용약관</Link>
+          <Link href="/privacy" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0,minHeight:"auto"}}>개인정보처리방침</Link>
         </div>
       </div>
     </>

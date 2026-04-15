@@ -76,6 +76,7 @@ export default function PricingPage() {
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0}
         .pricing-page{min-height:100vh;padding:120px 24px 80px}
+        @media(max-width:768px){.pricing-page{padding-top:80px}.modal{padding:24px 20px}}
         .pricing-inner{max-width:1000px;margin:0 auto}
         .pricing-header{text-align:center;margin-bottom:60px}
         .pricing-tag{display:inline-block;background:#EBF3FF;color:#3182F6;font-size:13px;font-weight:600;padding:5px 14px;border-radius:100px;margin-bottom:16px}

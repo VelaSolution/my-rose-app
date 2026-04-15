@@ -228,10 +228,10 @@ function SignUpForm() {
               {/* 운영 상태 */}
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">현재 상황</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {BUSINESS_STATUS.map(opt => (
                     <button key={opt.id} onClick={() => setBusinessStatus(opt.id)}
-                      className={`rounded-xl py-2.5 text-xs font-semibold transition text-center ${businessStatus === opt.id ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}>
+                      className={`rounded-xl py-3 text-xs font-semibold transition text-center ${businessStatus === opt.id ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}>
                       {opt.label}
                     </button>
                   ))}
@@ -241,10 +241,10 @@ function SignUpForm() {
               {/* 업종 */}
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">업종</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {INDUSTRY_OPTIONS.map(opt => (
                     <button key={opt.id} onClick={() => setIndustry(opt.id)}
-                      className={`rounded-xl py-2.5 text-xs font-semibold transition text-center ${industry === opt.id ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}>
+                      className={`rounded-xl py-3 text-xs font-semibold transition text-center ${industry === opt.id ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}>
                       {opt.label}
                     </button>
                   ))}

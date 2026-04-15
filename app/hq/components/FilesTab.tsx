@@ -845,12 +845,12 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                 <div className="w-px h-4 bg-slate-200 mx-1" />
                 {selectedFiles.size > 0 && isAdmin && (
                   <>
-                    <button onClick={() => setBulkMoveOpen(true)} className="text-xs text-slate-500 hover:text-[#3182F6] font-medium px-2 py-1 rounded-lg hover:bg-[#3182F6]/5 transition-all">이동</button>
-                    <button onClick={() => setBulkSecurityOpen(true)} className="text-xs text-slate-500 hover:text-[#3182F6] font-medium px-2 py-1 rounded-lg hover:bg-[#3182F6]/5 transition-all">보안등급</button>
+                    <button onClick={() => setBulkMoveOpen(true)} className="text-xs text-slate-500 hover:text-[#3182F6] font-medium px-3 py-2 rounded-lg hover:bg-[#3182F6]/5 transition-all">이동</button>
+                    <button onClick={() => setBulkSecurityOpen(true)} className="text-xs text-slate-500 hover:text-[#3182F6] font-medium px-3 py-2 rounded-lg hover:bg-[#3182F6]/5 transition-all">보안등급</button>
                   </>
                 )}
                 <button onClick={() => setConfirmDelete({ type: "file", id: "__bulk__", name: "__bulk__" })}
-                  className="text-xs text-slate-500 hover:text-red-500 font-medium px-2 py-1 rounded-lg hover:bg-red-50 transition-all">삭제</button>
+                  className="text-xs text-slate-500 hover:text-red-500 font-medium px-3 py-2 rounded-lg hover:bg-red-50 transition-all">삭제</button>
                 <div className="w-px h-4 bg-slate-200 mx-1" />
                 <button onClick={() => { setSelectedFiles(new Set()); setSelectedFolders(new Set()); }} className="text-xs text-slate-400 hover:text-slate-600">선택 해제</button>
               </div>

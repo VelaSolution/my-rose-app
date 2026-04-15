@@ -45,7 +45,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <main className="min-h-screen bg-slate-50 flex items-center justify-center px-5">
       <div className="w-full max-w-md">
 
         <div className="text-center mb-8">
@@ -53,7 +53,7 @@ function LoginForm() {
             <span className="font-serif text-3xl font-bold text-slate-900">VELA</span>
             <span className="font-serif text-3xl font-bold text-blue-500">.</span>
           </Link>
-          <p className="mt-2 text-sm text-slate-500">계속하려면 로그인하세요</p>
+          <p className="mt-3 text-sm text-slate-500">계속하려면 로그인하세요</p>
           {nextPath !== "/" && (
             <p className="mt-1 text-xs text-blue-500 bg-blue-50 rounded-full px-3 py-1 inline-block">
               로그인 후 {nextPath} 으로 이동합니다
@@ -61,13 +61,13 @@ function LoginForm() {
           )}
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm ring-1 ring-slate-200 p-8">
+        <div className="bg-white rounded-3xl shadow-sm ring-1 ring-slate-200 p-6 sm:p-8">
 
           {/* 카카오 로그인 */}
           <div className="mb-6">
             <button
               onClick={() => handleSocialLogin("kakao")}
-              className="w-full flex items-center justify-center gap-3 rounded-2xl bg-[#FEE500] px-4 py-4 text-base font-bold text-[#191919] transition hover:brightness-95"
+              className="w-full flex items-center justify-center gap-3 rounded-2xl bg-[#FEE500] px-4 py-4 text-base font-bold text-[#191919] transition hover:brightness-95 active:scale-[0.98]"
             >
               <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
                 <path d="M9 1.5C4.86 1.5 1.5 4.19 1.5 7.5c0 2.12 1.29 3.98 3.24 5.1l-.83 3.07c-.07.27.22.49.46.34L8.1 13.9c.29.04.59.06.9.06 4.14 0 7.5-2.69 7.5-6S13.14 1.5 9 1.5z" fill="#191919" />
@@ -101,7 +101,7 @@ function LoginForm() {
               });
               if (error) setError(error.message);
               else setError("비밀번호 재설정 이메일을 보냈습니다. 메일을 확인해주세요.");
-            }} className="w-full text-xs text-slate-400 hover:text-slate-600 py-2 transition">
+            }} className="w-full text-sm text-slate-400 hover:text-slate-600 py-3 transition">
               비밀번호를 잊으셨나요?
             </button>
           </form>

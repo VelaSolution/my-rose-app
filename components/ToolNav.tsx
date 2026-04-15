@@ -87,6 +87,11 @@ export default function ToolNav() {
     setOpen(false);
   }, [pathname]);
 
+  // 현재 도구의 이름 찾기
+  const allTools = TOOL_SECTIONS.flatMap(s => s.tools);
+  const currentTool = allTools.find(t => t.href === pathname);
+  const currentLabel = currentTool ? toolLabel(currentTool, locale) : "";
+
   return (
     <>
       {/* 데스크탑: 좌측 사이드바 */}
@@ -117,6 +122,51 @@ export default function ToolNav() {
           </div>
         ))}
       </aside>
+
+      {/* 모바일: 상단 네비게이션 바 */}
+      <div className="md:hidden sticky top-[56px] z-40 bg-white/95 backdrop-blur-sm border-b border-slate-100 -mx-4 px-4 py-2.5">
+        <div className="flex items-center justify-between">
+          <Link href="/tools" className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 active:text-slate-600 py-1.5">
+            ← 목록
+          </Link>
+          {currentLabel && (
+            <span className="text-xs font-bold text-slate-700 truncate max-w-[160px]">{currentTool?.emoji} {currentLabel}</span>
+          )}
+          <button
+            onClick={() => setOpen(!open)}
+            className="flex items-center gap-1 text-xs font-semibold text-blue-500 active:text-blue-700 py-1.5"
+          >
+            다른 도구 {open ? "▲" : "▼"}
+          </button>
+        </div>
+
+        {/* 도구 전환 패널 */}
+        {open && (
+          <div ref={panelRef} className="mt-2 max-h-[50vh] overflow-y-auto -mx-1 pb-2 relative z-50">
+            {TOOL_SECTIONS.map(section => (
+              <div key={section.section} className="mb-2">
+                <p className="text-[11px] font-bold text-slate-400 px-2 py-1">{section.section}</p>
+                <div className="grid grid-cols-2 gap-1">
+                  {section.tools.map(tool => (
+                    <Link
+                      key={tool.href}
+                      href={tool.href}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
+                        pathname === tool.href
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-600 active:bg-slate-100"
+                      }`}
+                    >
+                      <span className="text-sm">{tool.emoji}</span>
+                      <span className="truncate leading-tight">{toolLabel(tool, locale)}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   );
 }

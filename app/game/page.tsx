@@ -19,6 +19,15 @@ async function cloudLoad(): Promise<S|null> {
     return JSON.parse(data[0].state);
   } catch { return null; }
 }
+async function cloudDelete() {
+  try {
+    const sb = createSupabaseBrowserClient();
+    if (!sb) return;
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    await sb.from("game_saves").delete().eq("user_id", user.id);
+  } catch { /* noop */ }
+}
 
 // ── 메인 엔트리 ────────────────────────────────────────────
 export default function GamePage() {

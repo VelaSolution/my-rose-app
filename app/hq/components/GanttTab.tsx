@@ -183,6 +183,8 @@ export default function GanttTab({ userId, userName, myRole, flash }: Props) {
         {items.length === 0 ? (
           <p className="text-sm text-slate-400 py-8 text-center">표시할 목표나 태스크가 없습니다.</p>
         ) : (
+          <>
+          <p className="md:hidden text-xs text-slate-400 mb-2">← 좌우로 스크롤하세요</p>
           <div className="flex border border-slate-200 rounded-xl overflow-hidden">
             {/* Left labels */}
             <div className="flex-shrink-0 border-r border-slate-200 bg-slate-50" style={{ width: LABEL_WIDTH }}>
@@ -289,6 +291,7 @@ export default function GanttTab({ userId, userName, myRole, flash }: Props) {
               </div>
             </div>
           </div>
+          </>
         )}
       </div>
 

@@ -367,7 +367,7 @@ function ResultContent() {
                       </div>
                       <div className="mt-3 space-y-1.5">
                         <div>
-                          <div className="mb-0.5 flex justify-between text-[10px] text-slate-400">
+                          <div className="mb-0.5 flex justify-between text-[11px] text-slate-400">
                             <span>내 매장</span><span>{pct(mine)}</span>
                           </div>
                           <div className="h-1.5 w-full rounded-full bg-slate-200">
@@ -375,7 +375,7 @@ function ResultContent() {
                           </div>
                         </div>
                         <div>
-                          <div className="mb-0.5 flex justify-between text-[10px] text-slate-400">
+                          <div className="mb-0.5 flex justify-between text-[11px] text-slate-400">
                             <span>업종 평균</span><span>{pct(avg)}</span>
                           </div>
                           <div className="h-1.5 w-full rounded-full bg-slate-200">
@@ -418,7 +418,8 @@ function ResultContent() {
               <h2 className="mb-1 text-xl font-bold text-slate-900">비용 구조</h2>
               <p className="mb-5 text-sm text-slate-500">월 총 비용 {fmt(total)}원의 구성</p>
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
-                <div className="flex-shrink-0" style={{ width: 220, height: 220 }}>
+                {/* 파이차트 */}
+                <div className="flex-shrink-0" style={{ width: "100%", height: 200 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={items} dataKey="value" nameKey="name" innerRadius={60} outerRadius={95} paddingAngle={2}>

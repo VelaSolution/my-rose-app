@@ -380,11 +380,11 @@ export default function ToolsPage() {
                         </div>
                         {locked ? (
                           <div>
-                            <p className="text-xs text-slate-400 leading-relaxed mb-1.5">{resolveDesc(tool, locale)}</p>
-                            <Link href="/pricing" className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition">업그레이드 →</Link>
+                            <p className="text-[13px] text-slate-400 leading-relaxed mb-1.5">{resolveDesc(tool, locale)}</p>
+                            <Link href="/pricing" className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition">업그레이드 →</Link>
                           </div>
                         ) : (
-                          <p className="text-xs text-slate-500 leading-relaxed">{resolveDesc(tool, locale)}</p>
+                          <p className="text-[13px] text-slate-500 leading-relaxed">{resolveDesc(tool, locale)}</p>
                         )}
                       </div>
                       {/* Arrow indicator on hover */}

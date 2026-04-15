@@ -16,6 +16,8 @@ export default function Over({s, onMenu, onRestart}:{s:S; onMenu:()=>void; onRes
 
   useEffect(()=>{
     delSave();
+    // 클라우드 저장도 삭제
+    (async()=>{ try { const sb2 = createSupabaseBrowserClient(); const {data:{user}} = await sb2.auth.getUser(); if(user) await sb2.from("game_saves").delete().eq("user_id",user.id); } catch{} })();
     (async()=>{
       try {
         const sb2 = createSupabaseBrowserClient();

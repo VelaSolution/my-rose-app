@@ -63,11 +63,11 @@ html.capacitor-app input, html.capacitor-app textarea, html.capacitor-app select
 }
 html.capacitor-app .vela-nav {
   padding-top: env(safe-area-inset-top) !important;
-  height: calc(52px + env(safe-area-inset-top)) !important;
+  height: calc(48px + env(safe-area-inset-top)) !important;
   align-items: flex-end !important;
 }
 html.capacitor-app .vela-nav-inner {
-  height: 52px;
+  height: 48px;
   align-items: center;
 }
 /* 앱에서 NavBar 축소로 인한 상단 패딩 보정 */
@@ -79,7 +79,7 @@ html.capacitor-app .vela-nav-links { display: none !important; }
 html.capacitor-app .vela-nav-actions { display: none !important; }
 html.capacitor-app .vela-hamburger { display: none !important; }
 /* 앱에서 body 상단 패딩 */
-html.capacitor-app body { padding-top: calc(52px + env(safe-area-inset-top)) !important; }
+html.capacitor-app body { padding-top: calc(48px + env(safe-area-inset-top)) !important; }
 /* 앱에서 ToolNav 하단 탭바 safe area */
 html.capacitor-app nav.fixed.bottom-0 {
   padding-bottom: env(safe-area-inset-bottom) !important;
@@ -121,7 +121,7 @@ html.capacitor-app body {
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
-  padding-bottom: calc(56px + env(safe-area-inset-bottom) + 20px) !important;
+  padding-bottom: calc(58px + env(safe-area-inset-bottom) + 20px) !important;
 }
 /* 앱에서 다크모드 비활성화 — 항상 라이트 */
 html.capacitor-app.dark { --background: #F9FAFB !important; --foreground: #171717 !important; }
@@ -163,48 +163,91 @@ html.capacitor-app .hidden.lg\:block.relative { display: none !important; }
 input[type="range"] { -webkit-appearance: none; appearance: none; height: 4px; background: #E5E8EB; border-radius: 2px; outline: none; }
 input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #3182F6; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15); cursor: pointer; }
 
-/* ── 모바일 최적화 (max-width: 768px) ─────────────── */
+/* ── 모바일 앱 UX (max-width: 768px) ─────────────── */
 @media (max-width: 768px) {
-  /* 전체 폰트 크기 약간 줄이기 */
-  html { font-size: 15px; -webkit-text-size-adjust: 100%; }
+  /* ─ 기본 타이포그래피 ─ */
+  html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+  body { word-break: keep-all; line-height: 1.65; -webkit-font-smoothing: antialiased; }
 
-  /* 한국어 텍스트 줄바꿈 최적화 */
-  body { word-break: keep-all; }
-
-  /* 모든 요소 좌우 오버플로 방지 */
+  /* 오버플로 방지 */
   *, *::before, *::after { max-width: 100vw; }
+  html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 
-  /* NavBar 높이 축소 */
-  .vela-nav { height: 56px !important; }
-  .vela-nav-logo { font-size: 18px !important; }
+  /* ─ 앱 레이아웃 ─ */
+  .vela-nav { height: 52px !important; }
+  .vela-nav-logo { font-size: 17px !important; }
+  body { padding-top: 52px !important; }
 
-  /* body 상단 패딩 NavBar에 맞춤 */
-  body { padding-top: 56px !important; }
+  main {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    padding-bottom: 100px !important;
+  }
 
-  /* 컨텐츠 영역 패딩 최적화 */
-  main { padding-left: 12px !important; padding-right: 12px !important; }
-  .px-4 { padding-left: 12px !important; padding-right: 12px !important; }
-
-  /* 하단 탭바 공간 확보 */
   .pb-16, .pb-20 { padding-bottom: 100px !important; }
 
-  /* 입력 필드 — iOS 확대 방지 */
+  /* 데스크탑 사이드바 숨기기 */
+  aside.hidden.md\:flex { display: none !important; }
+  ::-webkit-scrollbar { display: none; }
+
+  /* ─ 앱 타이포그래피 스케일 ─ */
+  h1, .text-2xl { font-size: 1.5rem !important; line-height: 1.3 !important; }
+  h2, .text-xl  { font-size: 1.25rem !important; line-height: 1.35 !important; }
+  .text-lg { font-size: 1.1rem !important; }
+  .text-sm { font-size: 0.875rem !important; line-height: 1.5 !important; }
+  .text-xs { font-size: 0.8rem !important; line-height: 1.45 !important; }
+
+  /* 최소 텍스트 크기 */
+  .text-\[8px\], .text-\[9px\], .text-\[10px\] { font-size: 11px !important; }
+  .text-\[11px\] { font-size: 12px !important; }
+
+  /* ─ 입력 필드 — 앱 수준 터치 ─ */
   input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
   textarea, select {
     font-size: 16px !important;
+    min-height: 48px;
+    border-radius: 14px !important;
   }
 
-  /* 모바일에서 데스크탑 사이드바 숨기기 */
-  aside.hidden.md\:flex { display: none !important; }
+  /* ─ 버튼 — 앱 수준 터치 + 피드백 ─ */
+  button, [role="button"], [role="tab"],
+  a.rounded-xl, a.rounded-2xl, a.rounded-3xl {
+    min-height: 44px;
+  }
+  button:active, [role="button"]:active,
+  a.rounded-xl:active, a.rounded-2xl:active, a.rounded-3xl:active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
 
-  /* 스크롤바 숨기기 */
-  ::-webkit-scrollbar { display: none; }
+  /* ─ 카드 — 앱 느낌 ─ */
+  .rounded-2xl { border-radius: 16px !important; }
+  .rounded-3xl { border-radius: 18px !important; }
+  .p-5 { padding: 16px !important; }
+  .p-6 { padding: 18px !important; }
+  .p-8 { padding: 20px !important; }
 
-  /* 좌우 스크롤 방지 */
-  html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+  .ring-1 { box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important; }
+  .shadow-sm, .shadow-lg { box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important; }
 
-  /* 하단 여백 */
-  main { padding-bottom: 100px !important; }
+  /* ─ 간격 ─ */
+  .space-y-6 > * + * { margin-top: 1rem; }
+  .space-y-5 > * + * { margin-top: 0.875rem; }
+  .gap-6 { gap: 1rem !important; }
+  .gap-4 { gap: 0.875rem !important; }
+
+  /* ─ 테이블 ─ */
+  table { font-size: 13px; }
+  th, td { padding: 10px 12px; }
+
+  /* ─ hover 전용 요소 모바일 표시 ─ */
+  .group-hover\:opacity-100 { opacity: 1 !important; }
+
+  /* ─ 모달/오버레이 ─ */
+  .fixed.inset-0 { padding: 16px !important; }
+
+  /* ─ 이미지/아바타 ─ */
+  img { border-radius: 12px; }
 }
 
 /* ── 라이트 모드 가독성 강화 ───────────────────────── */
@@ -262,11 +305,11 @@ input[type="range"].vela-slider::-moz-range-thumb {
         .vela-btn-start{background:#3182F6;color:#fff;padding:9px 18px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;transition:background .15s;font-family:inherit;line-height:1}
         .vela-btn-start:hover{background:#2563EB}
         .vela-user-name{font-size:14px;font-weight:600;color:#333D4B;text-decoration:none;cursor:pointer;font-family:inherit}
-        .vela-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+        .vela-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:10px;background:none;border:none;min-width:44px;min-height:44px;align-items:center;justify-content:center}
         .vela-hamburger span{display:block;width:22px;height:2px;background:#333D4B;border-radius:2px;transition:all .2s}
-        .vela-mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:#fff;border-bottom:1px solid #E5E8EB;padding:16px 24px;flex-direction:column;gap:0;z-index:99;max-height:80vh;overflow-y:auto;font-family:inherit}
+        .vela-mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#fff;border-bottom:1px solid #E5E8EB;padding:12px 20px 20px;flex-direction:column;gap:0;z-index:99;max-height:calc(100vh - 56px);overflow-y:auto;font-family:inherit;-webkit-overflow-scrolling:touch}
         .vela-mobile-menu.open{display:flex}
-        .vela-mobile-link{font-size:15px;font-weight:500;color:#333D4B;text-decoration:none;padding:12px 0;border-bottom:1px solid #F2F4F6;display:block;font-family:inherit}
+        .vela-mobile-link{font-size:15px;font-weight:500;color:#333D4B;text-decoration:none;padding:14px 4px;border-bottom:1px solid #F2F4F6;display:block;font-family:inherit;min-height:44px;display:flex;align-items:center}
         .vela-dropdown{position:relative}
         .vela-dropdown-btn{font-size:15px;font-weight:500;color:#6B7684;background:none;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;padding:0;transition:color .15s}
         .vela-dropdown-btn:hover{color:#191F28}
@@ -283,7 +326,12 @@ input[type="range"].vela-slider::-moz-range-thumb {
         .vela-dropdown-icon{font-size:20px;flex-shrink:0;margin-top:1px}
         .vela-dropdown-label{font-size:13px;font-weight:600;color:#191F28;margin:0 0 2px;font-family:inherit}
         .vela-dropdown-desc{font-size:11px;color:#9EA6B3;margin:0;font-family:inherit}
-        @media(max-width:768px){.vela-nav-links,.vela-nav-actions{display:none}.vela-hamburger{display:flex}}
+        @media(max-width:768px){
+          .vela-nav-links,.vela-nav-actions{display:none}
+          .vela-hamburger{display:flex}
+          .vela-nav{height:52px !important;background:rgba(255,255,255,0.92) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border-bottom:1px solid rgba(0,0,0,0.06) !important}
+          .vela-nav-inner{padding:0 16px !important}
+        }
         @media(min-width:769px) and (max-width:1024px){
           .vela-nav-links{gap:16px !important}
           .vela-nav-links a{font-size:13px !important}

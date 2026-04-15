@@ -159,20 +159,20 @@ function FeedCard({ post: p, userId, isAdmin, onLike, onDelete }: { post: ShareP
             {INDUSTRY_ICONS[p.industry] ?? "🏪"} {INDUSTRY_LABELS[p.industry] ?? p.industry}
           </span>
           <div className={`rounded-2xl px-3 py-1.5 text-center ${isProfit ? "bg-emerald-50" : "bg-red-50"}`}>
-            <p className="text-[10px] font-semibold text-slate-400">순이익</p>
+            <p className="text-[11px] font-semibold text-slate-400">순이익</p>
             <p className={`text-sm font-bold ${isProfit ? "text-emerald-600" : "text-red-500"}`}>{fmt(p.net_profit)}원</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-3">
         {[
           { label: "월매출", value: `${fmt(p.total_sales)}원` },
           { label: "순이익률", value: pct(p.net_margin) },
           { label: "원가율", value: pct(p.cogs_ratio) },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-xl bg-slate-50 px-2 py-2 text-center">
-            <p className="text-[10px] text-slate-400">{label}</p>
+            <p className="text-[11px] text-slate-400">{label}</p>
             <p className="text-xs font-bold text-slate-800 mt-0.5">{value}</p>
           </div>
         ))}
@@ -323,7 +323,7 @@ function BoardTab({ userId, isAdmin }: { userId: string | null; isAdmin: boolean
           {posts.map(p => (
             <button key={p.id} onClick={() => setSelected(p)} className="w-full text-left px-5 py-4 hover:bg-slate-50 transition">
               <div className="flex items-start gap-3">
-                <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${CATEGORY_COLORS[p.category] ?? "bg-slate-100 text-slate-600"}`}>
+                <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${CATEGORY_COLORS[p.category] ?? "bg-slate-100 text-slate-600"}`}>
                   {CATEGORY_LABELS[p.category] ?? p.category}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -421,7 +421,7 @@ function PostDetail({ post, userId, onBack }: { post: BoardPost; userId: string 
         ← 목록으로
       </button>
       <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${CATEGORY_COLORS[post.category]}`}>{CATEGORY_LABELS[post.category]}</span>
+        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${CATEGORY_COLORS[post.category]}`}>{CATEGORY_LABELS[post.category]}</span>
         <h2 className="mt-3 text-xl font-bold text-slate-900">{post.title}</h2>
         <p className="mt-1 text-xs text-slate-400">{post.nickname} · {new Date(post.created_at).toLocaleDateString("ko-KR")}</p>
         <p className="mt-5 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
@@ -437,7 +437,7 @@ function PostDetail({ post, userId, onBack }: { post: BoardPost; userId: string 
               <div key={c.id} className="pt-3 first:pt-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-semibold text-slate-700">{c.nickname}</span>
-                  {c.is_ai && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">AI</span>}
+                  {c.is_ai && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-600">AI</span>}
                   <span className="text-xs text-slate-400">{new Date(c.created_at).toLocaleDateString("ko-KR")}</span>
                 </div>
                 <p className="text-sm text-slate-600 leading-relaxed">{c.content}</p>
@@ -490,7 +490,7 @@ function BenchmarkTab() {
               <div className="grid grid-cols-2 gap-3">
                 {metrics.map(({ key, label }) => (
                   <div key={key} className="rounded-xl bg-slate-50 p-3">
-                    <p className="text-[10px] text-slate-400">{label}</p>
+                    <p className="text-[11px] text-slate-400">{label}</p>
                     <p className="text-lg font-bold text-slate-900 mt-1">{b[key]}{}</p>
                     <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-200">
                       <div className="h-1.5 rounded-full bg-slate-700" style={{ width: `${Math.min(b[key], 50) * 2}%` }} />

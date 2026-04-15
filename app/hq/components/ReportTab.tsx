@@ -188,6 +188,25 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
     setEditId(null); flash("수정 완료");
   };
 
+  /* -- delete (대표/이사만) -- */
+  const canDelete = myRole === "대표" || myRole === "이사";
+
+  const deleteReport = async (id: string) => {
+    if (!confirm("이 보고서를 삭제하시겠습니까?")) return;
+    const s = sb();
+    if (!s) return;
+    // 관련 댓글도 삭제
+    await s.from("hq_item_comments").delete().eq("item_id", id).eq("item_type", "report");
+    const { error } = await s.from("hq_reports").delete().eq("id", id);
+    if (error) { flash("삭제 실패: " + error.message); return; }
+    flash("보고서 삭제 완료");
+    if (sub === "daily") loadDailies();
+    if (sub === "issue") loadIssues();
+    if (sub === "project") loadProjects();
+  };
+
+
+  /* -- load comments on tab change -- */
   useEffect(() => {
     const items = sub === "daily" ? dailies : sub === "issue" ? issues : projects;
     items.forEach(item => loadComments(item.id));
@@ -234,6 +253,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
           editNext={editNext} setEditNext={setEditNext}
           {...sharedFeedbackProps} {...sharedCommentProps}
           addDaily={addDaily} approveReport={approveReport} checkReport={checkReport} saveEdit={saveEdit}
+          canDelete={canDelete} deleteReport={deleteReport}
         />
       )}
 
@@ -246,6 +266,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
           editTitle={editTitle} setEditTitle={setEditTitle} editDesc={editDesc} setEditDesc={setEditDesc}
           {...sharedFeedbackProps} {...sharedCommentProps}
           addIssue={addIssue} approveReport={approveReport} checkReport={checkReport} saveEdit={saveEdit}
+          canDelete={canDelete} deleteReport={deleteReport}
         />
       )}
 
@@ -258,6 +279,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
           editTitle={editTitle} setEditTitle={setEditTitle} editDesc={editDesc} setEditDesc={setEditDesc}
           {...sharedFeedbackProps} {...sharedCommentProps}
           addProject={addProject} approveReport={approveReport} checkReport={checkReport} saveEdit={saveEdit}
+          canDelete={canDelete} deleteReport={deleteReport}
         />
       )}
     </div>

@@ -310,20 +310,20 @@ export default function SalesConnectPage() {
         {/* ── 통합 요약 카드 ── */}
         {loaded && totalSales > 0 && (
           <div className="rounded-2xl sm:rounded-3xl bg-slate-900 p-5 sm:p-6 mb-5 text-white">
-            <p className="text-[10px] sm:text-xs text-slate-400 mb-0.5">{monthLabel} 총 매출</p>
+            <p className="text-[11px] sm:text-xs text-slate-400 mb-0.5">{monthLabel} 총 매출</p>
             <p className="text-2xl sm:text-3xl font-extrabold mb-3">{fmt(totalSales)}원</p>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              <div className="rounded-xl bg-white/10 p-2.5 sm:p-3 text-center">
-                <p className="text-[10px] text-slate-400 mb-0.5">홀</p>
-                <p className="text-xs sm:text-sm font-bold truncate">{hallVal ? `${fmt(hallVal)}` : "—"}</p>
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+              <div className="rounded-xl bg-white/10 p-3 text-center">
+                <p className="text-[11px] text-slate-400 mb-1">홀</p>
+                <p className="text-sm font-bold truncate">{hallVal ? `${fmt(hallVal)}` : "—"}</p>
               </div>
-              <div className="rounded-xl bg-white/10 p-2.5 sm:p-3 text-center">
-                <p className="text-[10px] text-slate-400 mb-0.5">배달</p>
-                <p className="text-xs sm:text-sm font-bold truncate">{deliveryVal ? `${fmt(deliveryVal)}` : "—"}</p>
+              <div className="rounded-xl bg-white/10 p-3 text-center">
+                <p className="text-[11px] text-slate-400 mb-1">배달</p>
+                <p className="text-sm font-bold truncate">{deliveryVal ? `${fmt(deliveryVal)}` : "—"}</p>
               </div>
-              <div className="rounded-xl bg-white/10 p-2.5 sm:p-3 text-center">
-                <p className="text-[10px] text-slate-400 mb-0.5">배달 비중</p>
-                <p className="text-xs sm:text-sm font-bold">{deliveryRatio}%</p>
+              <div className="rounded-xl bg-white/10 p-3 text-center">
+                <p className="text-[11px] text-slate-400 mb-1">배달 비중</p>
+                <p className="text-sm font-bold">{deliveryRatio}%</p>
               </div>
             </div>
           </div>
@@ -436,7 +436,7 @@ export default function SalesConnectPage() {
                   <ol className="space-y-1.5">
                     {selectedPlatform.guide.map((s, i) => (
                       <li key={i} className="flex gap-2 text-xs text-slate-500">
-                        <span className="flex-shrink-0 w-4 h-4 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center mt-0.5">
+                        <span className="flex-shrink-0 w-4 h-4 rounded-full bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center justify-center mt-0.5">
                           {i + 1}
                         </span>
                         {s}
@@ -512,7 +512,7 @@ export default function SalesConnectPage() {
                     { label: "실수령", value: dResult.netSales ? `${fmt(dResult.netSales)}원` : "—", color: "text-emerald-600" },
                   ].map((s) => (
                     <div key={s.label} className="rounded-xl sm:rounded-2xl bg-white dark:bg-slate-800 p-3 sm:p-4 ring-1 ring-slate-200 dark:ring-slate-700">
-                      <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mb-0.5">{s.label}</p>
+                      <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mb-0.5">{s.label}</p>
                       <p className={`text-base sm:text-lg font-bold truncate ${s.color ?? "text-slate-900 dark:text-white"}`}>{s.value}</p>
                     </div>
                   ))}

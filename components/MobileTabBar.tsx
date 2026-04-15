@@ -51,8 +51,16 @@ export default function MobileTabBar() {
     : TABS;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden vela-mobile-tab" style={{ paddingBottom: "env(safe-area-inset-bottom)", background: "#fff", borderTop: "1px solid #E5E8EB" }}>
-      <div style={{ display: "flex", height: 50 }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden vela-mobile-tab"
+      style={{
+        paddingBottom: "env(safe-area-inset-bottom)",
+        background: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderTop: "1px solid rgba(0,0,0,0.06)",
+      }}
+    >
+      <div style={{ display: "flex", height: 56, paddingTop: 4 }}>
         {tabs.map(tab => {
           const isActive = tab.href === "/"
             ? pathname === "/"
@@ -68,15 +76,23 @@ export default function MobileTabBar() {
                 alignItems: "center",
                 justifyContent: "center",
                 textDecoration: "none",
-                color: isActive ? "#3182F6" : "#9EA6B3",
+                color: isActive ? "#3182F6" : "#B0B8C1",
                 gap: 2,
                 minHeight: "auto",
                 fontSize: "inherit",
                 fontWeight: "inherit",
+                transition: "color 0.15s, transform 0.1s",
+                position: "relative",
               }}
             >
-              <span style={{ fontSize: 20, lineHeight: 1 }}>{tab.icon}</span>
-              <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500 }}>{tab.label}</span>
+              {isActive && (
+                <span style={{
+                  position: "absolute", top: -4, width: 20, height: 2,
+                  borderRadius: 1, background: "#3182F6",
+                }} />
+              )}
+              <span style={{ fontSize: 21, lineHeight: 1 }}>{tab.icon}</span>
+              <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, letterSpacing: "0.01em" }}>{tab.label}</span>
             </Link>
           );
         })}

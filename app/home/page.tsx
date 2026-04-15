@@ -113,52 +113,46 @@ export default function HomePage() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 px-4 pt-20 pb-24 md:px-8">
-      <div className="mx-auto max-w-4xl space-y-5">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 px-5 pt-16 pb-24 md:px-8">
+      <div className="mx-auto max-w-4xl space-y-4">
 
         {/* 인사말 */}
-        <div>
-          <p className="text-xs text-slate-400">{now.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}</p>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{greeting}, {name}님! 👋</h1>
+        <div className="pt-2">
+          <p className="text-sm text-slate-400">{now.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" })}</p>
+          <h1 className="text-[22px] font-extrabold text-slate-900 dark:text-white mt-0.5 tracking-tight">{greeting}, {name}님!</h1>
         </div>
 
         {/* 이번 달 매출 요약 */}
         {snap && (
-          <div className="rounded-2xl bg-slate-900 dark:bg-slate-800 p-5 text-white">
-            <p className="text-[10px] text-slate-400 mb-0.5">{snap.month} 매출 현황</p>
-            <div className="flex items-baseline gap-4">
-              <div>
-                <span className="text-xs text-slate-400">매출 </span>
-                <span className="text-lg font-extrabold">{fmt(snap.total_sales)}원</span>
-              </div>
-              <div>
-                <span className="text-xs text-slate-400">순이익 </span>
-                <span className={`text-lg font-extrabold ${snap.net_profit >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                  {snap.net_profit >= 0 ? "+" : ""}{fmt(snap.net_profit)}원
-                </span>
-              </div>
+          <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white">
+            <p className="text-xs text-slate-400 mb-2">{snap.month} 매출 현황</p>
+            <p className="text-2xl font-extrabold tracking-tight">{fmt(snap.total_sales)}<span className="text-sm font-bold text-slate-400 ml-0.5">원</span></p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className={`text-sm font-bold ${snap.net_profit >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                순이익 {snap.net_profit >= 0 ? "+" : ""}{fmt(snap.net_profit)}원
+              </span>
             </div>
           </div>
         )}
 
         {/* 빠른 실행 */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {QUICK_ACTIONS.map(a => (
             <Link key={a.href} href={a.href}
-              className={`${a.color} rounded-2xl p-3 sm:p-4 text-center active:scale-[0.97] transition`}>
-              <p className="text-xl sm:text-2xl mb-1">{a.icon}</p>
-              <p className="text-[10px] sm:text-xs font-bold">{a.label}</p>
+              className={`${a.color} rounded-2xl p-4 text-center active:scale-[0.96] transition-all duration-150`}>
+              <p className="text-2xl mb-2">{a.icon}</p>
+              <p className="text-[13px] font-bold">{a.label}</p>
             </Link>
           ))}
         </div>
 
         {/* 경제 지표 */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 gap-2.5">
           {indexCards.map(({ label, icon, data }) => (
             <div key={label} className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 px-3 py-3">
               <div className="flex items-center gap-1 mb-1">
-                <span className="text-xs">{icon}</span>
-                <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{label}</p>
+                <span className="text-sm">{icon}</span>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{label}</p>
               </div>
               {!stocks ? (
                 <div className="h-5 bg-slate-100 dark:bg-slate-700 rounded w-16 animate-pulse" />
@@ -174,28 +168,28 @@ export default function HomePage() {
         {/* 경영 팁 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="rounded-2xl bg-blue-50 dark:bg-blue-900/20 p-4">
-            <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 mb-1">💡 이번 달 팁</p>
-            <p className="text-xs text-blue-900 dark:text-blue-200 leading-relaxed">{getSeasonTip(now.getMonth() + 1, now.getDate())}</p>
+            <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mb-1">💡 이번 달 팁</p>
+            <p className="text-sm text-blue-900 dark:text-blue-200 leading-relaxed">{getSeasonTip(now.getMonth() + 1, now.getDate())}</p>
           </div>
           <div className="rounded-2xl bg-slate-100 dark:bg-slate-800 p-4">
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">📋 오늘의 할 일</p>
-            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{DAILY_TIPS[now.getDay()]}</p>
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">📋 오늘의 할 일</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{DAILY_TIPS[now.getDay()]}</p>
           </div>
         </div>
 
         {/* 뉴스 */}
-        <div className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 p-5">
+        <div className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">📰 오늘의 뉴스</h2>
-              <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">AI 요약</span>
+              <span className="text-[11px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">AI 요약</span>
             </div>
           </div>
 
-          <div className="flex gap-1.5 mb-4 overflow-x-auto">
+          <div className="flex gap-2 mb-4 overflow-x-auto">
             {NEWS_TAGS.map(t => (
               <button key={t.key} onClick={() => setNewsFilter(t.key)}
-                className={`px-2.5 py-1.5 rounded-full text-[10px] font-semibold whitespace-nowrap transition ${
+                className={`px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition ${
                   newsFilter === t.key
                     ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
                     : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
@@ -210,22 +204,22 @@ export default function HomePage() {
               {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-100 dark:bg-slate-700 rounded-xl animate-pulse" />)}
             </div>
           ) : filteredNews.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-6">해당 카테고리 뉴스가 없어요.</p>
+            <p className="text-sm text-slate-400 text-center py-6">해당 카테고리 뉴스가 없어요.</p>
           ) : (
             <div className="space-y-2">
               {filteredNews.slice(0, 8).map((n, i) => (
                 <a key={i} href={n.url || "#"} target="_blank" rel="noopener noreferrer"
-                  className="block rounded-xl border border-slate-100 dark:border-slate-700 p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition group">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    {n.tag && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${TAG_COLORS[n.tag] ?? "bg-slate-100 text-slate-600"}`}>{n.tag}</span>}
-                    <span className="text-[10px] text-slate-400">{n.source}</span>
-                    {n.date && <span className="text-[9px] text-slate-300 dark:text-slate-500">{n.date.slice(5).replace("-", "/")}</span>}
+                  className="block rounded-xl border border-slate-100 dark:border-slate-700 p-3.5 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition group">
+                  <div className="flex items-center gap-2 mb-1">
+                    {n.tag && <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${TAG_COLORS[n.tag] ?? "bg-slate-100 text-slate-600"}`}>{n.tag}</span>}
+                    <span className="text-[11px] text-slate-400">{n.source}</span>
+                    {n.date && <span className="text-[11px] text-slate-300 dark:text-slate-500">{n.date.slice(5).replace("-", "/")}</span>}
                   </div>
-                  <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-snug group-hover:text-blue-600 transition">{n.title}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{n.summary}</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug group-hover:text-blue-600 transition">{n.title}</p>
+                  <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">{n.summary}</p>
                   {n.insight && (
-                    <div className="mt-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1.5">
-                      <p className="text-[10px] text-amber-800 dark:text-amber-300">💡 <b>사장님 인사이트:</b> {n.insight}</p>
+                    <div className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2">
+                      <p className="text-xs text-amber-800 dark:text-amber-300">💡 <b>인사이트:</b> {n.insight}</p>
                     </div>
                   )}
                 </a>
