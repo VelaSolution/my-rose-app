@@ -111,7 +111,7 @@ export default function VelaChat({ context }: { context?: ChatContext }) {
       {/* 플로팅 버튼 */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 shadow-lg transition hover:bg-slate-700 active:scale-95 print:hidden"
+        className="fixed bottom-6 left-5 md:left-auto md:right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 shadow-lg transition hover:bg-slate-700 active:scale-95 print:hidden"
       >
         {open ? (
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -134,7 +134,7 @@ export default function VelaChat({ context }: { context?: ChatContext }) {
       {/* 채팅 창 */}
       {open && (
         <div
-          className="fixed bottom-24 right-6 z-50 flex w-[360px] max-w-[calc(100vw-2rem)] flex-col rounded-[28px] bg-white shadow-2xl ring-1 ring-slate-200 print:hidden"
+          className="fixed bottom-24 left-5 md:left-auto md:right-6 z-50 flex w-[360px] max-w-[calc(100vw-2rem)] flex-col rounded-[28px] bg-white shadow-2xl ring-1 ring-slate-200 print:hidden"
           style={{ height: "520px" }}
         >
           {/* 헤더 */}
