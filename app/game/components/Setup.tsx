@@ -348,8 +348,8 @@ export default function Setup({onStart}:{onStart:(s:S)=>void}) {
           </div>
         </div>
         <div style={{display:"flex",gap:8,marginTop:16}}>
-          <button onClick={()=>setStep(0)} style={{flex:1,padding:"14px",borderRadius:14,border:"1px solid "+G200,background:"#fff",color:G800,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>← 이전</button>
-          <button onClick={()=>setStep(2)} style={{flex:2,padding:"14px",borderRadius:14,border:"none",background:cfg.color,color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>다음 →</button>
+          <button onClick={()=>setStep(1)} style={{flex:1,padding:"14px",borderRadius:14,border:"1px solid "+G200,background:"#fff",color:G800,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>← 이전</button>
+          <button onClick={()=>setStep(3)} style={{flex:2,padding:"14px",borderRadius:14,border:"none",background:cfg.color,color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>다음 →</button>
         </div>
       </div>
     </div>
