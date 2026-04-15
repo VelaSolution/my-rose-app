@@ -171,14 +171,19 @@ export function Toggle({
         role="switch"
         aria-checked={value}
         onClick={() => onChange(!value)}
-        className={`relative h-[31px] w-[51px] rounded-full transition-colors duration-200 ease-in-out flex-shrink-0 ${
+        className={`relative inline-flex h-[31px] w-[51px] rounded-full transition-colors duration-200 ease-in-out flex-shrink-0 ${
           value ? "bg-[#34C759]" : "bg-[#E5E5EA]"
         }`}
+        style={{ minHeight: 31, minWidth: 51 }}
       >
         <span
-          className={`absolute top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-[0_3px_8px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-in-out ${
-            value ? "translate-x-[22px]" : "translate-x-[2px]"
-          }`}
+          className="absolute rounded-full bg-white"
+          style={{
+            width: 27, height: 27, top: 2,
+            left: value ? 22 : 2,
+            boxShadow: "0 3px 8px rgba(0,0,0,0.15), 0 1px 1px rgba(0,0,0,0.06)",
+            transition: "left 0.2s ease-in-out",
+          }}
         />
       </button>
     </div>
