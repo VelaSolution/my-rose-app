@@ -301,20 +301,13 @@ export default function Page() {
         )}
 
         <section className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <button type="button" onClick={() => router.push("/")} className="text-sm text-slate-400 hover:text-slate-700 transition">← 홈</button>
             <div className="flex gap-2">
               <button type="button" onClick={() => setShowSaveModal(true)} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50">불러오기</button>
               <button type="button" onClick={() => { const label = addSaveSlot(form as unknown as Record<string, unknown>); showMessage(`${label} 저장 완료`); }} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50">저장</button>
               <button type="button" onClick={() => { setCloudSaveTitle(""); setShowCloudSave(true); }} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700">클라우드</button>
             </div>
-          </div>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button type="button" onClick={() => { const label = addSaveSlot(form as unknown as Record<string, unknown>); showMessage(`${label} 저장 완료`); }} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">💾 현재 값 저장</button>
-            <button type="button" onClick={() => { setCloudSaveTitle(""); setShowCloudSave(true); }} className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700">☁️ 클라우드 저장</button>
-            <button type="button" onClick={() => setShowSaveModal(true)} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">📂 저장값 불러오기</button>
-            <button type="button" onClick={() => { setForm(createEmptyForm(form.industry)); setStep(1); setStepError(""); showMessage("초기화가 완료되었습니다."); }} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">초기화</button>
-            <button type="button" onClick={async () => { try { const url = `${window.location.origin}${window.location.pathname}?${buildQuery(form)}`; await navigator.clipboard.writeText(url); showMessage("링크가 복사되었습니다."); } catch (error) { console.error(error); showMessage("링크 복사에 실패했습니다."); } }} className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500">링크 공유</button>
           </div>
 
           <h1 className="text-[26px] font-extrabold tracking-tight text-slate-900 mb-1">수익 시뮬레이터</h1>
@@ -363,6 +356,15 @@ export default function Page() {
             {step === 1 && <FormStep1 form={form} update={update} errors={step1Errors} loadIndustryDefaults={loadIndustryDefaults} applyPosResult={applyPosResult} />}
             {step === 2 && <FormStep2 form={form} update={update} errors={step2Errors} />}
             {step === 3 && <FormStep3 form={form} update={update} errors={step3Errors} />}
+
+            {/* 저장/공유 액션 */}
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => { const label = addSaveSlot(form as unknown as Record<string, unknown>); showMessage(`${label} 저장 완료`); }} className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.97] transition">💾 현재 값 저장</button>
+              <button type="button" onClick={() => { setCloudSaveTitle(""); setShowCloudSave(true); }} className="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 active:scale-[0.97] transition">☁️ 클라우드 저장</button>
+              <button type="button" onClick={() => setShowSaveModal(true)} className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.97] transition">📂 불러오기</button>
+              <button type="button" onClick={() => { setForm(createEmptyForm(form.industry)); setStep(1); setStepError(""); showMessage("초기화가 완료되었습니다."); }} className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.97] transition">초기화</button>
+              <button type="button" onClick={async () => { try { const url = `${window.location.origin}${window.location.pathname}?${buildQuery(form)}`; await navigator.clipboard.writeText(url); showMessage("링크가 복사되었습니다."); } catch (error) { console.error(error); showMessage("링크 복사에 실패했습니다."); } }} className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 active:scale-[0.97] transition">링크 공유</button>
+            </div>
 
             {/* 데스크톱 네비게이션 */}
             <section className="hidden lg:block rounded-2xl bg-white p-5 ring-1 ring-slate-100">
