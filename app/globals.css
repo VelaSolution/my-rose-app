@@ -186,6 +186,9 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20p
 
   .pb-16, .pb-20 { padding-bottom: 40px !important; }
 
+  /* 도구 페이지: ToolNav fixed 바 공간 확보 */
+  .pt-20 { padding-top: 96px !important; }
+
   /* 데스크탑 사이드바 숨기기 */
   aside.hidden.md\:flex { display: none !important; }
   ::-webkit-scrollbar { display: none; }
