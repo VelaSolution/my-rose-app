@@ -83,13 +83,17 @@ export default function HomePage() {
     });
   }, [router]);
 
+  // 지수와 뉴스를 독립적으로 로드 (지수 먼저, 뉴스 나중에)
   useEffect(() => {
-    fetch("/api/home")
+    // 지수: 빠르게
+    fetch("/api/home?only=stocks")
       .then(r => r.json())
-      .then(d => {
-        if (d.stocks) setStocks(d.stocks);
-        if (d.news) setNews(d.news);
-      })
+      .then(d => { if (d.stocks) setStocks(d.stocks); })
+      .catch(() => {});
+    // 뉴스: 느릴 수 있음
+    fetch("/api/home?only=news")
+      .then(r => r.json())
+      .then(d => { if (d.news) setNews(d.news); })
       .catch(() => {})
       .finally(() => setNewsLoad(false));
   }, []);
@@ -147,22 +151,28 @@ export default function HomePage() {
         </div>
 
         {/* 경제 지표 */}
-        <div className="grid grid-cols-3 gap-2.5">
-          {indexCards.map(({ label, icon, data }) => (
-            <div key={label} className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 px-3 py-3">
-              <div className="flex items-center gap-1 mb-1">
-                <span className="text-sm">{icon}</span>
-                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{label}</p>
+        <div>
+          <div className="grid grid-cols-3 gap-2.5">
+            {indexCards.map(({ label, icon, data }) => (
+              <div key={label} className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 px-3 py-3">
+                <div className="flex items-center gap-1 mb-1">
+                  <span className="text-sm">{icon}</span>
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{label}</p>
+                </div>
+                {!stocks ? (
+                  <div className="h-5 bg-slate-100 dark:bg-slate-700 rounded w-16 animate-pulse" />
+                ) : data ? (
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{data.price}</p>
+                ) : (
+                  <p className="text-xs text-slate-400">—</p>
+                )}
               </div>
-              {!stocks ? (
-                <div className="h-5 bg-slate-100 dark:bg-slate-700 rounded w-16 animate-pulse" />
-              ) : data ? (
-                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{data.price}</p>
-              ) : (
-                <p className="text-xs text-slate-400">—</p>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
+          {stocks && (() => {
+            const d = stocks.kospi?.date || stocks.kosdaq?.date || stocks.usdkrw?.date;
+            return d ? <p className="text-xs text-slate-400 mt-1.5 text-right">{d} 기준</p> : null;
+          })()}
         </div>
 
         {/* 경영 팁 */}

@@ -118,7 +118,30 @@ async function getNews() {
   }
 }
 
-export async function GET() {
-  const [stocks, news] = await Promise.all([getStocks(), getNews()]);
+// ── 지수 캐시 (서버 메모리, 30분) ─────────────────────
+let stocksCache: { data: Awaited<ReturnType<typeof getStocks>>; ts: number } | null = null;
+const STOCKS_TTL = 30 * 60 * 1000; // 30분
+
+async function getStocksCached() {
+  if (stocksCache && Date.now() - stocksCache.ts < STOCKS_TTL) return stocksCache.data;
+  const data = await getStocks();
+  if (data) stocksCache = { data, ts: Date.now() };
+  return data;
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const only = searchParams.get("only");
+
+  if (only === "stocks") {
+    const stocks = await getStocksCached();
+    return apiSuccess({ stocks });
+  }
+  if (only === "news") {
+    const news = await getNews();
+    return apiSuccess({ news });
+  }
+
+  const [stocks, news] = await Promise.all([getStocksCached(), getNews()]);
   return apiSuccess({ stocks, news });
 }
