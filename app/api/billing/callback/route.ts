@@ -39,6 +39,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/payment/fail?reason=auth_failed", origin));
     }
 
+    // customerKey가 인증된 사용자와 일치하는지 검증
+    if (customerKey !== user.id) {
+      return NextResponse.redirect(new URL("/payment/fail?reason=customer_mismatch", origin));
+    }
+
     // 2. 빌링키 발급
     const billing = await issueBillingKey(authKey, customerKey);
     const cardLast4 = billing.card.number.slice(-4);
@@ -82,7 +87,14 @@ export async function GET(request: NextRequest) {
 
     if (subError) {
       console.error("Subscription insert error:", subError);
-      // 결제는 성공했으니 에러만 로그하고 계속 진행
+      // 한 번 더 시도
+      const { data: sub2 } = await supabase.from("subscriptions").upsert({
+        user_id: user.id, plan: "standard", billing_cycle: cycle,
+        billing_key: billing.billingKey, card_last4: cardLast4, card_company: cardCompany,
+        status: "active", current_period_start: now.toISOString(), current_period_end: periodEnd.toISOString(),
+        cancel_at_period_end: false, retry_count: 0, updated_at: now.toISOString(),
+      }, { onConflict: "user_id" }).select().single();
+      if (sub2) Object.assign(sub ?? {}, sub2);
     }
 
     // 5. 결제 기록

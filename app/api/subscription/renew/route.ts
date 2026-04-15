@@ -46,12 +46,20 @@ export async function POST(req: NextRequest) {
       const newStart = new Date(sub.current_period_end);
       const newEnd = calcNextPeriodEnd(newStart, cycle);
 
-      await admin.from("subscriptions").update({
+      // DB 업데이트 — 실패 시 이중 결제 방지를 위해 반드시 확인
+      const { error: updateErr } = await admin.from("subscriptions").update({
         current_period_start: newStart.toISOString(),
         current_period_end: newEnd.toISOString(),
         retry_count: 0,
         updated_at: now.toISOString(),
       }).eq("id", sub.id);
+
+      if (updateErr) {
+        console.error("CRITICAL: charge succeeded but subscription update failed", { subId: sub.id, error: updateErr });
+        // 결제는 됐지만 DB 반영 실패 — 관리자 알림 필요
+        failed++;
+        continue;
+      }
 
       await admin.from("profiles").update({
         plan_expires_at: newEnd.toISOString(),

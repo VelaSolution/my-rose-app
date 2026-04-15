@@ -44,13 +44,18 @@ export async function POST(req: NextRequest) {
       const newStart = new Date(sub.current_period_end);
       const newEnd = calcNextPeriodEnd(newStart, cycle);
 
-      await admin.from("subscriptions").update({
+      const { error: updateErr } = await admin.from("subscriptions").update({
         status: "active",
         current_period_start: newStart.toISOString(),
         current_period_end: newEnd.toISOString(),
         retry_count: 0,
         updated_at: now.toISOString(),
       }).eq("id", sub.id);
+
+      if (updateErr) {
+        console.error("CRITICAL: retry charge succeeded but DB update failed", { subId: sub.id, error: updateErr });
+        continue;
+      }
 
       await admin.from("profiles").update({
         plan_expires_at: newEnd.toISOString(),

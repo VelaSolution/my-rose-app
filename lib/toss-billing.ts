@@ -70,13 +70,18 @@ export function generateOrderId(billingCycle: "monthly" | "annual", isRenewal = 
   return `${prefix}-${billingCycle}-${Date.now()}`;
 }
 
-/** 다음 결제일 계산 */
+/** 다음 결제일 계산 (월말 롤오버 안전) */
 export function calcNextPeriodEnd(from: Date, billingCycle: "monthly" | "annual"): Date {
   const next = new Date(from);
+  const origDay = next.getDate();
   if (billingCycle === "annual") {
     next.setFullYear(next.getFullYear() + 1);
   } else {
     next.setMonth(next.getMonth() + 1);
+  }
+  // 월말 롤오버 방지: 1/31 + 1개월 → 2/28 (3/3이 아님)
+  if (next.getDate() !== origDay) {
+    next.setDate(0); // 이전 달의 마지막 날로
   }
   return next;
 }
