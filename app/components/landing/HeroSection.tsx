@@ -1,75 +1,4 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-
-function MiniSim() {
-  const [seats, setSeats] = useState(28);
-  const [spend, setSpend] = useState(20000);
-  const [turn, setTurn] = useState(1.4);
-  const [cogsRate, setCogsRate] = useState(33);
-
-  const sales = Math.round(seats * spend * turn * 26);
-  const cost = Math.round(sales * cogsRate / 100 + 600 * 10000 + 250 * 10000 + 500000);
-  const profit = sales - cost;
-  const margin = sales > 0 ? ((profit / sales) * 100).toFixed(1) : "0";
-  const fmt = (n: number) => Math.abs(n).toLocaleString("ko-KR");
-
-  const sliders = [
-    { label: "좌석 수", value: seats, display: `${seats}석`, min: 5, max: 80, step: 1, set: setSeats },
-    { label: "객단가", value: spend, display: `${spend.toLocaleString()}원`, min: 3000, max: 100000, step: 1000, set: setSpend },
-    { label: "회전율", value: turn, display: `${turn.toFixed(1)}회`, min: 0.5, max: 6, step: 0.1, set: setTurn },
-    { label: "원가율", value: cogsRate, display: `${cogsRate}%`, min: 15, max: 55, step: 1, set: setCogsRate },
-  ];
-
-  return (
-    <div className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-lg p-5">
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-bold text-slate-900">수익 미리보기</span>
-        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-semibold">슬라이더를 움직여보세요</span>
-      </div>
-      <div className="space-y-3 mb-4">
-        {sliders.map((s) => (
-          <div key={s.label}>
-            <div className="flex justify-between mb-1">
-              <span className="text-xs text-slate-500">{s.label}</span>
-              <span className="text-xs font-bold text-slate-900">{s.display}</span>
-            </div>
-            <input
-              type="range" min={s.min} max={s.max} step={s.step} value={s.value}
-              onChange={(e) => s.set(Number(e.target.value))}
-              className="w-full accent-blue-500 h-1.5"
-            />
-          </div>
-        ))}
-      </div>
-      <div className="rounded-xl bg-slate-50 p-4 mb-3">
-        <div className="flex justify-between items-center mb-1.5">
-          <span className="text-xs text-slate-400 font-semibold">예상 월 매출</span>
-          <span className="text-base font-extrabold text-slate-900">{fmt(sales)}원</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-slate-400 font-semibold">예상 순이익</span>
-          <span className={`text-lg font-extrabold ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-            {profit >= 0 ? "+" : "-"}{fmt(profit)}원
-          </span>
-        </div>
-        <div className="mt-2 h-1 rounded-full bg-slate-200 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-300 ${profit >= 0 ? "bg-emerald-500" : "bg-red-500"}`}
-            style={{ width: `${Math.min(Math.max(Number(margin), 0), 100)}%` }}
-          />
-        </div>
-        <p className={`text-right text-xs font-semibold mt-1 ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-          순이익률 {margin}%
-        </p>
-      </div>
-      <Link href="/simulator" className="block w-full text-center bg-blue-600 text-white py-3 rounded-xl text-sm font-bold active:scale-[0.98] transition">
-        상세 분석하기 →
-      </Link>
-    </div>
-  );
-}
 
 export function HeroSection() {
   return (
@@ -93,7 +22,19 @@ export function HeroSection() {
           </div>
         </div>
         <div className="fade-init d2">
-          <MiniSim />
+          <div className="hero-card">
+            <div className="hero-card-header">
+              <span className="hero-card-title">☕ 카페 · 운영 중</span>
+              <span className="hero-card-badge">흑자</span>
+            </div>
+            <div className="hero-metric-label">이번 달 세전 순이익</div>
+            <div className={`hero-metric-value green`}>+3,420,000원</div>
+            <div className="hero-bar-wrap"><div className="hero-bar" /></div>
+            <div className="hero-row"><span className="hero-row-label">월 총 매출</span><span className="hero-row-value">28,500,000원</span></div>
+            <div className="hero-row"><span className="hero-row-label">손익분기점</span><span className="hero-row-value">22,100,000원 ✓</span></div>
+            <div className="hero-row"><span className="hero-row-label">투자금 회수</span><span className="hero-row-value">18개월 예상</span></div>
+            <div className="hero-row"><span className="hero-row-label">순이익률</span><span className="hero-row-value" style={{ color: "#3182F6" }}>12.0%</span></div>
+          </div>
         </div>
       </div>
     </section>
