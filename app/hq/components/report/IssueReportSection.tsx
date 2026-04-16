@@ -35,6 +35,7 @@ interface Props {
   // Delete permissions (HQ 권한 관리)
   canDelete?: boolean;
   deleteReport?: (id: string) => void;
+  isAdmin?: boolean;
 }
 
 export default function IssueReportSection(props: Props) {
@@ -46,7 +47,7 @@ export default function IssueReportSection(props: Props) {
     feedbackId, feedbackText, setFeedbackId, setFeedbackText,
     commentMap, commentTarget, commentText, setCommentTarget, setCommentText,
     addIssue, approveReport, checkReport, submitFeedback, saveEdit, addComment,
-    canDelete, deleteReport,
+    canDelete, deleteReport, isAdmin,
   } = props;
 
   return (
@@ -105,14 +106,14 @@ export default function IssueReportSection(props: Props) {
               </div>
             ) : (
               <>
-                <p className="text-sm text-slate-600 mb-3 line-clamp-2">{iss.description}</p>
+                <p className="text-sm text-slate-600 mb-3 whitespace-pre-wrap">{iss.description}</p>
                 <div className="flex items-center gap-2 text-xs text-slate-400">
                   <span className={`${BADGE} ${priorityColor[iss.priority] ?? priorityColor["중간"]}`}>{iss.priority}</span>
                   <span>{displayName(iss.author ?? userName)}</span>
-                  {iss.author === userName && iss.reportStatus !== "approved" && (
+                  {(iss.author === userName || isAdmin) && (
                     <button onClick={() => { setEditId(iss.id); setEditTitle(iss.title); setEditDesc(iss.description); }} className="text-slate-400 hover:text-[#3182F6] font-semibold">수정</button>
                   )}
-                  {canDelete && deleteReport && (
+                  {(canDelete || iss.author === userName) && deleteReport && (
                     <button onClick={() => deleteReport(iss.id)} className="text-slate-400 hover:text-red-500 font-semibold">삭제</button>
                   )}
                 </div>

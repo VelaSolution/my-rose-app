@@ -40,6 +40,7 @@ interface Props {
   // Delete permissions (HQ 권한 관리)
   canDelete?: boolean;
   deleteReport?: (id: string) => void;
+  isAdmin?: boolean;
 }
 
 export default function DailyReportSection(props: Props) {
@@ -52,7 +53,7 @@ export default function DailyReportSection(props: Props) {
     feedbackId, feedbackText, setFeedbackId, setFeedbackText,
     commentMap, commentTarget, commentText, setCommentTarget, setCommentText,
     addDaily, approveReport, checkReport, submitFeedback, saveEdit, addComment,
-    canDelete, deleteReport,
+    canDelete, deleteReport, isAdmin,
   } = props;
 
   return (
@@ -133,10 +134,10 @@ export default function DailyReportSection(props: Props) {
                 {d.problems && <p className="text-sm text-red-600 mb-1"><span className="font-semibold">문제:</span> {d.problems}</p>}
                 {d.nextSteps && <p className="text-sm text-blue-600"><span className="font-semibold">계획:</span> {d.nextSteps}</p>}
                 <div className="flex gap-3 mt-2">
-                  {d.author === userName && d.status !== "approved" && (
+                  {(d.author === userName || isAdmin) && (
                     <button onClick={() => { setEditId(d.id); setEditContent(d.content); setEditProblems(d.problems); setEditNext(d.nextSteps); }} className="text-xs text-slate-400 hover:text-[#3182F6] font-semibold">수정</button>
                   )}
-                  {canDelete && deleteReport && (
+                  {(canDelete || d.author === userName) && deleteReport && (
                     <button onClick={() => deleteReport(d.id)} className="text-xs text-slate-400 hover:text-red-500 font-semibold">삭제</button>
                   )}
                 </div>

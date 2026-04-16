@@ -188,8 +188,9 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
     setEditId(null); flash("수정 완료");
   };
 
-  /* -- delete (대표/이사만) -- */
-  const canDelete = myRole === "대표" || myRole === "이사";
+  /* -- edit/delete 권한 -- */
+  const isAdmin = myRole === "대표" || myRole === "이사";
+  const canDelete = isAdmin;
 
   const deleteReport = async (id: string) => {
     if (!confirm("이 보고서를 삭제하시겠습니까?")) return;
@@ -253,7 +254,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
           editNext={editNext} setEditNext={setEditNext}
           {...sharedFeedbackProps} {...sharedCommentProps}
           addDaily={addDaily} approveReport={approveReport} checkReport={checkReport} saveEdit={saveEdit}
-          canDelete={canDelete} deleteReport={deleteReport}
+          canDelete={canDelete} deleteReport={deleteReport} isAdmin={isAdmin}
         />
       )}
 
@@ -266,7 +267,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
           editTitle={editTitle} setEditTitle={setEditTitle} editDesc={editDesc} setEditDesc={setEditDesc}
           {...sharedFeedbackProps} {...sharedCommentProps}
           addIssue={addIssue} approveReport={approveReport} checkReport={checkReport} saveEdit={saveEdit}
-          canDelete={canDelete} deleteReport={deleteReport}
+          canDelete={canDelete} deleteReport={deleteReport} isAdmin={isAdmin}
         />
       )}
 
@@ -279,7 +280,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
           editTitle={editTitle} setEditTitle={setEditTitle} editDesc={editDesc} setEditDesc={setEditDesc}
           {...sharedFeedbackProps} {...sharedCommentProps}
           addProject={addProject} approveReport={approveReport} checkReport={checkReport} saveEdit={saveEdit}
-          canDelete={canDelete} deleteReport={deleteReport}
+          canDelete={canDelete} deleteReport={deleteReport} isAdmin={isAdmin}
         />
       )}
     </div>

@@ -36,6 +36,7 @@ interface Props {
   // Delete permissions (HQ 권한 관리)
   canDelete?: boolean;
   deleteReport?: (id: string) => void;
+  isAdmin?: boolean;
 }
 
 export default function ProjectReportSection(props: Props) {
@@ -47,7 +48,7 @@ export default function ProjectReportSection(props: Props) {
     feedbackId, feedbackText, setFeedbackId, setFeedbackText,
     commentMap, commentTarget, commentText, setCommentTarget, setCommentText,
     addProject, approveReport, checkReport, submitFeedback, saveEdit, addComment,
-    canDelete, deleteReport,
+    canDelete, deleteReport, isAdmin,
   } = props;
 
   return (
@@ -102,7 +103,7 @@ export default function ProjectReportSection(props: Props) {
               </div>
             ) : (
               <>
-                <p className="text-sm text-slate-600 mb-3">{p.description}</p>
+                <p className="text-sm text-slate-600 mb-3 whitespace-pre-wrap">{p.description}</p>
                 <div className="mb-2">
                   <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
                     <span>진행률</span>
@@ -115,10 +116,10 @@ export default function ProjectReportSection(props: Props) {
                 <div className="flex items-center gap-3 text-xs text-slate-400">
                   <span>{displayName(p.author ?? userName)}</span>
                   <span>마감: {p.deadline}</span>
-                  {p.author === userName && p.reportStatus !== "approved" && (
+                  {(p.author === userName || isAdmin) && (
                     <button onClick={() => { setEditId(p.id); setEditTitle(p.title); setEditDesc(p.description); }} className="text-slate-400 hover:text-[#3182F6] font-semibold">수정</button>
                   )}
-                  {canDelete && deleteReport && (
+                  {(canDelete || p.author === userName) && deleteReport && (
                     <button onClick={() => deleteReport(p.id)} className="text-slate-400 hover:text-red-500 font-semibold">삭제</button>
                   )}
                 </div>
