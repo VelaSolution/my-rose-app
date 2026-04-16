@@ -48,7 +48,7 @@ export default function HistorySection() {
               <YAxis tickFormatter={(v) => `${v}만`} tick={{ fontSize: 12 }} />
               <Tooltip formatter={(v, name) => [`${fmt(Number(v) * 10000)}원`, String(name)]} />
               <Legend />
-              <Line type="monotone" dataKey="매출" stroke="#0f172a" strokeWidth={2} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="매출" stroke="#3182F6" strokeWidth={2} dot={{ r: 4 }} />
               <Line type="monotone" dataKey="세전순이익" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
               <Line type="monotone" dataKey="세후실수령" stroke="#6366f1" strokeWidth={2} dot={{ r: 4 }} strokeDasharray="4 2" />
             </LineChart>

@@ -28,7 +28,7 @@ import SensitivitySection from "./components/SensitivitySection";
 import ScenarioCompareSection from "./components/ScenarioCompareSection";
 import StrategyGuideSection from "./components/StrategyGuideSection";
 
-const CHART_COLORS = ["#0f172a", "#334155", "#64748b", "#94a3b8", "#cbd5e1"];
+const CHART_COLORS = ["#3182F6", "#7C3AED", "#10B981", "#F59E0B", "#EF4444", "#EC4899", "#06B6D4"];
 
 // ─── 결과 컨텐츠 ───────────────────────────────────────────────
 function ResultContent() {
@@ -419,13 +419,13 @@ function ResultContent() {
             other: form.supplies + form.maintenance + form.etc,
           };
           const items = [
-            { name: "인건비", value: breakdown.labor, color: "#0f172a" },
-            { name: "원가", value: breakdown.cogs, color: "#334155" },
-            { name: "임대료", value: breakdown.rent, color: "#475569" },
-            { name: "공과금·통신", value: breakdown.utilities, color: "#64748b" },
-            { name: "카드수수료", value: breakdown.cardFee, color: "#94a3b8" },
-            { name: "마케팅", value: breakdown.marketing, color: "#b0bec5" },
-            { name: "기타", value: breakdown.other, color: "#cbd5e1" },
+            { name: "인건비", value: breakdown.labor, color: "#3182F6" },
+            { name: "원가", value: breakdown.cogs, color: "#7C3AED" },
+            { name: "임대료", value: breakdown.rent, color: "#10B981" },
+            { name: "공과금·통신", value: breakdown.utilities, color: "#F59E0B" },
+            { name: "카드수수료", value: breakdown.cardFee, color: "#EF4444" },
+            { name: "마케팅", value: breakdown.marketing, color: "#EC4899" },
+            { name: "기타", value: breakdown.other, color: "#06B6D4" },
           ].filter(i => i.value > 0);
           const total = items.reduce((s, i) => s + i.value, 0);
           return (
@@ -434,17 +434,17 @@ function ResultContent() {
               <p className="mb-5 text-sm text-slate-500">월 총 비용 {fmt(total)}원의 구성</p>
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
                 {/* 파이차트 */}
-                <div className="flex-shrink-0" style={{ width: "100%", height: 200 }}>
+                <div className="flex-shrink-0 mx-auto lg:mx-0" style={{ width: 200, height: 200 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={items} dataKey="value" nameKey="name" innerRadius={60} outerRadius={95} paddingAngle={2}>
+                      <Pie data={items} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
                         {items.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
                       </Pie>
                       <Tooltip formatter={(v) => [`${fmt(Number(v ?? 0))}원`, ""]} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 min-w-0 space-y-2">
                   {items.map(item => (
                     <div key={item.name}>
                       <div className="flex justify-between text-xs text-slate-600 mb-1">

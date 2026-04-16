@@ -241,7 +241,7 @@ export default function MyStorePage() {
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9EA6B3" }} axisLine={false} tickLine={false} />
                     <YAxis tickFormatter={v => fmtM(v)} tick={{ fontSize: 11, fill: "#9EA6B3" }} axisLine={false} tickLine={false} width={48} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="매출" fill="#191F28" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="매출" fill="#3182F6" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 ) : activeChart === "profit" ? (
                   <LineChart data={chartData}>
@@ -258,10 +258,10 @@ export default function MyStorePage() {
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9EA6B3" }} axisLine={false} tickLine={false} />
                     <YAxis tickFormatter={v => fmtM(v)} tick={{ fontSize: 11, fill: "#9EA6B3" }} axisLine={false} tickLine={false} width={48} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="인건비" fill="#334155" radius={[3, 3, 0, 0]} stackId="a" />
-                    <Bar dataKey="원재료비" fill="#64748b" radius={[0, 0, 0, 0]} stackId="a" />
-                    <Bar dataKey="임대료" fill="#94a3b8" radius={[0, 0, 0, 0]} stackId="a" />
-                    <Bar dataKey="기타" fill="#cbd5e1" radius={[3, 3, 0, 0]} stackId="a" />
+                    <Bar dataKey="인건비" fill="#3182F6" radius={[3, 3, 0, 0]} stackId="a" />
+                    <Bar dataKey="원재료비" fill="#7C3AED" radius={[0, 0, 0, 0]} stackId="a" />
+                    <Bar dataKey="임대료" fill="#10B981" radius={[0, 0, 0, 0]} stackId="a" />
+                    <Bar dataKey="기타" fill="#F59E0B" radius={[3, 3, 0, 0]} stackId="a" />
                   </BarChart>
                 )}
               </ResponsiveContainer>
@@ -269,10 +269,10 @@ export default function MyStorePage() {
               {activeChart === "cost" && (
                 <div className="flex gap-4 mt-3 justify-center flex-wrap">
                   {[
-                    { label: "인건비", color: "#334155" },
-                    { label: "원재료비", color: "#64748b" },
-                    { label: "임대료", color: "#94a3b8" },
-                    { label: "기타", color: "#cbd5e1" },
+                    { label: "인건비", color: "#3182F6" },
+                    { label: "원재료비", color: "#7C3AED" },
+                    { label: "임대료", color: "#10B981" },
+                    { label: "기타", color: "#F59E0B" },
                   ].map(l => (
                     <span key={l.label} className="flex items-center gap-1.5 text-xs text-slate-500">
                       <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: l.color }} />
