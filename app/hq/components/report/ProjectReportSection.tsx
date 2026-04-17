@@ -18,6 +18,7 @@ interface Props {
   editId: string | null; setEditId: (id: string | null) => void;
   editTitle: string; setEditTitle: (v: string) => void;
   editDesc: string; setEditDesc: (v: string) => void;
+  editProgress?: number; setEditProgress?: (v: number) => void;
   // Feedback state
   feedbackId: string | null; feedbackText: string;
   setFeedbackId: (id: string | null) => void;
@@ -98,6 +99,7 @@ function ProjectList(props: Omit<Props, "pTitle" | "setPTitle" | "pProgress" | "
   const {
     projects, userName, canApprove,
     editId, setEditId, editTitle, setEditTitle, editDesc, setEditDesc,
+    editProgress, setEditProgress,
     feedbackId, feedbackText, setFeedbackId, setFeedbackText,
     commentMap, commentTarget, commentText, setCommentTarget, setCommentText,
     approveReport, checkReport, submitFeedback, saveEdit, addComment,
@@ -136,6 +138,11 @@ function ProjectList(props: Omit<Props, "pTitle" | "setPTitle" | "pProgress" | "
                   <div className="space-y-2">
                     <input className={I} value={editTitle} onChange={e => setEditTitle(e.target.value)} />
                     <textarea className={`${I} min-h-[60px]`} rows={2} value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 mb-1 block">진행률 ({editProgress ?? 0}%)</label>
+                      <input type="range" min={0} max={100} value={editProgress ?? 0}
+                        onChange={e => setEditProgress?.(Number(e.target.value))} className="w-full accent-[#3182F6]" />
+                    </div>
                     <div className="flex gap-2 justify-end">
                       <button className={B2} onClick={() => setEditId(null)}>취소</button>
                       <button className={B} onClick={() => saveEdit(p.id, "project")}>저장</button>
@@ -157,7 +164,7 @@ function ProjectList(props: Omit<Props, "pTitle" | "setPTitle" | "pProgress" | "
                       <span>{displayName(p.author ?? userName)}</span>
                       <span>마감: {p.deadline}</span>
                       {(p.author === userName || isAdmin) && (
-                        <button onClick={() => { setEditId(p.id); setEditTitle(p.title); setEditDesc(p.description); }} className="text-slate-400 hover:text-[#3182F6] font-semibold">수정</button>
+                        <button onClick={() => { setEditId(p.id); setEditTitle(p.title); setEditDesc(p.description); setEditProgress?.(p.progress); }} className="text-slate-400 hover:text-[#3182F6] font-semibold">수정</button>
                       )}
                       {(canDelete || p.author === userName) && deleteReport && (
                         <button onClick={() => deleteReport(p.id)} className="text-slate-400 hover:text-red-500 font-semibold">삭제</button>

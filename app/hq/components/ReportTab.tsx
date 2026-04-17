@@ -57,6 +57,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
   const [editNext, setEditNext] = useState("");
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [editProgress, setEditProgress] = useState(0);
 
   const [commentMap, setCommentMap] = useState<Record<string, { id: string; author: string; text: string; time: string }[]>>({});
   const [commentText, setCommentText] = useState("");
@@ -184,7 +185,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
     const s = sb(); if (!s) return;
     if (type === "daily") { await s.from("hq_reports").update({ content: editContent, problems: editProblems, next_steps: editNext }).eq("id", id); loadDailies(); }
     else if (type === "issue") { await s.from("hq_reports").update({ title: editTitle, description: editDesc }).eq("id", id); loadIssues(); }
-    else { await s.from("hq_reports").update({ title: editTitle, description: editDesc }).eq("id", id); loadProjects(); }
+    else { await s.from("hq_reports").update({ title: editTitle, description: editDesc, progress: editProgress }).eq("id", id); loadProjects(); }
     setEditId(null); flash("수정 완료");
   };
 
@@ -278,6 +279,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
           pDeadline={pDeadline} setPDeadline={setPDeadline} pDesc={pDesc} setPDesc={setPDesc}
           editId={editId} setEditId={setEditId}
           editTitle={editTitle} setEditTitle={setEditTitle} editDesc={editDesc} setEditDesc={setEditDesc}
+          editProgress={editProgress} setEditProgress={setEditProgress}
           {...sharedFeedbackProps} {...sharedCommentProps}
           addProject={addProject} approveReport={approveReport} checkReport={checkReport} saveEdit={saveEdit}
           canDelete={canDelete} deleteReport={deleteReport} isAdmin={isAdmin}
