@@ -6,9 +6,9 @@ export function CTASection() {
     <section className="cta-bg">
       <div className="section-inner">
         <FadeIn>
-          <h2 className="cta-title">지금 바로 내 매장을 분석해보세요</h2>
-          <p className="cta-desc">회원가입 후 무료로 시작할 수 있습니다. 신용카드 불필요.</p>
-          <Link href="/signup" className="btn-white">무료로 시작하기 →</Link>
+          <h2 className="cta-title">내 매장, 지금 돈 벌고 있는 건지<br />30초만에 확인하세요</h2>
+          <p className="cta-desc">회원가입 없이 바로 써볼 수 있어요. 무료입니다.</p>
+          <Link href="/simulator" className="btn-white">시뮬레이터 시작하기 →</Link>
         </FadeIn>
       </div>
     </section>

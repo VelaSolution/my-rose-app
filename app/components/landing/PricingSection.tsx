@@ -2,8 +2,8 @@ import Link from "next/link";
 import { FadeIn } from "./LandingUtils";
 
 const PLANS = [
-  { plan: "무료", price: "0", unit: "원/월", desc: "혼자 운영하는 소규모 매장", features: ["수익 시뮬레이터", "월 3회 AI 브리핑", "기본 차트 및 분석", "링크 공유"], btn: "무료로 시작", cls: "pricing-btn-gray", href: "/signup", popular: false },
-  { plan: "프로", price: "29,900", unit: "원/월", desc: "매출부터 전략까지, 제대로 관리하고 싶은 사장님", features: ["무료 플랜 모든 기능", "모든 도구 무제한", "AI 브리핑·전략 무제한", "POS 분석 · PDF · 대시보드", "우선 고객 지원"], btn: "프로 시작", cls: "pricing-btn-blue", href: "/pricing", popular: true },
+  { plan: "무료", price: "0", unit: "원/월", desc: "일단 써보고 싶은 사장님", features: ["수익 시뮬레이터", "메뉴 원가 계산기", "인건비 계산기", "월 3회 AI 기능"], btn: "무료로 시작", cls: "pricing-btn-gray", href: "/signup", popular: false },
+  { plan: "프로", price: "29,900", unit: "원/월", desc: "제대로 관리하고 싶은 사장님", features: ["무료 기능 전부 포함", "AI 기능 무제한", "리뷰 답변 · SNS 콘텐츠", "세금 계산 · 손익 리포트", "데이터 클라우드 저장"], btn: "프로 시작하기", cls: "pricing-btn-blue", href: "/pricing", popular: true },
 ];
 
 export function PricingSection() {
@@ -12,14 +12,14 @@ export function PricingSection() {
       <div className="section-inner">
         <FadeIn>
           <span className="section-tag">요금제</span>
-          <h2 className="section-title">합리적인 가격으로</h2>
-          <p className="section-desc">매장 규모에 맞는 플랜을 선택하세요. 언제든 변경 가능합니다.</p>
+          <h2 className="section-title">부담 없이 시작하세요</h2>
+          <p className="section-desc">기본 도구는 무료. 더 필요하면 그때 업그레이드하세요.</p>
         </FadeIn>
         <div className="pricing-grid">
           {PLANS.map((p) => (
             <FadeIn key={p.plan}>
               <div className={`pricing-card${p.popular ? " popular" : ""}`}>
-                {p.popular && <div className="pricing-popular-badge">가장 인기</div>}
+                {p.popular && <div className="pricing-popular-badge">추천</div>}
                 <div className="pricing-plan">{p.plan}</div>
                 <div className="pricing-price">{p.price}<span>{p.unit}</span></div>
                 <div className="pricing-desc">{p.desc}</div>

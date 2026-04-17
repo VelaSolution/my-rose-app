@@ -1,9 +1,9 @@
 import { FadeIn } from "./LandingUtils";
 
-const TESTIMONIALS = [
-  { text: "손익분기점을 처음으로 제대로 이해했어요. 숫자를 보니 어디서 돈이 새는지 바로 보이더라고요.", name: "김○○", role: "카페 운영 3년차", av: "김", delay: 0 },
-  { text: "AI가 배달 채널 추가를 추천해줬는데, 실행 후 월 매출이 20% 올랐습니다. 믿기 어렵지만 사실이에요.", name: "박○○", role: "분식점 사장님", av: "박", delay: 80 },
-  { text: "창업 전에 미리 수치를 검토할 수 있어서 보증금 협상도 자신 있게 했습니다.", name: "이○○", role: "파인다이닝 예비 창업자", av: "이", delay: 160 },
+const USE_CASES = [
+  { icon: "☕", title: "카페 사장님", desc: "아메리카노 한 잔에 얼마 남는지, 알바비 빼면 내 월급이 얼마인지 바로 계산합니다." },
+  { icon: "🍽️", title: "음식점 사장님", desc: "재료비 오를 때 메뉴 가격을 얼마나 올려야 하는지, 배달 수수료 포함 실수익을 봅니다." },
+  { icon: "🥩", title: "고깃집 사장님", desc: "고기 원가율이 높아도 술 마진으로 커버 가능한지, 테이블당 순익을 확인합니다." },
 ];
 
 export function TestimonialsSection() {
@@ -11,19 +11,16 @@ export function TestimonialsSection() {
     <section className="testi-bg">
       <div className="section-inner">
         <FadeIn>
-          <span className="section-tag" style={{ background: "rgba(255,255,255,.06)", color: "#93C5FD", border: "1px solid rgba(255,255,255,0.1)" }}>후기</span>
-          <h2 className="section-title">실제 사장님들의 이야기</h2>
+          <span className="section-tag" style={{ background: "rgba(255,255,255,.06)", color: "#93C5FD", border: "1px solid rgba(255,255,255,0.1)" }}>이런 분들이 씁니다</span>
+          <h2 className="section-title">내 업종에 딱 맞는 계산</h2>
         </FadeIn>
         <div className="testi-grid">
-          {TESTIMONIALS.map((t) => (
-            <FadeIn key={t.name} delay={t.delay}>
+          {USE_CASES.map((t, i) => (
+            <FadeIn key={t.title} delay={i * 80}>
               <div className="testi-card">
-                <div className="testi-stars">★★★★★</div>
-                <div className="testi-text">&ldquo;{t.text}&rdquo;</div>
-                <div className="testi-author">
-                  <div className="testi-avatar">{t.av}</div>
-                  <div><div className="testi-name">{t.name}</div><div className="testi-role">{t.role}</div></div>
-                </div>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>{t.icon}</div>
+                <div className="testi-name" style={{ marginBottom: 8 }}>{t.title}</div>
+                <div className="testi-text" style={{ fontSize: 14 }}>{t.desc}</div>
               </div>
             </FadeIn>
           ))}

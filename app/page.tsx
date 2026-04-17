@@ -121,11 +121,10 @@ function LandingContent() {
     <>
       <LandingStyles />
       <HeroSection />
-      <FeaturesSection />
       <HowItWorksSection />
-      <PricingSection />
       <TestimonialsSection />
-      <GameBannerSection />
+      <FeaturesSection />
+      <PricingSection />
       <FAQSection />
       <CTASection />
       <ContactSection />

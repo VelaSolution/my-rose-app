@@ -2,14 +2,11 @@ import Link from "next/link";
 import { FadeIn } from "./LandingUtils";
 
 const FEATURES = [
-  { icon:"🧮", title:"메뉴별 원가 계산기",  desc:"식재료 원가 입력 → 원가율·건당 순익 자동 계산. 메뉴 가격 결정에 바로 활용하세요.",      tag:"원가 계산",  href:"/tools/menu-cost" },
-  { icon:"👥", title:"인건비 스케줄러",      desc:"직원별 시급·근무시간 설정 → 주간·월간 인건비 예측. 알바 채용 계획에 필수.",              tag:"인건비 관리", href:"/tools/labor" },
-  { icon:"🧾", title:"세금 계산기",          desc:"매출 기반 부가세·종합소득세 예상액 자동 산출. 세금 폭탄 없이 미리 준비하세요.",           tag:"세금 예측",  href:"/tools/tax" },
-  { icon:"📄", title:"손익계산서 PDF",       desc:"시뮬레이션 데이터로 월별 P&L 리포트 PDF 출력. 투자자·세무사에게 바로 공유 가능.",        tag:"PDF 출력",   href:"/tools/pl-report" },
-  { icon:"✅", title:"창업 체크리스트",      desc:"업종별 인허가·준비물·타임라인 단계별 가이드. 창업 전 놓치는 것 없이 준비하세요.",         tag:"창업 준비",  href:"/tools/startup-checklist" },
-  { icon:"📱", title:"SNS 콘텐츠 생성기",   desc:"메뉴·이벤트 정보 입력 → 인스타 캡션 AI 자동 생성. 매일 고민하는 SNS 포스팅 해결.",     tag:"AI · SNS",   href:"/tools/sns-content" },
-  { icon:"💬", title:"리뷰 답변 생성기",     desc:"고객 리뷰 붙여넣기 → AI가 맞춤 답변 초안 작성. 악성 리뷰도 프로답게 대응하세요.",        tag:"AI · 리뷰",  href:"/tools/review-reply" },
-  { icon:"🗺️", title:"상권 분석 도우미",    desc:"입지 조건 입력 → AI 상권 적합도 평가 리포트. 창업 전 상권 리스크를 미리 파악하세요.",    tag:"AI · 상권",  href:"/tools/area-analysis" },
+  { icon:"🧮", title:"메뉴 원가 계산",    desc:"재료비 넣으면 메뉴 하나에 얼마 남는지 바로 나옵니다. 가격 올릴지 말지 숫자로 판단하세요.",  tag:"원가",    href:"/tools/menu-cost" },
+  { icon:"👥", title:"인건비 계산",       desc:"알바 시급, 근무시간 넣으면 주휴수당·4대보험 포함 실제 인건비를 보여줍니다.",                  tag:"인건비",  href:"/tools/labor" },
+  { icon:"💬", title:"리뷰 답변 생성",    desc:"배민·쿠팡이츠 리뷰 붙여넣으면 AI가 답변을 써줍니다. 악성 리뷰도 프로답게.",                  tag:"리뷰",    href:"/tools/review-reply" },
+  { icon:"🧾", title:"세금 미리보기",     desc:"매출 넣으면 부가세·종합소득세 얼마 나올지 미리 봅니다. 세금 폭탄 방지.",                      tag:"세금",    href:"/tools/tax" },
+  { icon:"📱", title:"SNS 홍보글 생성",   desc:"메뉴 이름만 넣으면 인스타 캡션을 AI가 만들어줍니다. 매일 고민하는 포스팅 해결.",             tag:"홍보",    href:"/tools/sns-content" },
 ];
 
 export function FeaturesSection() {
@@ -18,8 +15,8 @@ export function FeaturesSection() {
       <div className="section-inner">
         <FadeIn>
           <span className="section-tag">도구</span>
-          <h2 className="section-title">사업에 필요한 <span className="gradient-text">모든 도구</span></h2>
-          <p className="section-desc">외식업 사장님을 위한 실무 도구 모음. 계산부터 콘텐츠 생성까지 한 곳에서.</p>
+          <h2 className="section-title">사장님이 <span className="gradient-text">진짜 쓰는</span> 도구</h2>
+          <p className="section-desc">매장 운영하면서 매번 귀찮았던 계산들, 여기서 바로 해결하세요.</p>
         </FadeIn>
         <div className="features-grid">
           {FEATURES.map((f, i) => (
@@ -35,6 +32,13 @@ export function FeaturesSection() {
             </FadeIn>
           ))}
         </div>
+        <FadeIn>
+          <div style={{ textAlign: "center", marginTop: 32 }}>
+            <Link href="/tools" style={{ fontSize: 14, fontWeight: 600, color: "#3182F6", textDecoration: "none" }}>
+              도구 30개 전체 보기 →
+            </Link>
+          </div>
+        </FadeIn>
       </div>
     </section>
   );
