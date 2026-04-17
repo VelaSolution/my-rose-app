@@ -28,6 +28,7 @@ function TaxInvoiceForm({ userId, payments }: { userId: string | null; payments:
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
+  const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -36,10 +37,12 @@ function TaxInvoiceForm({ userId, payments }: { userId: string | null; payments:
       .then(({ data }: { data: any[] | null }) => { if (data) setRequests(data); });
   }, [userId, submitted]);
 
+  const flash = (type: "success" | "error", text: string) => { setMsg({ type, text }); setTimeout(() => setMsg(null), 4000); };
+
   const handleSubmit = async () => {
-    if (!bizNo.trim() || !bizName.trim() || !email.trim()) { alert("모든 필드를 입력해주세요"); return; }
-    if (!selectedPayment) { alert("결제 건을 선택해주세요"); return; }
-    if (!/^\d{3}-\d{2}-\d{5}$/.test(bizNo)) { alert("사업자번호 형식: 000-00-00000"); return; }
+    if (!bizNo.trim() || !bizName.trim() || !email.trim()) { flash("error", "모든 필드를 입력해주세요"); return; }
+    if (!selectedPayment) { flash("error", "결제 건을 선택해주세요"); return; }
+    if (!/^\d{3}-\d{2}-\d{5}$/.test(bizNo)) { flash("error", "사업자번호 형식: 000-00-00000"); return; }
     setSubmitting(true);
     const sb = createSupabaseBrowserClient();
     const { error } = await sb.from("tax_invoice_requests").insert({
@@ -47,16 +50,21 @@ function TaxInvoiceForm({ userId, payments }: { userId: string | null; payments:
       email: email.trim(), payment_id: selectedPayment, status: "대기",
     });
     setSubmitting(false);
-    if (error) { alert("신청 실패: " + error.message); return; }
+    if (error) { flash("error", "신청 실패: " + error.message); return; }
     setSubmitted(true);
     setBizNo(""); setBizName(""); setEmail(""); setSelectedPayment("");
-    alert("세금계산서 발행이 신청되었습니다. 영업일 기준 1~3일 내 발행됩니다.");
+    flash("success", "세금계산서 발행이 신청되었습니다. 영업일 기준 1~3일 내 발행됩니다.");
   };
 
   const donePayments = payments.filter(p => p.status === "done");
 
   return (
     <div className="space-y-4">
+      {msg && (
+        <div className={`rounded-xl px-4 py-3 text-sm font-semibold ${msg.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
+          {msg.text}
+        </div>
+      )}
       {donePayments.length === 0 ? (
         <p className="text-sm text-slate-400 text-center py-4">결제 내역이 없습니다</p>
       ) : (
