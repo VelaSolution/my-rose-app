@@ -95,6 +95,7 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
     const todayStr = today();
 
     // 전체 쿼리를 병렬 실행
+    // 기존 10개 소스
     const [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10] = await Promise.all([
       s.from("hq_approvals").select("id, title, date").eq("status", "대기").eq("approver", userName).then((res: SupabaseQueryResult<ApprovalRow>) => res.data).catch(() => null),
       s.from("hq_notices").select("id, title, date, read_by").order("date", { ascending: false }).limit(20).then((res: SupabaseQueryResult<NoticeRow>) => res.data).catch(() => null),
@@ -108,6 +109,16 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
       s.from("hq_surveys").select("id, title, author, date, status").eq("status", "진행중").order("date", { ascending: false }).limit(5).then((res: SupabaseQueryResult<SurveyRow>) => res.data).catch(() => null),
     ]);
 
+    // 추가 소스: 휴가 신청(대표/이사에게), 위키, 파일, 결재 상태 변경, 캘린더
+    const canApprove = myRole === "대표" || myRole === "이사" || myRole === "팀장";
+    const [rLeaveReq, rWiki, rFiles, rApprovalDone, rCalendar] = await Promise.all([
+      canApprove ? s.from("hq_leave").select("id, type, status, date, requester").eq("status", "대기").order("date", { ascending: false }).limit(10).then((res: SupabaseQueryResult<LeaveRow & { requester: string }>) => res.data).catch(() => null) : null,
+      s.from("hq_wiki").select("id, title, author, updated_at").order("updated_at", { ascending: false }).limit(5).then((res: SupabaseQueryResult<{ id: string; title: string; author: string; updated_at: string }>) => res.data).catch(() => null),
+      s.from("hq_files").select("id, name, uploaded_by, created_at").order("created_at", { ascending: false }).limit(5).then((res: SupabaseQueryResult<{ id: string; name: string; uploaded_by: string; created_at: string }>) => res.data).catch(() => null),
+      s.from("hq_approvals").select("id, title, status, date, author").in("status", ["승인", "반려"]).eq("author", userName).order("date", { ascending: false }).limit(5).then((res: SupabaseQueryResult<ApprovalRow & { status: string; author: string }>) => res.data).catch(() => null),
+      s.from("hq_calendar").select("id, title, date, author").gte("date", todayStr).order("date", { ascending: true }).limit(5).then((res: SupabaseQueryResult<{ id: string; title: string; date: string; author: string }>) => res.data).catch(() => null),
+    ]);
+
     if (r1) for (const a of r1) items.push({ id: `approval-${a.id}`, icon: "📋", title: `결재 대기: ${a.title}`, time: a.date, tab: "approval" });
     if (r2) for (const n of r2) { if (!(n.read_by ?? []).includes(userName)) items.push({ id: `notice-${n.id}`, icon: "📢", title: `새 공지: ${n.title}`, time: n.date, tab: "notice" }); }
     if (r3) for (const t of r3) { if (t.status !== "completed" && t.status !== "failed") items.push({ id: `task-${t.id}`, icon: "⏰", title: `오늘 마감: ${t.title}`, time: todayStr, tab: "task" }); }
@@ -115,9 +126,16 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
     if (r5) for (const c of r5) items.push({ id: `chat-${c.id}`, icon: "💬", title: `${displayName(c.sender)}: ${c.text.slice(0, 30)}`, time: c.created_at, tab: "chat" });
     if (r6) for (const d of r6) items.push({ id: `dm-${d.id}`, icon: "✉️", title: `DM ${displayName(d.sender)}: ${d.text.slice(0, 30)}`, time: d.created_at, tab: "chat" });
     if (r7) for (const f of r7) { if (f.author !== userName) items.push({ id: `feedback-${f.id}`, icon: "🐛", title: `피드백: ${f.title}`, time: f.date, tab: "feedback" }); }
-    if (r8) for (const r of r8) { if (r.author !== userName) items.push({ id: `report-${r.id}`, icon: "📄", title: `보고서 제출: ${r.title}`, time: r.date, tab: "report" }); }
-    if (r9) for (const b of r9) { if (b.author !== userName) items.push({ id: `board-${b.id}`, icon: "💬", title: `게시판: ${b.title}`, time: b.date, tab: "board" }); }
+    if (r8) for (const r of r8) { if (r.author !== userName) items.push({ id: `report-${r.id}`, icon: "📄", title: `보고서 제출: ${r.title ?? "무제"}`, time: r.date, tab: "report" }); }
+    if (r9) for (const b of r9) { if (b.author !== userName) items.push({ id: `board-${b.id}`, icon: "📝", title: `게시판: ${b.title}`, time: b.date, tab: "board" }); }
     if (r10) for (const sv of r10) { if (sv.author !== userName) items.push({ id: `survey-${sv.id}`, icon: "📊", title: `설문 참여: ${sv.title}`, time: sv.date, tab: "survey" }); }
+
+    // 추가 알림
+    if (rLeaveReq) for (const l of rLeaveReq) { if (l.requester !== userName) items.push({ id: `leave-req-${l.id}`, icon: "📩", title: `휴가 신청: ${l.requester} (${l.type})`, time: l.date, tab: "leave" }); }
+    if (rWiki) for (const w of rWiki) { if (w.author !== userName) items.push({ id: `wiki-${w.id}`, icon: "📖", title: `위키 수정: ${w.title}`, time: w.updated_at, tab: "wiki" }); }
+    if (rFiles) for (const f of rFiles) { if (f.uploaded_by !== userName) items.push({ id: `file-${f.id}`, icon: "📁", title: `파일 업로드: ${f.name}`, time: f.created_at, tab: "files" }); }
+    if (rApprovalDone) for (const a of rApprovalDone) items.push({ id: `approval-done-${a.id}`, icon: a.status === "승인" ? "✅" : "❌", title: `결재 ${a.status}: ${a.title}`, time: a.date, tab: "approval" });
+    if (rCalendar) for (const c of rCalendar) items.push({ id: `cal-${c.id}`, icon: "📅", title: `일정: ${c.title}`, time: c.date, tab: "calendar" });
 
     items.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
     setNotifications(items);
@@ -159,7 +177,16 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
       .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_notices" } as Record<string, string>, withPush("새 공지"))
       .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_feedback" } as Record<string, string>, withPush("새 피드백"))
       .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_board" } as Record<string, string>, withPush("새 게시글"))
+      .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_reports" } as Record<string, string>, withPush("새 보고서"))
+      .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_surveys" } as Record<string, string>, withPush("새 설문"))
+      .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_tasks" } as Record<string, string>, withPush("새 태스크"))
+      .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_leave" } as Record<string, string>, withPush("휴가 신청"))
+      .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_wiki" } as Record<string, string>, withPush("위키 수정"))
+      .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_files" } as Record<string, string>, withPush("파일 업로드"))
+      .on("postgres_changes" as "system", { event: "INSERT", schema: "public", table: "hq_calendar" } as Record<string, string>, withPush("새 일정"))
       .on("postgres_changes" as "system", { event: "UPDATE", schema: "public", table: "hq_leave" } as Record<string, string>, () => fetchNotifications())
+      .on("postgres_changes" as "system", { event: "UPDATE", schema: "public", table: "hq_approvals" } as Record<string, string>, () => fetchNotifications())
+      .on("postgres_changes" as "system", { event: "UPDATE", schema: "public", table: "hq_reports" } as Record<string, string>, () => fetchNotifications())
       .subscribe();
     return () => { s.removeChannel(channel); };
   }, [fetchNotifications]);

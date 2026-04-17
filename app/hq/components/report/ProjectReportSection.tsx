@@ -84,6 +84,7 @@ export default function ProjectReportSection(props: Props) {
 
       <ProjectList projects={projects} userName={userName} canApprove={canApprove} today={today}
         editId={editId} setEditId={setEditId} editTitle={editTitle} setEditTitle={setEditTitle} editDesc={editDesc} setEditDesc={setEditDesc}
+        editProgress={editProgress} setEditProgress={setEditProgress}
         feedbackId={feedbackId} feedbackText={feedbackText} setFeedbackId={setFeedbackId} setFeedbackText={setFeedbackText}
         commentMap={commentMap} commentTarget={commentTarget} commentText={commentText}
         setCommentTarget={setCommentTarget} setCommentText={setCommentText}
