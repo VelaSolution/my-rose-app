@@ -78,6 +78,7 @@ export default function HiringPage() {
   const [contract, setContract] = useState<ContractForm>(defaultContract);
   const [savedContracts, setSavedContracts] = useState<ContractForm[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [hiringMsg, setHiringMsg] = useState("");
   const [jobIndustry, setJobIndustry] = useState("restaurant");
   const [jobPosition, setJobPosition] = useState("홀 서빙");
   const [jobLocation, setJobLocation] = useState("");
@@ -96,11 +97,11 @@ export default function HiringPage() {
   }, [hiringData]);
   const syncContract = (c: ContractForm) => { setContract(c); setHiringData({ ...hiringData, contract: c }); };
   const saveContract = () => {
-    if (!contract.empName.trim()) { alert("근로자명을 입력해주세요."); return; }
+    if (!contract.empName.trim()) { setHiringMsg("근로자명을 입력해주세요."); setTimeout(() => setHiringMsg(""), 3000); return; }
     const updated = [...savedContracts.filter(s => s.id !== contract.id), { ...contract, createdAt: contract.createdAt || new Date().toISOString().slice(0, 10) }];
     setSavedContracts(updated);
     setHiringData({ ...hiringData, savedContracts: updated, contract });
-    alert("계약서가 저장되었습니다.");
+    setHiringMsg("계약서가 저장되었습니다."); setTimeout(() => setHiringMsg(""), 3000);
   };
   const loadContract = (c: ContractForm) => { setContract(c); setHiringData({ ...hiringData, contract: c }); };
   const deleteContract = (id: string) => {
@@ -156,6 +157,11 @@ export default function HiringPage() {
       <ToolNav />
       <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">
+          {hiringMsg && (
+            <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-xl">
+              {hiringMsg}
+            </div>
+          )}
           <Link href="/tools" className="text-xs text-slate-400 hover:text-slate-600 transition">← 도구 목록</Link>
           <div className="mt-4 mb-2">
             <div className="inline-flex items-center gap-2 bg-teal-50 text-teal-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
@@ -429,7 +435,7 @@ export default function HiringPage() {
                     <div className="flex items-center justify-between p-4 border-b border-slate-200 print:hidden">
                       <h3 className="font-bold text-slate-900 text-sm">근로계약서 미리보기</h3>
                       <div className="flex gap-2">
-                        <button onClick={() => { navigator.clipboard.writeText(document.getElementById("contract-print")?.innerText ?? ""); alert("텍스트가 복사되었습니다!"); }}
+                        <button onClick={() => { navigator.clipboard.writeText(document.getElementById("contract-print")?.innerText ?? ""); setHiringMsg("텍스트가 복사되었습니다!"); setTimeout(() => setHiringMsg(""), 3000); }}
                           className="rounded-lg bg-slate-100 text-slate-700 font-semibold px-4 py-2 text-xs hover:bg-slate-200 transition">📋 복사</button>
                         <button onClick={() => window.print()}
                           className="rounded-lg bg-teal-500 text-white font-semibold px-4 py-2 text-xs hover:bg-teal-600 transition">🖨️ 인쇄 / PDF</button>
@@ -545,7 +551,7 @@ export default function HiringPage() {
                 <div key={style} className={cardCls}>
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="font-bold text-sm text-slate-900">{title}</h4>
-                    <button onClick={() => { navigator.clipboard.writeText(buildJobPost(style)); alert("복사 완료!"); }}
+                    <button onClick={() => { navigator.clipboard.writeText(buildJobPost(style)); setHiringMsg("복사 완료!"); setTimeout(() => setHiringMsg(""), 3000); }}
                       className="text-xs text-teal-600 font-semibold">📋 복사</button>
                   </div>
                   <pre className="whitespace-pre-wrap text-xs text-slate-600 bg-slate-50 rounded-xl p-3 font-sans leading-relaxed">{buildJobPost(style)}</pre>

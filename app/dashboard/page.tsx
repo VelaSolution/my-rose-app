@@ -224,7 +224,7 @@ export default function DashboardHome() {
   const toggleWidget = (key: WidgetKey) => {
     const next = { ...widgets, [key]: !widgets[key] };
     setWidgets(next);
-    localStorage.setItem("vela-dashboard-widgets", JSON.stringify(next));
+    try { localStorage.setItem("vela-dashboard-widgets", JSON.stringify(next)); } catch {}
   };
   const w = (key: WidgetKey) => widgets[key];
 
@@ -270,7 +270,7 @@ export default function DashboardHome() {
   const handleSetGoal = () => {
     const val = Number(goalInput.replace(/[^0-9]/g, ""));
     if (val > 0) {
-      localStorage.setItem("vela-monthly-goal", String(val));
+      try { localStorage.setItem("vela-monthly-goal", String(val)); } catch {}
       setMonthlyGoal(val);
       setShowGoalModal(false);
       setGoalInput("");
@@ -504,7 +504,7 @@ export default function DashboardHome() {
                   />
                   <button onClick={() => {
                     if (!todaySales) return;
-                    localStorage.setItem(todayKey, JSON.stringify({ date: today, sales: todayNum }));
+                    try { localStorage.setItem(todayKey, JSON.stringify({ date: today, sales: todayNum })); } catch {}
                     setTodaySaved(true);
                   }} className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700">{todaySaved ? "저장됨 ✓" : "저장"}</button>
                 </div>

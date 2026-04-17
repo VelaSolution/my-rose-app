@@ -253,7 +253,7 @@ export default function Page() {
     // 무료 플랜 월 10회 제한
     if (plan === "free") {
       const now = new Date();
-      const month = `${now.getFullYear()}-${now.getMonth() + 1}`;
+      const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const usage = getSimUsage();
       const count = usage.month === month ? usage.count : 0;
       if (count >= FREE_SIM_LIMIT) {

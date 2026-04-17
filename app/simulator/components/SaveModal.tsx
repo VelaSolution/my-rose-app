@@ -81,7 +81,7 @@ export function SaveModal({
                     <p className="text-sm font-semibold text-slate-900">{s.label}</p>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {industryLabel[s.form?.industry] ?? s.form?.industry}
-                      &nbsp;·&nbsp;{new Date(s.created_at).toLocaleDateString("ko-KR", {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}
+                      &nbsp;·&nbsp;{new Date(s.created_at).toLocaleString("ko-KR", {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}
                     </p>
                   </div>
                   <button

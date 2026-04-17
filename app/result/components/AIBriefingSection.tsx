@@ -23,7 +23,7 @@ function getBriefingUsage(): { count: number; month: string } {
 
 function incrementBriefingUsage() {
   const now = new Date();
-  const month = `${now.getFullYear()}-${now.getMonth() + 1}`;
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const usage = getBriefingUsage();
   const count = usage.month === month ? usage.count + 1 : 1;
   localStorage.setItem(BRIEFING_KEY, JSON.stringify({ count, month }));
@@ -36,7 +36,7 @@ export default function AIBriefingSection({ form, result, plan }: { form: FullFo
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${now.getMonth() + 1}`;
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const usage = getBriefingUsage();
   const usedThisMonth = usage.month === currentMonth ? usage.count : 0;
   const isLimited = plan === "free" && usedThisMonth >= FREE_BRIEFING_LIMIT;

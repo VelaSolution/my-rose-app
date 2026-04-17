@@ -122,7 +122,7 @@ function ResultContent() {
   // 커뮤니티 공유
   const shareToComm = async () => {
     if (!userId) { router.push("/login"); return; }
-    if (!shareTitle.trim()) { alert("제목을 입력해주세요."); return; }
+    if (!shareTitle.trim()) { setShareMsg("제목을 입력해주세요."); setTimeout(() => setShareMsg(""), 3000); return; }
     setSharing(true);
     const supabase = createSupabaseBrowserClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -142,7 +142,7 @@ function ResultContent() {
       memo: shareMemo.trim(),
     });
     setSharing(false);
-    if (error) { alert("공유 실패: " + error.message); console.error("Share error:", error); return; }
+    if (error) { setShareMsg("공유 실패: " + error.message); setTimeout(() => setShareMsg(""), 4000); return; }
     setShareMsg("커뮤니티에 공유됐어요! 🎉");
     setShowShareModal(false);
     setShareTitle(""); setShareMemo("");

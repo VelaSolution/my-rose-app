@@ -87,12 +87,12 @@ export default function HomePage() {
   useEffect(() => {
     // 지수: 빠르게
     fetch("/api/home?only=stocks")
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(d => { if (d.stocks) setStocks(d.stocks); })
       .catch(() => {});
     // 뉴스: 느릴 수 있음
     fetch("/api/home?only=news")
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(d => { if (d.news) setNews(d.news); })
       .catch(() => {})
       .finally(() => setNewsLoad(false));
