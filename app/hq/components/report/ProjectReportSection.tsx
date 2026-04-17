@@ -47,6 +47,7 @@ export default function ProjectReportSection(props: Props) {
     projects, userName, canApprove, today,
     pTitle, setPTitle, pProgress, setPProgress, pDeadline, setPDeadline, pDesc, setPDesc,
     editId, setEditId, editTitle, setEditTitle, editDesc, setEditDesc,
+    editProgress, setEditProgress,
     feedbackId, feedbackText, setFeedbackId, setFeedbackText,
     commentMap, commentTarget, commentText, setCommentTarget, setCommentText,
     addProject, approveReport, checkReport, submitFeedback, saveEdit, addComment,
