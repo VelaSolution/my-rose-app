@@ -140,9 +140,11 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
   const [editClockOut, setEditClockOut] = useState(false);
   const [editClockOutTime, setEditClockOutTime] = useState("");
 
-  // 대표 전용: 과거 출근시간 수정
+  // 대표 전용: 출퇴근시간 수정
   const [editClockInId, setEditClockInId] = useState<string | null>(null);
   const [editClockInTime, setEditClockInTime] = useState("");
+  const [editClockOutId, setEditClockOutId] = useState<string | null>(null);
+  const [editClockOutTimeTeam, setEditClockOutTimeTeam] = useState("");
 
   const updateClockIn = async (recId: string) => {
     if (!editClockInTime) return;
@@ -161,6 +163,29 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     if (error) { flash("수정 실패: " + error.message); return; }
     flash(`출근 시간 수정 완료 (${editClockInTime})`);
     setEditClockInId(null);
+    loadData();
+  };
+
+  const updateClockOutTeam = async (recId: string) => {
+    if (!editClockOutTimeTeam) return;
+    const s = sb();
+    if (!s) return;
+    const rec = records.find(r => r.id === recId);
+    if (!rec) return;
+    const [h, m] = editClockOutTimeTeam.split(":").map(Number);
+    const d = new Date(`${rec.date}T00:00:00`);
+    d.setHours(h, m, 0, 0);
+    const nextDay = editClockOutTimeTeam < rec.clockIn;
+    const hours = diffHours(rec.clockIn, editClockOutTimeTeam, nextDay);
+    const isEarly = !nextDay && editClockOutTimeTeam < "18:00";
+    const overtime = Math.max(0, +(hours - 8).toFixed(1));
+    const newStatus = isEarly && rec.status !== "지각" ? "조퇴" : rec.status;
+    const { error } = await s.from("hq_attendance").update({
+      clock_out: d.toISOString(), overtime, status: newStatus,
+    }).eq("id", recId);
+    if (error) { flash("수정 실패: " + error.message); return; }
+    flash(`퇴근 시간 수정 완료 (${editClockOutTimeTeam})`);
+    setEditClockOutId(null);
     loadData();
   };
 
@@ -552,7 +577,24 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                             </span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-700">{rec?.clockOut || <span className="text-slate-300">-</span>}</td>
+                        <td className="py-2.5 px-3 text-slate-700">
+                          {editClockOutId === rec?.id ? (
+                            <div className="flex items-center gap-1">
+                              <input type="time" value={editClockOutTimeTeam} onChange={e => setEditClockOutTimeTeam(e.target.value)}
+                                className="border border-slate-200 rounded-lg px-1.5 py-0.5 text-sm font-bold text-slate-800 w-[5.5rem]" />
+                              <button onClick={() => updateClockOutTeam(rec!.id)} className="text-xs text-[#3182F6] font-bold">확인</button>
+                              <button onClick={() => setEditClockOutId(null)} className="text-xs text-slate-400">취소</button>
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1">
+                              {rec?.clockOut || <span className="text-slate-300">-</span>}
+                              {myRole === "대표" && rec?.clockOut && (
+                                <button onClick={() => { setEditClockOutId(rec.id); setEditClockOutTimeTeam(rec.clockOut); }}
+                                  className="text-xs text-slate-300 hover:text-[#3182F6] transition-colors">✏️</button>
+                              )}
+                            </span>
+                          )}
+                        </td>
                         <td className="py-2.5 px-3">
                           {rec ? (
                             <span className={`${BADGE} text-[11px] ${STATUS_COLOR[rec.status]}`}>{rec.status}</span>

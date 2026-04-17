@@ -245,8 +245,15 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#3182F6] border-t-transparent" />
+      <div className="space-y-4 animate-pulse">
+        <div className="h-16 bg-white rounded-2xl" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-white rounded-2xl" />)}
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <div className="h-32 bg-white rounded-2xl" />
+          <div className="h-32 bg-white rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -278,18 +285,17 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">현황판</h2>
-          <p className="text-xs text-slate-500">
-            {userName}님, {(() => { const h = new Date().getHours(); return h < 12 ? "좋은 오전이에요" : h < 18 ? "좋은 오후에요" : "좋은 저녁이에요"; })()}. 오늘도 화이팅!
+          <h2 className="text-xl font-bold text-slate-900">
+            {(() => { const h = new Date().getHours(); return h < 6 ? "🌙" : h < 12 ? "☀️" : h < 18 ? "🌤️" : "🌙"; })()} {userName}님, {(() => { const h = new Date().getHours(); return h < 6 ? "늦은 밤이에요" : h < 12 ? "좋은 아침이에요" : h < 18 ? "좋은 오후에요" : "수고하셨어요"; })()}
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setEditMode(v => !v)}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${editMode ? "bg-[#3182F6] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
-            {editMode ? "완료" : "편집"}
-          </button>
-          <span className={`${BADGE} bg-blue-50 text-blue-700`}>{myRole}</span>
-        </div>
+        <button onClick={() => setEditMode(v => !v)}
+          className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all active:scale-95 ${editMode ? "bg-[#3182F6] text-white shadow-sm shadow-[#3182F6]/20" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-slate-300"}`}>
+          {editMode ? "✓ 완료" : "⚙ 편집"}
+        </button>
       </div>
 
       {editMode && (

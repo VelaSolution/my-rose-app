@@ -1,5 +1,4 @@
 "use client";
-import { C } from "@/app/hq/utils";
 import type { Tab } from "@/app/hq/types";
 
 interface Props {
@@ -14,16 +13,14 @@ export default function AttendanceBanner({ loading, todayAttendance, onClockIn, 
 
   if (!todayAttendance) {
     return (
-      <div className={`${C} border-[#3182F6] border-2 bg-blue-50/50`}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🕘</span>
-            <div>
-              <h3 className="text-base font-bold text-slate-900">아직 출근 전이에요!</h3>
-              <p className="text-sm text-slate-500">출근 버튼을 눌러 오늘 근무를 시작하세요.</p>
-            </div>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#3182F6] to-[#7C3AED] p-5 text-white shadow-lg shadow-[#3182F6]/20">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-[4rem]" />
+        <div className="flex items-center justify-between gap-4 relative">
+          <div>
+            <h3 className="text-base font-bold">아직 출근 전이에요!</h3>
+            <p className="text-sm text-white/70 mt-0.5">출근 버튼을 눌러 오늘 근무를 시작하세요.</p>
           </div>
-          <button onClick={onClockIn} className="rounded-xl bg-[#3182F6] text-white font-bold px-6 py-3 text-sm hover:bg-[#2672DE] active:scale-[0.98] transition-all flex-shrink-0">
+          <button onClick={onClockIn} className="rounded-xl bg-white text-[#3182F6] font-bold px-6 py-3 text-sm hover:bg-white/90 active:scale-[0.98] transition-all flex-shrink-0 shadow-sm">
             출근하기
           </button>
         </div>
@@ -33,17 +30,15 @@ export default function AttendanceBanner({ loading, todayAttendance, onClockIn, 
 
   if (!todayAttendance.clockOut) {
     return (
-      <div className={`${C} border-emerald-300 border bg-emerald-50/30`}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">✅</span>
-            <div>
-              <p className="text-sm font-semibold text-emerald-700">출근 완료 · {todayAttendance.clockIn}</p>
-              <p className="text-xs text-slate-400">퇴근 시 근태 탭에서 퇴근하기를 눌러주세요.</p>
-            </div>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 p-5 text-white shadow-lg shadow-emerald-500/20">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-[4rem]" />
+        <div className="flex items-center justify-between gap-4 relative">
+          <div>
+            <p className="text-base font-bold">근무 중 · {todayAttendance.clockIn} 출근</p>
+            <p className="text-sm text-white/70 mt-0.5">오늘도 화이팅!</p>
           </div>
-          <button onClick={() => onNavigate("attendance")} className="rounded-xl bg-slate-700 text-white font-semibold px-5 py-2.5 text-sm hover:bg-slate-800 transition-all flex-shrink-0">
-            🕕 퇴근하기
+          <button onClick={() => onNavigate("attendance")} className="rounded-xl bg-white/20 backdrop-blur-sm text-white font-semibold px-5 py-2.5 text-sm hover:bg-white/30 active:scale-[0.98] transition-all flex-shrink-0 ring-1 ring-white/30">
+            퇴근하기
           </button>
         </div>
       </div>
@@ -51,11 +46,13 @@ export default function AttendanceBanner({ loading, todayAttendance, onClockIn, 
   }
 
   return (
-    <div className={`${C} border-slate-200 bg-slate-50/50`}>
+    <div className="rounded-2xl bg-white ring-1 ring-slate-200/60 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="flex items-center gap-3">
-        <span className="text-2xl">🏠</span>
+        <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+          <span className="text-lg">✅</span>
+        </div>
         <div>
-          <p className="text-sm font-semibold text-slate-600">오늘 근무 완료</p>
+          <p className="text-sm font-semibold text-slate-700">오늘 근무 완료</p>
           <p className="text-xs text-slate-400">출근 {todayAttendance.clockIn} · 퇴근 {todayAttendance.clockOut}</p>
         </div>
       </div>

@@ -15,20 +15,18 @@ export function StatsSection({ totalUsers, todaySignups, totalRevenue, activeSub
   totalUsers: number; todaySignups: number; totalRevenue: number; activeSubs: number;
 }) {
   const items = [
-    { label: "총 사용자", value: fmt(totalUsers), icon: "👥", bg: "bg-blue-50", color: "text-[#3182F6]" },
-    { label: "오늘 가입", value: fmt(todaySignups), icon: "🆕", bg: "bg-emerald-50", color: "text-emerald-600" },
-    { label: "총 매출", value: `₩${fmt(totalRevenue)}`, icon: "💰", bg: "bg-amber-50", color: "text-amber-600" },
-    { label: "활성 구독", value: fmt(activeSubs), icon: "⭐", bg: "bg-purple-50", color: "text-purple-600" },
+    { label: "총 사용자", value: fmt(totalUsers), sub: "명", icon: "👥", gradient: "from-blue-500 to-blue-600" },
+    { label: "오늘 가입", value: fmt(todaySignups), sub: "명", icon: "📈", gradient: "from-emerald-500 to-emerald-600" },
+    { label: "총 매출", value: `₩${fmt(totalRevenue)}`, sub: "", icon: "💰", gradient: "from-amber-500 to-orange-500" },
+    { label: "활성 구독", value: fmt(activeSubs), sub: "건", icon: "⭐", gradient: "from-purple-500 to-violet-600" },
   ];
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {items.map((s) => (
-        <div key={s.label} className={`${C} border-l-4 ${s.bg.replace("50", "400")} !p-3`}>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className={`w-6 h-6 ${s.bg} rounded-lg flex items-center justify-center text-xs`}>{s.icon}</span>
-            <p className="text-[11px] font-semibold text-slate-500">{s.label}</p>
-          </div>
-          <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+        <div key={s.label} className={`${C} !p-3.5 relative overflow-hidden`}>
+          <div className={`absolute top-0 right-0 w-16 h-16 bg-gradient-to-br ${s.gradient} opacity-[0.07] rounded-bl-[2rem]`} />
+          <p className="text-[11px] font-semibold text-slate-400 mb-1">{s.label}</p>
+          <p className="text-xl font-bold text-slate-900">{s.value}<span className="text-xs font-medium text-slate-400 ml-0.5">{s.sub}</span></p>
         </div>
       ))}
     </div>
