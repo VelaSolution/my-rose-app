@@ -19,8 +19,8 @@ export function HeroSection() {
               <a href="#features" className="btn-secondary">서비스 알아보기</a>
             </div>
             <div className="hero-stats">
-              <div className="hero-stat"><div className="stat-num">4<span>개</span></div><div className="stat-label">업종 지원</div></div>
-              <div className="hero-stat"><div className="stat-num">20<span>+</span></div><div className="stat-label">재무 지표</div></div>
+              <div className="hero-stat"><div className="stat-num">5<span>개</span></div><div className="stat-label">업종 지원</div></div>
+              <div className="hero-stat"><div className="stat-num">30<span>+</span></div><div className="stat-label">경영 도구</div></div>
               <div className="hero-stat"><div className="stat-num">AI</div><div className="stat-label">실시간 전략</div></div>
             </div>
           </div>
