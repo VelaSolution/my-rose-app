@@ -147,14 +147,18 @@ export default function HomePage() {
   });
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("landing") === "1") { setLoggedIn(false); return; }
+
     const sb = createSupabaseBrowserClient();
+    const timeout = setTimeout(() => { setLoggedIn(false); }, 5000); // 5초 타임아웃
+
     sb.auth.getUser().then(({ data }: { data: { user: unknown } }) => {
+      clearTimeout(timeout);
       const val = !!data.user;
       setLoggedIn(val);
       localStorage.setItem("vela-logged-in", val ? "1" : "0");
       if (val) {
-        // 신규 가입 → 온보딩
-        const params = new URLSearchParams(window.location.search);
         const onboarded = localStorage.getItem("vela-onboarded") === "1";
         if (params.get("signup") === "success" && !onboarded) {
           router.replace("/onboarding");
@@ -162,14 +166,17 @@ export default function HomePage() {
           router.replace("/home");
         }
       }
-    });
+    }).catch(() => { clearTimeout(timeout); setLoggedIn(false); });
+
+    return () => clearTimeout(timeout);
   }, [router]);
 
-  // 해시 앵커(#features 등) 접근 시 랜딩 표시
+  // ?landing=1 이나 #해시 접근 시 랜딩 표시, 아니면 /home으로
   const hasHash = typeof window !== "undefined" && window.location.hash.length > 0;
+  const forceLanding = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("landing") === "1";
 
-  // 로그인 확인 중 또는 리다이렉트 중
-  if (loggedIn && !hasHash) {
+  // 로그인 상태 + 강제 랜딩 아닌 경우 → /home 리다이렉트 대기
+  if (loggedIn && !hasHash && !forceLanding) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-slate-900 dark:border-t-white rounded-full animate-spin" />
