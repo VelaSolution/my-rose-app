@@ -528,6 +528,16 @@ html.dark .from-blue-50.to-indigo-50 { background: rgba(59,130,246,0.1) !importa
 html.dark .vela-theme-toggle { border-color: #334155 !important; }
 html.dark .vela-theme-toggle:hover { border-color: #94A3B8 !important; }
 
+/* ── 인쇄 스타일 (근로계약서 등) ────────────────────── */
+@media print {
+  body, html { background: white !important; }
+  .vela-nav, nav.fixed, header, aside, .print\:hidden { display: none !important; }
+  main { padding: 0 !important; margin: 0 !important; }
+  .fixed.inset-0 { position: static !important; background: none !important; overflow: visible !important; padding: 0 !important; }
+  .fixed.inset-0 > .bg-white { max-width: none !important; border-radius: 0 !important; box-shadow: none !important; }
+  #contract-print { padding: 2cm !important; font-size: 13px !important; }
+}
+
 /* HQ 페이지: NavBar/MobileTabBar 즉시 숨김 (hydration 전) */
 html.is-hq .vela-nav,
 html.is-hq .vela-mobile-tab { display: none !important; }
