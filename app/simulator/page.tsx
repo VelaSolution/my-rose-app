@@ -46,6 +46,7 @@ export default function Page() {
   const [showCloudSave, setShowCloudSave] = useState(false);
   const [cloudSaveTitle, setCloudSaveTitle] = useState("");
   const [cloudSaving, setCloudSaving] = useState(false);
+  const [showResultTransition, setShowResultTransition] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -278,12 +279,39 @@ export default function Page() {
       });
     } catch {}
 
-    router.push(`/result?${buildQuery(form)}`);
+    setShowResultTransition(true);
+    setTimeout(() => {
+      router.push(`/result?${buildQuery(form)}`);
+    }, 800);
   };
 
   // ─── 렌더링 ───────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      {showResultTransition && (
+        <>
+          <style>{`
+            @keyframes resultOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes resultPulse { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+            @keyframes resultDots { 0%,20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80%,100% { content: '...'; } }
+          `}</style>
+          <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900" style={{ animation: "resultOverlayIn 0.3s ease-out" }}>
+            <div style={{ animation: "resultPulse 0.5s ease-out" }}>
+              <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center mb-4 mx-auto">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-white text-lg font-bold mt-2">분석 결과를 준비하고 있어요</p>
+            <p className="text-slate-400 text-sm mt-1">잠시만 기다려주세요...</p>
+            <div className="mt-6 w-48 h-1 rounded-full bg-slate-700 overflow-hidden">
+              <div className="h-full bg-emerald-500 rounded-full" style={{ animation: "resultBarFill 0.7s ease-out forwards", width: "0%" }} />
+            </div>
+            <style>{`@keyframes resultBarFill { from { width: 0%; } to { width: 100%; } }`}</style>
+          </div>
+        </>
+      )}
       <UpgradeModal open={showSimLimit} onClose={() => setShowSimLimit(false)} title="이번 달 시뮬레이션 한도를 다 사용했어요" description="무료 플랜은 월 10회까지 시뮬레이션할 수 있어요. 프로 플랜으로 업그레이드하면 무제한으로 분석 가능합니다." />
 
       <main className="px-4 py-6 md:px-8">

@@ -1,5 +1,5 @@
-const CACHE_NAME = 'vela-v1';
-const STATIC_ASSETS = ['/', '/tools', '/simulator'];
+const CACHE_NAME = 'vela-v2';
+const STATIC_ASSETS = ['/', '/tools', '/simulator', '/offline.html'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -26,6 +26,14 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() =>
+        caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+          if (event.request.mode === 'navigate') {
+            return caches.match('/offline.html');
+          }
+          return cached;
+        })
+      )
   );
 });

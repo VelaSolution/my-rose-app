@@ -72,34 +72,43 @@ export function FormStep1({
           <p className="mt-1 text-sm text-slate-500">매장 내 홀 영업 수치를 입력하세요.</p>
         </div>
 
-        <InputCard
-          label="좌석 수"
-          hint="매장 총 좌석 수"
-          value={form.seats}
-          onChange={(v) => update("seats", v)}
-          suffix="석"
-          error={errors.seats}
-        />
-        <InputCard
-          label="객단가"
-          hint="고객 1명 평균 결제 금액"
-          value={form.avgSpend}
-          onChange={(v) => update("avgSpend", v)}
-          suffix="원"
-          money
-          error={errors.avgSpend}
-        />
-        <SliderCard
-          label="회전율"
-          hint={`하루 평균 테이블 회전 횟수 (${config.label} 최대 ${config.maxTurnover}회)`}
-          value={form.turnover}
-          onChange={(v) => update("turnover", v)}
-          min={0.1}
-          max={config.maxTurnover}
-          step={0.1}
-          suffix="회"
-          error={errors.turnover}
-        />
+        <div>
+          <InputCard
+            label="좌석 수"
+            hint="매장 총 좌석 수"
+            value={form.seats}
+            onChange={(v) => update("seats", v)}
+            suffix="석"
+            error={errors.seats}
+          />
+          <p className="mt-1 px-2 text-xs text-slate-400">일반적인 카페는 15~25석, 음식점은 20~40석이 평균이에요</p>
+        </div>
+        <div>
+          <InputCard
+            label="객단가"
+            hint="고객 1명 평균 결제 금액"
+            value={form.avgSpend}
+            onChange={(v) => update("avgSpend", v)}
+            suffix="원"
+            money
+            error={errors.avgSpend}
+          />
+          <p className="mt-1 px-2 text-xs text-slate-400">카페 8,000~15,000원 · 음식점 12,000~25,000원 · 고깃집 25,000~45,000원</p>
+        </div>
+        <div>
+          <SliderCard
+            label="회전율"
+            hint={`하루 평균 테이블 회전 횟수 (${config.label} 최대 ${config.maxTurnover}회)`}
+            value={form.turnover}
+            onChange={(v) => update("turnover", v)}
+            min={0.1}
+            max={config.maxTurnover}
+            step={0.1}
+            suffix="회"
+            error={errors.turnover}
+          />
+          <p className="mt-1 px-2 text-xs text-slate-400">카페 3~5회 · 음식점 2~3회 · 파인다이닝 1~1.5회</p>
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <InputCard
