@@ -6,7 +6,8 @@ export type Tab =
   | "team" | "timeline" | "files" | "chat" | "approval" | "decision"
   // 하이윅스 신규
   | "attendance" | "leave" | "contacts" | "board" | "survey" | "wiki"
-  | "orgchart" | "audit" | "gantt";
+  | "orgchart" | "audit" | "gantt"
+  | "expense" | "kudos" | "payslip";
 
 export type HQRole = "대표" | "이사" | "팀장" | "팀원";
 
@@ -99,6 +100,9 @@ export const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "orgchart", label: "조직도", icon: "🏢" },
   { key: "audit", label: "활동로그", icon: "📜" },
   { key: "gantt", label: "간트", icon: "📊" },
+  { key: "expense", label: "경비청구", icon: "🧾" },
+  { key: "kudos", label: "칭찬", icon: "👏" },
+  { key: "payslip", label: "급여", icon: "💰" },
 ];
 
 export const SIDEBAR_GROUPS: { label: string; items: Tab[] }[] = [
@@ -106,17 +110,18 @@ export const SIDEBAR_GROUPS: { label: string; items: Tab[] }[] = [
   { label: "운영", items: ["dashboard", "task", "calendar", "gantt"] },
   { label: "전략", items: ["mett", "kpi", "goal"] },
   { label: "보고", items: ["report", "aar", "decision"] },
-  { label: "소통", items: ["notice", "board", "feedback", "chat", "memo"] },
+  { label: "소통", items: ["notice", "board", "feedback", "chat", "memo", "kudos"] },
   { label: "조직", items: ["team", "contacts", "survey", "orgchart"] },
   { label: "문서", items: ["files", "approval", "wiki"] },
+  { label: "급여·경비", items: ["payslip", "expense"] },
   { label: "분석", items: ["timeline", "audit"] },
 ];
 
 export const ROLE_PERMISSIONS: Record<HQRole, Tab[]> = {
   "대표": TABS.map(t => t.key),
   "이사": TABS.map(t => t.key).filter(k => k !== "team"),
-  "팀장": ["dashboard", "attendance", "leave", "kpi", "task", "aar", "notice", "report", "feedback", "board", "survey", "calendar", "memo", "contacts", "files", "chat", "decision", "wiki", "orgchart", "gantt"],
-  "팀원": ["dashboard", "attendance", "leave", "task", "notice", "board", "calendar", "memo", "chat", "contacts", "wiki", "survey", "orgchart"],
+  "팀장": ["dashboard", "attendance", "leave", "kpi", "task", "aar", "notice", "report", "feedback", "board", "survey", "calendar", "memo", "contacts", "files", "chat", "decision", "wiki", "orgchart", "gantt", "expense", "kudos", "payslip"],
+  "팀원": ["dashboard", "attendance", "leave", "task", "notice", "board", "calendar", "memo", "chat", "contacts", "wiki", "survey", "orgchart", "expense", "kudos", "payslip"],
 };
 
 export const TAB_MAP = Object.fromEntries(TABS.map(t => [t.key, t]));

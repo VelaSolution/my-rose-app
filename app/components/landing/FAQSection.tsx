@@ -39,7 +39,7 @@ export function FAQSection() {
           <span className="section-tag">FAQ</span>
           <h2 className="section-title">자주 묻는 질문</h2>
         </FadeIn>
-        <div className="flex flex-col gap-3 mt-10">
+        <div className="flex flex-col gap-4 mt-10">
           {FAQS.map((faq) => (
             <FadeIn key={faq.q}>
               <FAQItem q={faq.q} a={faq.a} />

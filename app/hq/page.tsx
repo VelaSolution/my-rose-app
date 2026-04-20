@@ -41,6 +41,9 @@ const WikiTab = dynamic(() => import("./components/WikiTab"));
 const OrgChartTab = dynamic(() => import("./components/OrgChartTab"));
 const AuditLog = dynamic(() => import("./components/AuditLog"));
 const GanttTab = dynamic(() => import("./components/GanttTab"));
+const ExpenseTab = dynamic(() => import("./components/ExpenseTab"));
+const KudosTab = dynamic(() => import("./components/KudosTab"));
+const PayslipTab = dynamic(() => import("./components/PayslipTab"));
 
 // ── 탭 → 컴포넌트 매핑 ────────────────────────────────
 const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName: string; myRole: HQRole; flash: (m: string) => void }>> = {
@@ -49,6 +52,7 @@ const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName
   team: TeamTab, timeline: TimelineTab, files: FilesTab, chat: ChatTab, approval: ApprovalTab,
   decision: DecisionTab, attendance: AttendanceTab, leave: LeaveTab, contacts: ContactsTab,
   board: BoardTab, survey: SurveyTab, wiki: WikiTab, orgchart: OrgChartTab, audit: AuditLog, gantt: GanttTab,
+  expense: ExpenseTab, kudos: KudosTab, payslip: PayslipTab,
 };
 
 // 모바일 하단 고정 5탭
