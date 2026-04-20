@@ -15,8 +15,8 @@ export function HeroSection() {
             <h1 className="hero-title">이번 달,<br /><span className="gradient-text">내 손에 얼마</span> 남을까?</h1>
             <p className="hero-desc">좌석 수랑 객단가만 넣으면 끝.<br />월세·재료비·인건비 빼고 진짜 남는 돈을 바로 보여드려요.</p>
             <div className="hero-actions">
-              <Link href="/simulator" className="btn-primary">내 매장 계산해보기 →</Link>
-              <a href="#how" className="btn-secondary">어떻게 되는지 보기</a>
+              <Link href="/simulator" className="btn-primary" onClick={() => { try { (window as any).gtag?.("event", "cta_click", { event_category: "landing", event_label: "hero_simulator" }); } catch {} }}>내 매장 계산해보기 →</Link>
+              <a href="#how" className="btn-secondary" onClick={() => { try { (window as any).gtag?.("event", "cta_click", { event_category: "landing", event_label: "hero_how" }); } catch {} }}>어떻게 되는지 보기</a>
             </div>
             <div className="hero-stats">
               <div className="hero-stat"><div className="stat-num">30<span>초</span></div><div className="stat-label">입력 완료</div></div>

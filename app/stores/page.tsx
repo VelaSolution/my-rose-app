@@ -48,7 +48,7 @@ export default function StoresPage() {
   const [formIndustry, setFormIndustry] = useState("");
   const [formAddress, setFormAddress] = useState("");
 
-  const maxStores = plan === "pro" ? 5 : 1;
+  const maxStores = plan === "standard" ? 5 : 1;
 
   const fetchStores = useCallback(async () => {
     if (!userId) return;
@@ -152,7 +152,7 @@ export default function StoresPage() {
             <h1 className="text-2xl font-extrabold text-slate-900">다점포 관리</h1>
             <p className="text-sm text-slate-500 mt-1">
               매장 {stores.length}/{maxStores}개 사용 중
-              {plan !== "pro" && (
+              {plan !== "standard" && (
                 <span className="ml-2 text-xs text-blue-600 cursor-pointer hover:underline" onClick={() => setShowUpgrade(true)}>
                   Pro로 업그레이드
                 </span>
@@ -287,7 +287,7 @@ export default function StoresPage() {
         )}
 
         {/* Capacity notice */}
-        {stores.length >= maxStores && plan !== "pro" && (
+        {stores.length >= maxStores && plan !== "standard" && (
           <div className="mt-4 rounded-2xl bg-amber-50 ring-1 ring-amber-200 p-4 text-center">
             <p className="text-sm text-amber-800">
               무료/프로 요금제는 매장 1개까지 이용 가능합니다.{" "}

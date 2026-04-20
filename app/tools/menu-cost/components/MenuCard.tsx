@@ -83,7 +83,7 @@ export default function MenuCard({
             placeholder="메뉴명을 입력하세요"
             value={item.name}
             onChange={(e) => onUpdate(item.id, { name: e.target.value })}
-            className="font-bold text-slate-900 text-base w-full bg-transparent outline-none placeholder:text-slate-300"
+            className="font-bold text-slate-900 text-lg w-full bg-transparent outline-none placeholder:text-slate-300"
           />
           <select
             value={item.category}
@@ -175,14 +175,14 @@ export default function MenuCard({
           {/* 판매가 */}
           <div>
             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">판매가</label>
-            <div className="relative w-48">
+            <div className="relative w-full sm:w-64">
               <input
                 type="text"
                 inputMode="numeric"
                 placeholder="0"
                 value={item.price}
                 onChange={(e) => onUpdate(item.id, { price: e.target.value.replace(/[^0-9]/g, "") })}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-right pr-8 outline-none focus:border-blue-400 focus:bg-white transition"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base font-semibold text-right pr-8 outline-none focus:border-blue-400 focus:bg-white transition"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">원</span>
             </div>

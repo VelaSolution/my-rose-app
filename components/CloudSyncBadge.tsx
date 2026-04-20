@@ -17,7 +17,13 @@ export default function CloudSyncBadge({
   status: SyncStatus;
   userId: string | null;
 }) {
-  if (status === "idle" && !userId) return null;
+  if (status === "idle" && !userId) {
+    return (
+      <span role="status" className="inline-flex items-center gap-1 text-[11px] text-amber-600 font-medium">
+        📱 로컬 저장 · <a href="/login" className="underline underline-offset-2 hover:text-amber-700">로그인하면 클라우드 동기화</a>
+      </span>
+    );
+  }
   if (status === "idle") {
     // 로그인 상태에서 idle이면 클라우드 연결 표시
     return (
