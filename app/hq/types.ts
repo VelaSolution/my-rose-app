@@ -46,10 +46,13 @@ export type Contact = {
   phone: string; email: string; extension: string;
   profileImg?: string; manager?: string;
 };
+export type BugStatus = "접수" | "진행" | "완료" | "보류";
+export type BugPriority = "긴급" | "높음" | "보통" | "낮음";
 export type BoardPost = {
   id: string; category: "자유" | "공지" | "질문" | "정보" | "부서" | "버그" | "건의";
   title: string; content: string; author: string; date: string;
   views: number; likes: number; comments: number; pinned: boolean;
+  bugStatus?: BugStatus; bugPriority?: BugPriority;
 };
 export type BoardComment = { id: string; postId: string; author: string; content: string; date: string };
 export type SurveyItem = {

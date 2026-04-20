@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { HQRole, BoardPost, BoardComment } from "@/app/hq/types";
+import { HQRole, BoardPost, BoardComment, BugStatus, BugPriority } from "@/app/hq/types";
 import { sb, today, I, C, L, B, B2, BADGE, useTeamDisplayNames } from "@/app/hq/utils";
 
 interface Props {
@@ -21,6 +21,21 @@ const categoryColor: Record<string, string> = {
   "부서": "bg-amber-50 text-amber-700",
   "버그": "bg-rose-50 text-rose-700",
   "건의": "bg-teal-50 text-teal-700",
+};
+
+const BUG_STATUSES: BugStatus[] = ["접수", "진행", "완료", "보류"];
+const BUG_PRIORITIES: BugPriority[] = ["긴급", "높음", "보통", "낮음"];
+const bugStatusColor: Record<BugStatus, string> = {
+  "접수": "bg-slate-100 text-slate-600",
+  "진행": "bg-blue-50 text-blue-700",
+  "완료": "bg-emerald-50 text-emerald-700",
+  "보류": "bg-amber-50 text-amber-700",
+};
+const bugPriorityColor: Record<BugPriority, string> = {
+  "긴급": "bg-red-50 text-red-700",
+  "높음": "bg-orange-50 text-orange-700",
+  "보통": "bg-slate-100 text-slate-600",
+  "낮음": "bg-slate-50 text-slate-400",
 };
 
 export default function BoardTab({ userId, userName, myRole, flash }: Props) {
@@ -48,6 +63,12 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
   const [eTitle, setETitle] = useState("");
   const [eContent, setEContent] = useState("");
 
+  // Bug form fields
+  const [fBugPriority, setFBugPriority] = useState<BugPriority>("보통");
+
+  // Bug filter
+  const [bugStatusFilter, setBugStatusFilter] = useState<BugStatus | "전체">("전체");
+
   // Comment
   const [commentText, setCommentText] = useState("");
 
@@ -70,21 +91,27 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
         likes: d.likes ?? 0,
         comments: 0,
         pinned: d.pinned ?? false,
+        bugStatus: d.bug_status as BugStatus | undefined,
+        bugPriority: d.bug_priority as BugPriority | undefined,
       }));
 
       // hq_feedback 데이터도 "버그"/"건의" 카테고리로 표시
       const { data: fbData } = await s.from("hq_feedback").select("*").order("created_at", { ascending: false });
+      const statusMap: Record<string, BugStatus> = { "open": "접수", "in_progress": "진행", "resolved": "완료", "closed": "완료", "wontfix": "보류", "접수": "접수", "진행": "진행", "완료": "완료", "보류": "보류" };
+      const priorityMap: Record<string, BugPriority> = { "critical": "긴급", "high": "높음", "medium": "보통", "low": "낮음", "긴급": "긴급", "높음": "높음", "보통": "보통", "낮음": "낮음" };
       const feedbackPosts: BoardPost[] = (fbData ?? []).map((f: any) => ({
         id: `fb-${f.id}`,
         category: "버그" as const,
         title: f.title ?? "",
-        content: `${f.description ?? ""}\n\n우선순위: ${f.priority ?? "-"} | 상태: ${f.status ?? "-"}`,
+        content: f.description ?? "",
         author: f.author ?? "",
         date: f.date ?? f.created_at?.slice(0, 10) ?? today(),
         views: 0,
         likes: 0,
         comments: 0,
         pinned: false,
+        bugStatus: statusMap[f.status] ?? "접수" as BugStatus,
+        bugPriority: priorityMap[f.priority] ?? "보통" as BugPriority,
       }));
 
       setPosts([...mapped, ...feedbackPosts].sort((a, b) => {
@@ -110,7 +137,7 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
     const s = sb();
     if (!s) { flash("DB 연결 실패"); return; }
     try {
-      const { error } = await s.from("hq_board").insert({
+      const row: any = {
         category: fCat,
         title: fTitle.trim(),
         content: fContent.trim(),
@@ -118,15 +145,46 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
         views: 0,
         likes: 0,
         pinned: false,
-      });
+      };
+      if (fCat === "버그") {
+        row.bug_status = "접수";
+        row.bug_priority = fBugPriority;
+      }
+      const { error } = await s.from("hq_board").insert(row);
       if (error) throw error;
       await load();
-      setFTitle(""); setFContent(""); setFCat("자유"); setShowForm(false);
+      setFTitle(""); setFContent(""); setFCat("자유"); setFBugPriority("보통"); setShowForm(false);
       flash("게시글 등록 완료");
     } catch (e) {
       console.error("addPost error:", e);
       flash("게시글 등록 실패");
     }
+  };
+
+  const changeBugStatus = async (postId: string, newStatus: BugStatus) => {
+    const s = sb(); if (!s) return;
+    const isFeedback = postId.startsWith("fb-");
+    if (isFeedback) {
+      const realId = postId.replace("fb-", "");
+      await s.from("hq_feedback").update({ status: newStatus }).eq("id", realId);
+    } else {
+      await s.from("hq_board").update({ bug_status: newStatus }).eq("id", postId);
+    }
+    flash(`상태: ${newStatus}`);
+    load();
+  };
+
+  const changeBugPriority = async (postId: string, newPriority: BugPriority) => {
+    const s = sb(); if (!s) return;
+    const isFeedback = postId.startsWith("fb-");
+    if (isFeedback) {
+      const realId = postId.replace("fb-", "");
+      await s.from("hq_feedback").update({ priority: newPriority }).eq("id", realId);
+    } else {
+      await s.from("hq_board").update({ bug_priority: newPriority }).eq("id", postId);
+    }
+    flash(`우선순위: ${newPriority}`);
+    load();
   };
 
   const toggleExpand = async (id: string) => {
@@ -249,12 +307,15 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
     return b.date.localeCompare(a.date);
   });
   const catFiltered = activeCat === "전체" ? sorted : sorted.filter((p) => p.category === activeCat);
+  const bugFiltered = (activeCat === "버그" && bugStatusFilter !== "전체")
+    ? catFiltered.filter((p) => p.bugStatus === bugStatusFilter)
+    : catFiltered;
   const filtered = searchQuery.trim()
-    ? catFiltered.filter((p) => {
+    ? bugFiltered.filter((p) => {
         const q = searchQuery.toLowerCase();
         return p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q) || p.author.toLowerCase().includes(q);
       })
-    : catFiltered;
+    : bugFiltered;
 
   return (
     <div className="space-y-6">
@@ -302,6 +363,22 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
         </div>
       </div>
 
+      {/* Bug status filter */}
+      {activeCat === "버그" && (
+        <div className="flex items-center gap-2">
+          <span className="text-[14px] font-semibold text-slate-500">상태:</span>
+          {(["전체", ...BUG_STATUSES] as const).map(s => (
+            <button key={s} onClick={() => setBugStatusFilter(s)}
+              className={`${BADGE} transition-all ${bugStatusFilter === s
+                ? (s === "전체" ? "bg-slate-900 text-white" : bugStatusColor[s as BugStatus])
+                : "bg-slate-50 text-slate-400 hover:text-slate-600"
+              }`}>
+              {s}{s !== "전체" && ` (${posts.filter(p => p.category === "버그" && p.bugStatus === s).length})`}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Write form */}
       {showForm && (
         <div className={C}>
@@ -317,9 +394,22 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
               <label className={L}>제목</label>
               <input className={I} value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="게시글 제목" />
             </div>
+            {fCat === "버그" && (
+              <div>
+                <label className={L}>우선순위</label>
+                <div className="flex gap-2">
+                  {BUG_PRIORITIES.map(p => (
+                    <button key={p} onClick={() => setFBugPriority(p)}
+                      className={`${BADGE} transition-all ${fBugPriority === p ? bugPriorityColor[p] + " ring-2 ring-offset-1 ring-[#3182F6]" : "bg-slate-50 text-slate-400"}`}>
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div>
-              <label className={L}>내용</label>
-              <textarea className={`${I} min-h-[120px]`} rows={5} value={fContent} onChange={(e) => setFContent(e.target.value)} placeholder="내용을 입력하세요" />
+              <label className={L}>{fCat === "버그" ? "버그 설명" : "내용"}</label>
+              <textarea className={`${I} min-h-[120px]`} rows={5} value={fContent} onChange={(e) => setFContent(e.target.value)} placeholder={fCat === "버그" ? "재현 방법, 예상 동작, 실제 동작 등" : "내용을 입력하세요"} />
             </div>
             <div className="flex justify-end">
               <button className={B} onClick={addPost}>등록</button>
@@ -351,6 +441,12 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
                     <span className={`${BADGE} ${categoryColor[post.category] ?? "bg-slate-50 text-slate-600"}`}>
                       {post.category}
                     </span>
+                    {post.category === "버그" && post.bugStatus && (
+                      <span className={`${BADGE} ${bugStatusColor[post.bugStatus]}`}>{post.bugStatus}</span>
+                    )}
+                    {post.category === "버그" && post.bugPriority && (
+                      <span className={`${BADGE} ${bugPriorityColor[post.bugPriority]}`}>{post.bugPriority}</span>
+                    )}
                     <h4 className="font-semibold text-slate-800 flex-1 truncate">{post.title}</h4>
                     <svg className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ${expanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -368,6 +464,27 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
                 {/* Expanded content */}
                 {expanded && (
                   <div className="mt-4 pt-4 border-t border-slate-100">
+                    {/* Bug status/priority controls */}
+                    {post.category === "버그" && (
+                      <div className="flex flex-wrap items-center gap-4 mb-4 p-3 bg-slate-50 rounded-2xl">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-semibold text-slate-500">상태</span>
+                          <select className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[14px] font-semibold outline-none"
+                            value={post.bugStatus ?? "접수"}
+                            onChange={e => changeBugStatus(post.id, e.target.value as BugStatus)}>
+                            {BUG_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-semibold text-slate-500">우선순위</span>
+                          <select className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[14px] font-semibold outline-none"
+                            value={post.bugPriority ?? "보통"}
+                            onChange={e => changeBugPriority(post.id, e.target.value as BugPriority)}>
+                            {BUG_PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    )}
                     {/* Edit form */}
                     {editingId === post.id ? (
                       <div className="space-y-3 mb-4">
