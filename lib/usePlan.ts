@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
-export type Plan = "free" | "standard" | "pro";
+export type Plan = "free" | "standard";
 
 export function usePlan(): { plan: Plan; userId: string | null; loading: boolean } {
   const [plan, setPlan] = useState<Plan>("free");
