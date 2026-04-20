@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import type { HQRole, Expense, FixedCost } from "@/app/hq/types";
 import { sb, I, C, L, B, B2, BADGE, fmt, today, useTeamDisplayNames } from "@/app/hq/utils";
+import * as XLSX from "xlsx";
 
 interface Props { userId: string; userName: string; myRole: HQRole; flash: (m: string) => void }
 
@@ -56,6 +57,13 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
   const [showFixForm, setShowFixForm] = useState(false);
   const [fixSaving, setFixSaving] = useState(false);
 
+  // ── 선택 (엑셀 내보내기용) ──────────────────────────────
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  }, []);
+
   const canApprove = myRole === "대표" || myRole === "이사";
   const canManageFixed = myRole === "대표" || myRole === "이사";
 
@@ -101,6 +109,37 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
     }
     return list;
   }, [expenses, expMonth, expCatFilter, expStatusFilter, expSearch]);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelected(prev => prev.size === filteredExpenses.length ? new Set() : new Set(filteredExpenses.map(e => e.id)));
+  }, [filteredExpenses]);
+
+  function exportExcel() {
+    const target = selected.size > 0
+      ? filteredExpenses.filter(e => selected.has(e.id))
+      : filteredExpenses;
+    if (target.length === 0) { flash("내보낼 데이터가 없습니다"); return; }
+    const rows = target.map(e => ({
+      "날짜": e.date,
+      "카테고리": e.category,
+      "금액": Number(e.amount),
+      "설명": e.description,
+      "결제수단": e.payment,
+      "등록자": e.author,
+      "상태": e.status,
+      "승인자": e.approver ?? "",
+      "비고": e.memo,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [
+      { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 30 },
+      { wch: 10 }, { wch: 8 }, { wch: 6 }, { wch: 8 }, { wch: 20 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "지출내역");
+    XLSX.writeFile(wb, `경비지출_${expMonth || today().slice(0, 7)}.xlsx`);
+    flash(`${target.length}건 엑셀 다운로드 완료`);
+  }
 
   const expSummary = useMemo(() => {
     const total = filteredExpenses.reduce((s, e) => s + Number(e.amount), 0);
@@ -468,9 +507,17 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
         <>
           <div className="flex items-center justify-between flex-wrap gap-3">
             <p className="text-sm text-slate-500">개별 경비 지출을 등록하고 승인 관리합니다</p>
-            <button className={B} onClick={() => { setExpForm(EXP_EMPTY); setExpEditId(null); setShowExpForm(!showExpForm); }}>
-              {showExpForm ? "닫기" : "+ 경비 등록"}
-            </button>
+            <div className="flex gap-2">
+              <button className={B2} onClick={exportExcel}>
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  엑셀{selected.size > 0 ? ` (${selected.size}건)` : ""}
+                </span>
+              </button>
+              <button className={B} onClick={() => { setExpForm(EXP_EMPTY); setExpEditId(null); setShowExpForm(!showExpForm); }}>
+                {showExpForm ? "닫기" : "+ 경비 등록"}
+              </button>
+            </div>
           </div>
 
           {/* 경비 등록 폼 */}
@@ -576,6 +623,22 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
             </div>
           </div>
 
+          {/* 전체 선택 바 */}
+          {filteredExpenses.length > 0 && (
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={selected.size === filteredExpenses.length && filteredExpenses.length > 0}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-slate-300 text-[#3182F6] focus:ring-[#3182F6]"
+                />
+                <span className="text-sm text-slate-500">전체 선택</span>
+                {selected.size > 0 && <span className="text-xs text-[#3182F6] font-semibold">{selected.size}건 선택됨 · {fmt(filteredExpenses.filter(e => selected.has(e.id)).reduce((s, e) => s + Number(e.amount), 0))}원</span>}
+              </label>
+            </div>
+          )}
+
           {/* 지출 목록 */}
           {filteredExpenses.length === 0 ? (
             <div className="text-center py-12">
@@ -585,8 +648,15 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
           ) : (
             <div className="space-y-3">
               {filteredExpenses.map(e => (
-                <div key={e.id} className={`${C} group`}>
+                <div key={e.id} className={`${C} group ${selected.has(e.id) ? "ring-2 ring-[#3182F6]/30" : ""}`}>
                   <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(e.id)}
+                        onChange={() => toggleSelect(e.id)}
+                        className="mt-1 w-4 h-4 rounded border-slate-300 text-[#3182F6] focus:ring-[#3182F6] flex-shrink-0 cursor-pointer"
+                      />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-2">
                         <span className={`${BADGE} ${CAT_COLORS[e.category] ?? "bg-slate-100 text-slate-600"}`}>{e.category}</span>
@@ -602,6 +672,7 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
                         <span>{displayName(e.author)}</span><span>·</span><span>{e.date}</span>
                         {e.approver && e.status !== "대기" && <><span>·</span><span>{e.status}: {displayName(e.approver)}</span></>}
                       </div>
+                    </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {canApprove && e.status === "대기" && (
