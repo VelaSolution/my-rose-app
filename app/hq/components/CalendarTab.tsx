@@ -19,6 +19,7 @@ type CalEvent = {
   color: string;
   author: string;
   memo?: string;
+  eventType?: "calendar" | "booking" | "shift";
 };
 
 type ViewMode = "month" | "week";
@@ -32,8 +33,11 @@ const COLORS = [
   { value: "purple", label: "보라", bg: "bg-purple-500", text: "text-purple-500", light: "bg-purple-50 text-purple-600" },
   { value: "pink", label: "분홍", bg: "bg-pink-500", text: "text-pink-500", light: "bg-pink-50 text-pink-600" },
 ];
-const colorBg = (c: string) => COLORS.find(x => x.value === c)?.bg ?? "bg-[#3182F6]";
-const colorLight = (c: string) => COLORS.find(x => x.value === c)?.light ?? "bg-[#3182F6]/10 text-[#3182F6]";
+const EXTRA_COLORS: Record<string, { bg: string; light: string }> = {
+  teal: { bg: "bg-teal-500", light: "bg-teal-50 text-teal-700" },
+};
+const colorBg = (c: string) => EXTRA_COLORS[c]?.bg ?? COLORS.find(x => x.value === c)?.bg ?? "bg-[#3182F6]";
+const colorLight = (c: string) => EXTRA_COLORS[c]?.light ?? COLORS.find(x => x.value === c)?.light ?? "bg-[#3182F6]/10 text-[#3182F6]";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
@@ -44,6 +48,8 @@ export default function CalendarTab({ userId, userName, myRole, flash }: Props) 
   const [taskDates, setTaskDates] = useState<Set<string>>(new Set());
   const [goalDates, setGoalDates] = useState<Set<string>>(new Set());
   const [events, setEvents] = useState<CalEvent[]>([]);
+  const [bookingEvents, setBookingEvents] = useState<CalEvent[]>([]);
+  const [shiftEvents, setShiftEvents] = useState<CalEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalEvent | null>(null);
@@ -58,20 +64,32 @@ export default function CalendarTab({ userId, userName, myRole, flash }: Props) 
   const load = async () => {
     const s = sb();
     if (!s) return;
-    const [tRes, gRes, eRes] = await Promise.all([
+    const monthStart = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+    const monthEnd = `${year}-${String(month + 1).padStart(2, "0")}-${new Date(year, month + 1, 0).getDate()}`;
+    const [tRes, gRes, eRes, bRes, sRes] = await Promise.all([
       s.from("hq_tasks").select("deadline"),
       s.from("hq_goals").select("end_date"),
       s.from("hq_events").select("*").order("date", { ascending: true }),
+      s.from("hq_bookings").select("id, title, date, resource_name, booked_by").gte("date", monthStart).lte("date", monthEnd),
+      s.from("hq_shifts").select("id, title, date, user_id, user_name").gte("date", monthStart).lte("date", monthEnd).eq("user_id", userId),
     ]);
     if (tRes.data) setTaskDates(new Set(tRes.data.map((t: any) => t.deadline).filter(Boolean)));
     if (gRes.data) setGoalDates(new Set(gRes.data.map((g: any) => g.end_date).filter(Boolean)));
     if (eRes.data) setEvents(eRes.data.map((r: any) => ({
       id: r.id, title: r.title ?? "", date: r.date ?? "", end_date: r.end_date,
-      color: r.color ?? "blue", author: r.author ?? "", memo: r.memo ?? "",
+      color: r.color ?? "blue", author: r.author ?? "", memo: r.memo ?? "", eventType: "calendar" as const,
+    })));
+    if (bRes.data) setBookingEvents(bRes.data.map((r: any) => ({
+      id: r.id, title: r.title || r.resource_name || "예약", date: r.date ?? "",
+      color: "purple", author: r.booked_by ?? "", eventType: "booking" as const,
+    })));
+    if (sRes.data) setShiftEvents(sRes.data.map((r: any) => ({
+      id: r.id, title: r.title || "근무", date: r.date ?? "",
+      color: "teal", author: r.user_name ?? "", eventType: "shift" as const,
     })));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [year, month]);
 
   const saveEvent = async () => {
     if (!form.title.trim() || !form.date) return;
@@ -154,10 +172,15 @@ export default function CalendarTab({ userId, userName, myRole, flash }: Props) 
   };
   const dateStr = (d: number) => `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
-  const eventsOnDate = (ds: string) => events.filter(e => {
-    if (e.end_date && e.end_date >= ds && e.date <= ds) return true;
-    return e.date === ds;
-  });
+  const eventsOnDate = (ds: string): CalEvent[] => {
+    const calEvents = events.filter(e => {
+      if (e.end_date && e.end_date >= ds && e.date <= ds) return true;
+      return e.date === ds;
+    });
+    const bkEvents = bookingEvents.filter(e => e.date === ds);
+    const shEvents = shiftEvents.filter(e => e.date === ds);
+    return [...calEvents, ...bkEvents, ...shEvents];
+  };
 
   const selectedEvents = selectedDate ? eventsOnDate(selectedDate) : [];
   const selectedHasTask = selectedDate ? taskDates.has(selectedDate) : false;
@@ -329,6 +352,8 @@ export default function CalendarTab({ userId, userName, myRole, flash }: Props) 
           <div className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-[#3182F6]" />오늘</div>
           <div className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-amber-400" />태스크</div>
           <div className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-emerald-400" />목표</div>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-purple-500" />자원예약</div>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-teal-500" />근무</div>
           {COLORS.map(c => (
             <div key={c.value} className="flex items-center gap-1.5 text-xs text-slate-500"><span className={`w-2 h-2 rounded-full ${c.bg}`} />{c.label}</div>
           ))}
@@ -402,20 +427,26 @@ export default function CalendarTab({ userId, userName, myRole, flash }: Props) 
             <p className="text-sm text-slate-400 text-center py-4">등록된 일정이 없습니다</p>
           )}
           {selectedEvents.map(e => (
-            <div key={e.id} className="flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-slate-50 transition-colors group">
+            <div key={`${e.eventType ?? "cal"}-${e.id}`} className="flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-slate-50 transition-colors group">
               <span className={`w-3 h-3 rounded-full mt-0.5 flex-shrink-0 ${colorBg(e.color)}`} />
-              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openEditEvent(e)}>
-                <p className="text-sm font-semibold text-slate-800">{e.title}</p>
+              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { if (!e.eventType || e.eventType === "calendar") openEditEvent(e); }}>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-semibold text-slate-800">{e.title}</p>
+                  {e.eventType === "booking" && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600 font-semibold">예약</span>}
+                  {e.eventType === "shift" && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-700 font-semibold">근무</span>}
+                </div>
                 <p className="text-xs text-slate-400">
                   {e.date}{e.end_date && e.end_date !== e.date ? ` ~ ${e.end_date}` : ""}
                   {e.author && ` · ${displayName(e.author)}`}
                 </p>
                 {e.memo && <p className="text-xs text-slate-500 mt-0.5">{e.memo}</p>}
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                <button onClick={() => openEditEvent(e)} className="text-xs text-slate-400 hover:text-[#3182F6]">수정</button>
-                <button onClick={() => delEvent(e.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button>
-              </div>
+              {(!e.eventType || e.eventType === "calendar") && (
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                  <button onClick={() => openEditEvent(e)} className="text-xs text-slate-400 hover:text-[#3182F6]">수정</button>
+                  <button onClick={() => delEvent(e.id)} className="text-xs text-slate-300 hover:text-red-500">삭제</button>
+                </div>
+              )}
             </div>
           ))}
         </div>

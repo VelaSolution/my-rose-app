@@ -1,7 +1,7 @@
 "use client";
 import { C } from "@/app/hq/utils";
 
-type SectionKey = "stats" | "todayTasks" | "approvals_attendance" | "recentActivity" | "kpi" | "goals" | "tasks" | "feedback" | "aars" | "teamStatus" | "recentNotices" | "upcomingEvents" | "recentReports";
+type SectionKey = "stats" | "todayTasks" | "approvals_attendance" | "recentActivity" | "kpi" | "goals" | "tasks" | "feedback" | "aars" | "teamStatus" | "recentNotices" | "upcomingEvents" | "recentReports" | "checkinStatus" | "resourceBookings" | "crmPipeline";
 
 const ALL_SECTIONS: { key: SectionKey; label: string; icon: string }[] = [
   { key: "stats", label: "플랫폼 통계", icon: "👥" },
@@ -17,6 +17,9 @@ const ALL_SECTIONS: { key: SectionKey; label: string; icon: string }[] = [
   { key: "tasks", label: "태스크", icon: "✅" },
   { key: "feedback", label: "피드백", icon: "🐛" },
   { key: "aars", label: "AAR", icon: "📝" },
+  { key: "checkinStatus", label: "체크인 현황", icon: "📍" },
+  { key: "resourceBookings", label: "자원예약", icon: "🏢" },
+  { key: "crmPipeline", label: "CRM 파이프라인", icon: "💼" },
 ];
 
 export interface WidgetPrefs {

@@ -19,7 +19,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 /* DB row (snake_case) → client LeaveRequest (camelCase) */
-function toClient(row: Record<string, unknown>): LeaveRequest {
+function toClient(row: Record<string, unknown>): LeaveRequest & { comment?: string } {
   return {
     id: row.id as string,
     requester: row.requester as string,
@@ -31,6 +31,7 @@ function toClient(row: Record<string, unknown>): LeaveRequest {
     status: row.status as LeaveRequest["status"],
     approver: (row.approver as string) ?? "",
     date: (row.created_at as string)?.slice(0, 10) ?? "",
+    comment: (row.comment as string) ?? "",
   };
 }
 
@@ -76,7 +77,7 @@ function getCalendarDays(year: number, month: number) {
 
 export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
   const { displayName } = useTeamDisplayNames();
-  const [requests, setRequests] = useState<LeaveRequest[]>([]);
+  const [requests, setRequests] = useState<(LeaveRequest & { comment?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState<LeaveRequest["type"]>("연차");
   const [startDate, setStartDate] = useState(today());
@@ -87,6 +88,7 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
+  const [approvalComments, setApprovalComments] = useState<Record<string, string>>({});
 
   /* ── fetch ────────────────────────────────────────────── */
   const fetchAll = useCallback(async () => {
@@ -114,6 +116,40 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
   const remaining = totalLeave - usedDays;
 
   const days = calcDays(startDate, endDate, type);
+
+  /* ── team leave overlap warning ──────────────────────── */
+  const overlappingMembers = (() => {
+    if (!startDate || !endDate) return [];
+    const overlaps: { name: string; start: string; end: string }[] = [];
+    for (const r of requests) {
+      if (r.requester === userName) continue;
+      if (r.status === "반려") continue;
+      // Check date range overlap
+      if (r.startDate <= endDate && r.endDate >= startDate) {
+        overlaps.push({ name: r.requester, start: r.startDate, end: r.endDate });
+      }
+    }
+    // Deduplicate by name (merge ranges for display)
+    const byName = new Map<string, { start: string; end: string }>();
+    for (const o of overlaps) {
+      const existing = byName.get(o.name);
+      if (!existing) { byName.set(o.name, { start: o.start, end: o.end }); }
+      else {
+        byName.set(o.name, {
+          start: o.start < existing.start ? o.start : existing.start,
+          end: o.end > existing.end ? o.end : existing.end,
+        });
+      }
+    }
+    return Array.from(byName.entries()).map(([name, range]) => {
+      const fmtDate = (d: string) => {
+        const parts = d.split("-");
+        return `${Number(parts[1])}/${Number(parts[2])}`;
+      };
+      const period = range.start === range.end ? fmtDate(range.start) : `${fmtDate(range.start)}~${fmtDate(range.end)}`;
+      return `${displayName(name)} (${period})`;
+    });
+  })();
 
   /* ── submit ───────────────────────────────────────────── */
   const submit = async () => {
@@ -159,11 +195,15 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
   const updateStatus = async (id: string, status: "승인" | "반려") => {
     const s = sb();
     if (!s) { flash("DB 연결 실패"); return; }
+    const comment = approvalComments[id]?.trim() || "";
+    const updateData: Record<string, unknown> = { status, approver: userName };
+    if (comment) updateData.comment = comment;
     const { error } = await s
       .from("hq_leave")
-      .update({ status, approver: userName })
+      .update(updateData)
       .eq("id", id);
     if (error) { flash("처리 실패: " + error.message); return; }
+    setApprovalComments(prev => { const next = { ...prev }; delete next[id]; return next; });
     flash(status === "승인" ? "승인 완료" : "반려 완료");
     fetchAll();
   };
@@ -334,6 +374,14 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
               />
             </div>
           </div>
+          {/* 팀 휴가 중복 경고 */}
+          {showForm && overlappingMembers.length > 0 && (
+            <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+              <p className="text-sm text-amber-800 font-medium">
+                ⚠️ 해당 기간 휴가 예정: {overlappingMembers.join(", ")}
+              </p>
+            </div>
+          )}
           <div className="flex justify-end gap-2 mt-4">
             <button onClick={() => setShowForm(false)} className={B2}>취소</button>
             <button onClick={submit} className={B}>신청하기</button>
@@ -374,35 +422,52 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
         ) : (
           <div className="space-y-3">
             {filtered.map(r => (
-              <div key={r.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50/50 transition-colors">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`${BADGE} text-[11px] bg-blue-50 text-blue-600`}>{r.type}</span>
-                    <span className={`${BADGE} text-[11px] ${STATUS_STYLE[r.status]}`}>{r.status}</span>
-                    {r.approver && <span className="text-[11px] text-slate-400">결재: {displayName(r.approver)}</span>}
+              <div key={r.id} className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`${BADGE} text-[11px] bg-blue-50 text-blue-600`}>{r.type}</span>
+                      <span className={`${BADGE} text-[11px] ${STATUS_STYLE[r.status]}`}>{r.status}</span>
+                      {r.approver && <span className="text-[11px] text-slate-400">결재: {displayName(r.approver)}</span>}
+                    </div>
+                    <p className="text-sm text-slate-700 font-medium">
+                      {displayName(r.requester)} &middot; {r.startDate} ~ {r.endDate} ({r.days}일)
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">{r.reason}</p>
+                    {r.comment && (
+                      <p className="text-xs text-slate-500 mt-1 bg-slate-50 rounded-lg px-2 py-1 inline-block">
+                        💬 {r.comment}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-sm text-slate-700 font-medium">
-                    {displayName(r.requester)} &middot; {r.startDate} ~ {r.endDate} ({r.days}일)
-                  </p>
-                  <p className="text-xs text-slate-400 mt-0.5">{r.reason}</p>
+                  <div className="flex gap-2 ml-3 shrink-0">
+                    {r.requester === userName && r.status === "대기" && (
+                      <button onClick={() => cancelRequest(r.id)} className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 font-semibold hover:bg-red-50 hover:text-red-600 transition-colors">
+                        취소
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2 ml-3 shrink-0">
-                  {isManager && r.status === "대기" && (myRole === "대표" || r.requester !== userName) && (
-                    <>
+                {/* 승인/반려 코멘트 영역 */}
+                {isManager && r.status === "대기" && (myRole === "대표" || r.requester !== userName) && (
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    <input
+                      type="text"
+                      className={I}
+                      placeholder="승인/반려 코멘트 (선택)"
+                      value={approvalComments[r.id] ?? ""}
+                      onChange={e => setApprovalComments(prev => ({ ...prev, [r.id]: e.target.value }))}
+                    />
+                    <div className="flex gap-2 mt-2 justify-end">
                       <button onClick={() => updateStatus(r.id, "승인")} className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 transition-colors">
                         승인
                       </button>
                       <button onClick={() => updateStatus(r.id, "반려")} className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-700 font-semibold hover:bg-red-100 transition-colors">
                         반려
                       </button>
-                    </>
-                  )}
-                  {r.requester === userName && r.status === "대기" && (
-                    <button onClick={() => cancelRequest(r.id)} className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 font-semibold hover:bg-red-50 hover:text-red-600 transition-colors">
-                      취소
-                    </button>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

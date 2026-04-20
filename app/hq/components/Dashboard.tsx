@@ -10,6 +10,7 @@ import {
   RecentActivitySection, KpiSection, GoalsSection,
   TasksSection, FeedbackSectionDash, AarsSection,
   TeamStatusSection, RecentNoticesSection, UpcomingEventsSection, RecentReportsSection,
+  CheckinStatusSection, ResourceBookingsSection, CrmPipelineSection,
 } from "@/app/hq/components/dashboard/DashboardSections";
 
 type Comment = { id: string; author: string; text: string; time: string };
@@ -23,7 +24,7 @@ interface Props {
   onNavigate?: (tab: Tab) => void;
 }
 
-const DEFAULT_ORDER: SectionKey[] = ["stats", "todayTasks", "approvals_attendance", "teamStatus", "recentNotices", "upcomingEvents", "recentReports", "recentActivity", "kpi", "goals", "tasks", "feedback", "aars"];
+const DEFAULT_ORDER: SectionKey[] = ["stats", "todayTasks", "approvals_attendance", "checkinStatus", "resourceBookings", "crmPipeline", "teamStatus", "recentNotices", "upcomingEvents", "recentReports", "recentActivity", "kpi", "goals", "tasks", "feedback", "aars"];
 const LS_KEY = "vela_hq_dashboard_prefs";
 
 function loadWidgetPrefs(): WidgetPrefs {
@@ -72,6 +73,11 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
   const [recentNotices, setRecentNotices] = useState<{ id: string; title: string; date: string; pinned: boolean; author: string }[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<{ id: string; title: string; date: string; author: string }[]>([]);
   const [recentReports, setRecentReports] = useState<{ id: string; title: string; content?: string; author: string; status: string; date: string; report_type: string }[]>([]);
+  const [checkinDone, setCheckinDone] = useState(0);
+  const [checkinPending, setCheckinPending] = useState(0);
+  const [todayBookingsCount, setTodayBookingsCount] = useState(0);
+  const [crmDealsByStage, setCrmDealsByStage] = useState<{ stage: string; count: number; value: number }[]>([]);
+  const [crmTotalValue, setCrmTotalValue] = useState(0);
 
   const [editMode, setEditMode] = useState(false);
   const [widgetPrefs, setWidgetPrefs] = useState<WidgetPrefs>(() => loadWidgetPrefs());
@@ -237,6 +243,42 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
         const { data: rd } = await s.from("hq_reports").select("id, title, content, author, status, date, report_type").order("created_at", { ascending: false }).limit(5);
         if (rd) setRecentReports(rd as any[]);
       } catch {}
+
+      // 체크인 현황
+      try {
+        const todayStr = today();
+        const { count: teamCount } = await s.from("hq_team").select("id", { count: "exact", head: true }).neq("approved", false);
+        const { count: doneCount } = await s.from("hq_checkins").select("id", { count: "exact", head: true }).eq("date", todayStr);
+        const done = doneCount ?? 0;
+        const total = teamCount ?? 0;
+        setCheckinDone(done);
+        setCheckinPending(Math.max(0, total - done));
+      } catch {}
+
+      // 자원예약
+      try {
+        const todayStr = today();
+        const { count: bkCount } = await s.from("hq_bookings").select("id", { count: "exact", head: true }).eq("date", todayStr);
+        setTodayBookingsCount(bkCount ?? 0);
+      } catch {}
+
+      // CRM 파이프라인
+      try {
+        const { data: deals } = await s.from("hq_crm_deals").select("stage, value");
+        if (deals) {
+          const stageMap: Record<string, { count: number; value: number }> = {};
+          let totalVal = 0;
+          for (const d of deals as any[]) {
+            const st = d.stage || "lead";
+            if (!stageMap[st]) stageMap[st] = { count: 0, value: 0 };
+            stageMap[st].count += 1;
+            stageMap[st].value += (d.value || 0);
+            totalVal += (d.value || 0);
+          }
+          setCrmDealsByStage(Object.entries(stageMap).map(([stage, v]) => ({ stage, ...v })));
+          setCrmTotalValue(totalVal);
+        }
+      } catch {}
     } catch { flash("보조 데이터 로딩 실패"); }
     finally { setSecondaryLoading(false); }
   }
@@ -314,6 +356,9 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
       case "recentNotices": return <RecentNoticesSection key="recentNotices" notices={recentNotices} go={go} userName={userName} />;
       case "upcomingEvents": return <UpcomingEventsSection key="upcomingEvents" events={upcomingEvents} go={go} userName={userName} />;
       case "recentReports": return <RecentReportsSection key="recentReports" reports={recentReports} go={go} userName={userName} />;
+      case "checkinStatus": return <CheckinStatusSection key="checkinStatus" checkinDone={checkinDone} checkinPending={checkinPending} go={go} userName={userName} />;
+      case "resourceBookings": return <ResourceBookingsSection key="resourceBookings" todayBookingsCount={todayBookingsCount} go={go} userName={userName} />;
+      case "crmPipeline": return <CrmPipelineSection key="crmPipeline" dealsByStage={crmDealsByStage} totalDealValue={crmTotalValue} go={go} userName={userName} />;
       default: return null;
     }
   };

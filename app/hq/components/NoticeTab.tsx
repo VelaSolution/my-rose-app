@@ -21,6 +21,7 @@ type NoticeCategory = typeof CATEGORIES[number]["key"];
 interface EnrichedNotice extends Notice {
   category?: NoticeCategory;
   important?: boolean;
+  publishAt?: string | null;
 }
 
 function linkify(text: string) {
@@ -49,6 +50,8 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [teamCount, setTeamCount] = useState(0);
+  const [useSchedule, setUseSchedule] = useState(false);
+  const [publishAt, setPublishAt] = useState("");
 
   const load = async () => {
     const s = sb();
@@ -73,6 +76,7 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
           readBy: d.read_by ?? [],
           category: d.category ?? "일반",
           important: d.important ?? false,
+          publishAt: d.publish_at ?? null,
         }))
       );
     }
@@ -81,19 +85,29 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
 
   useEffect(() => { load(); }, []);
 
+  const canManage = myRole === "대표" || myRole === "이사" || myRole === "팀장";
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return notices;
-    const q = search.toLowerCase();
-    return notices.filter(
-      n => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q) || n.author.toLowerCase().includes(q)
-    );
-  }, [notices, search]);
+    const now = new Date();
+    let list = notices.filter(n => {
+      // 예약 발행: publishAt이 있고 아직 시간이 안 됐으면 관리자에게만 보임 (예정 배지 표시)
+      if (n.publishAt && new Date(n.publishAt) > now && !canManage) return false;
+      return true;
+    });
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        n => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q) || n.author.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [notices, search, canManage]);
 
   const handleAdd = async () => {
     if (!title.trim()) { flash("제목을 입력하세요"); return; }
     const s = sb();
     if (!s) return;
-    const { error } = await s.from("hq_notices").insert({
+    const insertData: any = {
       title: title.trim(),
       content: content.trim(),
       pinned,
@@ -101,14 +115,20 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
       category,
       author: userName,
       read_by: [userName],
-    });
+    };
+    if (useSchedule && publishAt) {
+      insertData.publish_at = new Date(publishAt).toISOString();
+    }
+    const { error } = await s.from("hq_notices").insert(insertData);
     if (error) { flash("저장 실패"); return; }
     setTitle("");
     setContent("");
     setPinned(false);
     setImportant(false);
     setCategory("일반");
-    flash("공지 등록 완료");
+    setUseSchedule(false);
+    setPublishAt("");
+    flash(useSchedule && publishAt ? "예약 공지 등록 완료" : "공지 등록 완료");
     load();
   };
 
@@ -138,7 +158,6 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
     load();
   };
 
-  const canManage = myRole === "대표" || myRole === "이사" || myRole === "팀장";
   const catMeta = (key: string) => CATEGORIES.find(c => c.key === key) ?? CATEGORIES[0];
   const displayTeamCount = teamCount > 0 ? teamCount : "?";
 
@@ -174,7 +193,7 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
               <textarea className={`${I} min-h-[100px]`} rows={4} value={content} onChange={(e) => setContent(e.target.value)} placeholder="공지 내용을 입력하세요" />
             </div>
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap">
                 <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
                   <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} className="rounded border-slate-300 text-[#3182F6] focus:ring-[#3182F6]" />
                   상단 고정
@@ -183,9 +202,25 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
                   <input type="checkbox" checked={important} onChange={(e) => setImportant(e.target.checked)} className="rounded border-red-300 text-red-500 focus:ring-red-300" />
                   중요 공지
                 </label>
+                <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                  <input type="checkbox" checked={useSchedule} onChange={(e) => { setUseSchedule(e.target.checked); if (!e.target.checked) setPublishAt(""); }} className="rounded border-slate-300 text-[#3182F6] focus:ring-[#3182F6]" />
+                  예약 발행
+                </label>
               </div>
               <button className={B} onClick={handleAdd}>등록</button>
             </div>
+            {useSchedule && (
+              <div className="flex items-center gap-3 pt-1">
+                <label className={L}>발행 예정 시간</label>
+                <input
+                  type="datetime-local"
+                  className={`${I} !w-auto`}
+                  value={publishAt}
+                  onChange={(e) => setPublishAt(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -215,6 +250,8 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
             const expanded = expandedId === n.id;
             const cm = catMeta(n.category ?? "일반");
             const readCount = n.readBy?.length ?? 0;
+            const isScheduled = n.publishAt && new Date(n.publishAt) > new Date();
+            const readPercent = teamCount > 0 ? Math.round((readCount / teamCount) * 100) : 0;
             return (
               <div
                 key={n.id}
@@ -239,6 +276,11 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
                           중요
                         </span>
                       )}
+                      {isScheduled && (
+                        <span className={`${BADGE} bg-indigo-50 text-indigo-600`}>
+                          예정
+                        </span>
+                      )}
                       <span className={`${BADGE} ${cm.color}`}>
                         {n.category ?? "일반"}
                       </span>
@@ -255,8 +297,20 @@ export default function NoticeTab({ userId, userName, myRole, flash }: Props) {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        읽음 {readCount}/{displayTeamCount}
+                        읽음 {readCount}/{displayTeamCount}명 ({readPercent}%)
                       </span>
+                      {isScheduled && n.publishAt && (
+                        <span className="text-indigo-500">
+                          발행: {new Date(n.publishAt).toLocaleString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      )}
+                    </div>
+                    {/* 읽음 비율 프로그레스 바 */}
+                    <div className="mt-1.5 w-full max-w-[200px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${readPercent === 100 ? "bg-emerald-400" : "bg-[#3182F6]"}`}
+                        style={{ width: `${readPercent}%` }}
+                      />
                     </div>
                   </div>
                   <svg className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ml-2 ${expanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

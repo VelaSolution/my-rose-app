@@ -10,6 +10,9 @@ interface Props {
   flash: (m: string) => void;
 }
 
+type Milestone = { id: string; title: string; target_date: string; completed: boolean };
+type GoalWithMilestones = Goal & { milestones?: Milestone[] };
+
 const EMPTY = { title: "", target_value: "", metric_type: "", start_date: today(), end_date: "" };
 
 function PulseSkeleton() {
@@ -33,10 +36,15 @@ function PulseSkeleton() {
 }
 
 export default function GoalTab({ userId, flash }: Props) {
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goals, setGoals] = useState<GoalWithMilestones[]>([]);
   const [form, setForm] = useState({ ...EMPTY });
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [expandedMilestones, setExpandedMilestones] = useState<Set<string>>(new Set());
+  const [editingMilestones, setEditingMilestones] = useState<string | null>(null);
+  const [newMilestone, setNewMilestone] = useState({ title: "", target_date: "" });
+  const [formMilestones, setFormMilestones] = useState<Milestone[]>([]);
+  const [newFormMilestone, setNewFormMilestone] = useState({ title: "", target_date: "" });
 
   useEffect(() => { load(); }, []);
 
@@ -48,7 +56,15 @@ export default function GoalTab({ userId, flash }: Props) {
       .select("*")
       .eq("user_id", userId)
       .order("start_date", { ascending: false });
-    setGoals((data as Goal[]) ?? []);
+    setGoals(((data ?? []) as Record<string, unknown>[]).map(d => {
+      const g = d as unknown as GoalWithMilestones;
+      // milestones가 문자열이면 파싱
+      if (typeof (d as Record<string, unknown>).milestones === "string") {
+        try { g.milestones = JSON.parse((d as Record<string, unknown>).milestones as string); } catch { g.milestones = []; }
+      }
+      if (!Array.isArray(g.milestones)) g.milestones = [];
+      return g;
+    }));
     setLoading(false);
   }
 
@@ -70,9 +86,10 @@ export default function GoalTab({ userId, flash }: Props) {
       start_date: form.start_date,
       end_date: form.end_date || null,
       status: "active",
+      milestones: formMilestones,
     });
     if (error) flash("저장 실패: " + error.message);
-    else { flash("목표 생성 완료"); setForm({ ...EMPTY }); await load(); }
+    else { flash("목표 생성 완료"); setForm({ ...EMPTY }); setFormMilestones([]); await load(); }
     setSaving(false);
   }
 
@@ -98,6 +115,58 @@ export default function GoalTab({ userId, flash }: Props) {
     await s.from("hq_goals").delete().eq("id", id);
     flash("삭제 완료");
     await load();
+  }
+
+  /* ── milestone helpers ─────────────────────────────────── */
+  const toggleMilestoneExpand = (id: string) => {
+    setExpandedMilestones(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  async function saveMilestones(goalId: string, milestones: Milestone[]) {
+    const s = sb();
+    if (!s) return;
+    // 마일스톤 완료율로 current_value 자동 계산
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    const completedCount = milestones.filter(m => m.completed).length;
+    const total = milestones.length;
+    const newCurrent = total > 0 ? Math.round((completedCount / total) * goal.target_value) : goal.current_value;
+    await s.from("hq_goals").update({ milestones, current_value: newCurrent }).eq("id", goalId);
+    await load();
+  }
+
+  async function toggleMilestoneComplete(goalId: string, milestoneId: string) {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    const updated = (goal.milestones ?? []).map(m =>
+      m.id === milestoneId ? { ...m, completed: !m.completed } : m
+    );
+    await saveMilestones(goalId, updated);
+  }
+
+  async function addMilestone(goalId: string) {
+    if (!newMilestone.title.trim()) { flash("마일스톤 제목을 입력하세요"); return; }
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    const ms: Milestone = {
+      id: crypto.randomUUID(),
+      title: newMilestone.title.trim(),
+      target_date: newMilestone.target_date || "",
+      completed: false,
+    };
+    await saveMilestones(goalId, [...(goal.milestones ?? []), ms]);
+    setNewMilestone({ title: "", target_date: "" });
+  }
+
+  async function removeMilestone(goalId: string, milestoneId: string) {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    const updated = (goal.milestones ?? []).filter(m => m.id !== milestoneId);
+    await saveMilestones(goalId, updated);
   }
 
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
@@ -136,6 +205,59 @@ export default function GoalTab({ userId, flash }: Props) {
             <input type="date" className={I} value={form.end_date} onChange={(e) => set("end_date", e.target.value)} />
           </div>
         </div>
+        {/* 마일스톤 (새 목표 생성 시) */}
+        <div className="mt-4 border-t border-slate-100 pt-4">
+          <div className="flex items-center justify-between mb-2">
+            <label className={L}>마일스톤</label>
+            <span className="text-xs text-slate-400">{formMilestones.length}개</span>
+          </div>
+          {formMilestones.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {formMilestones.map(ms => (
+                <div key={ms.id} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                  <span className="flex-1 text-sm text-slate-700">{ms.title}</span>
+                  {ms.target_date && <span className="text-xs text-slate-400">{ms.target_date}</span>}
+                  <button
+                    onClick={() => setFormMilestones(prev => prev.filter(m => m.id !== ms.id))}
+                    className="text-xs text-red-400 hover:text-red-600 font-semibold"
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input
+              className={I}
+              placeholder="마일스톤 제목"
+              value={newFormMilestone.title}
+              onChange={e => setNewFormMilestone(p => ({ ...p, title: e.target.value }))}
+            />
+            <input
+              type="date"
+              className={`${I} w-40 shrink-0`}
+              value={newFormMilestone.target_date}
+              onChange={e => setNewFormMilestone(p => ({ ...p, target_date: e.target.value }))}
+            />
+            <button
+              type="button"
+              className={B2}
+              onClick={() => {
+                if (!newFormMilestone.title.trim()) return;
+                setFormMilestones(prev => [...prev, {
+                  id: crypto.randomUUID(),
+                  title: newFormMilestone.title.trim(),
+                  target_date: newFormMilestone.target_date,
+                  completed: false,
+                }]);
+                setNewFormMilestone({ title: "", target_date: "" });
+              }}
+            >
+              추가
+            </button>
+          </div>
+        </div>
         <div className="mt-4 flex justify-end">
           <button className={B} onClick={save} disabled={saving || activeCount >= 2}>
             {saving ? "생성 중..." : "목표 생성"}
@@ -150,9 +272,17 @@ export default function GoalTab({ userId, flash }: Props) {
       {!loading && (
         <div className="space-y-4">
           {goals.map((g) => {
-            const pct = g.target_value ? Math.round((g.current_value / g.target_value) * 100) : 0;
+            const milestones = g.milestones ?? [];
+            const msCompleted = milestones.filter(m => m.completed).length;
+            const msTotal = milestones.length;
+            // 마일스톤이 있으면 마일스톤 완료율로 진행률 계산
+            const pct = msTotal > 0
+              ? Math.round((msCompleted / msTotal) * 100)
+              : g.target_value ? Math.round((g.current_value / g.target_value) * 100) : 0;
             const st = ST[g.status] ?? ST.active;
             const isActive = g.status === "active";
+            const isExpanded = expandedMilestones.has(g.id);
+            const isEditingMs = editingMilestones === g.id;
             return (
               <div key={g.id} className={C}>
                 <div className="mb-3 flex items-start justify-between">
@@ -222,6 +352,139 @@ export default function GoalTab({ userId, flash }: Props) {
                     </button>
                   </div>
                 </div>
+
+                {/* 마일스톤 섹션 */}
+                {msTotal > 0 && (
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    <button
+                      onClick={() => toggleMilestoneExpand(g.id)}
+                      className="flex items-center gap-2 w-full text-left"
+                    >
+                      <span className="text-xs font-semibold text-slate-600">
+                        {isExpanded ? "▼" : "▶"} 마일스톤
+                      </span>
+                      <span className={`${BADGE} text-[10px] bg-blue-50 text-blue-700`}>
+                        {msCompleted}/{msTotal} 완료
+                      </span>
+                      {/* 미니 프로그레스 바 */}
+                      <div className="flex-1 max-w-[120px] h-1.5 rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-emerald-500 transition-all"
+                          style={{ width: `${msTotal > 0 ? (msCompleted / msTotal) * 100 : 0}%` }}
+                        />
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div className="mt-2 space-y-1.5">
+                        {milestones.map(ms => (
+                          <div key={ms.id} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                            <button
+                              onClick={() => isActive && toggleMilestoneComplete(g.id, ms.id)}
+                              className={`w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
+                                ms.completed
+                                  ? "bg-emerald-500 border-emerald-500 text-white"
+                                  : "border-slate-300 hover:border-emerald-400"
+                              }`}
+                              disabled={!isActive}
+                            >
+                              {ms.completed && <span className="text-[10px]">✓</span>}
+                            </button>
+                            <span className={`flex-1 text-sm ${ms.completed ? "line-through text-slate-400" : "text-slate-700"}`}>
+                              {ms.title}
+                            </span>
+                            {ms.target_date && (
+                              <span className="text-[11px] text-slate-400 shrink-0">{ms.target_date}</span>
+                            )}
+                            {isEditingMs && (
+                              <button
+                                onClick={() => removeMilestone(g.id, ms.id)}
+                                className="text-xs text-red-400 hover:text-red-600 font-semibold shrink-0"
+                              >
+                                삭제
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        {/* 마일스톤 추가/편집 */}
+                        {isActive && (
+                          <div className="mt-2">
+                            {!isEditingMs ? (
+                              <button
+                                onClick={() => { setEditingMilestones(g.id); setNewMilestone({ title: "", target_date: "" }); }}
+                                className="text-xs text-blue-600 font-semibold hover:text-blue-700"
+                              >
+                                + 마일스톤 편집
+                              </button>
+                            ) : (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <input
+                                    className={I}
+                                    placeholder="마일스톤 제목"
+                                    value={newMilestone.title}
+                                    onChange={e => setNewMilestone(p => ({ ...p, title: e.target.value }))}
+                                  />
+                                  <input
+                                    type="date"
+                                    className={`${I} w-40 shrink-0`}
+                                    value={newMilestone.target_date}
+                                    onChange={e => setNewMilestone(p => ({ ...p, target_date: e.target.value }))}
+                                  />
+                                  <button className={B2} onClick={() => addMilestone(g.id)}>추가</button>
+                                </div>
+                                <button
+                                  onClick={() => setEditingMilestones(null)}
+                                  className="text-xs text-slate-400 hover:text-slate-600 font-semibold"
+                                >
+                                  편집 완료
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 마일스톤이 없을 때 추가 버튼 */}
+                {msTotal === 0 && isActive && (
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    {editingMilestones !== g.id ? (
+                      <button
+                        onClick={() => { setEditingMilestones(g.id); setExpandedMilestones(prev => new Set(prev).add(g.id)); setNewMilestone({ title: "", target_date: "" }); }}
+                        className="text-xs text-blue-600 font-semibold hover:text-blue-700"
+                      >
+                        + 마일스톤 추가
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold text-slate-600">마일스톤 추가</label>
+                        <div className="flex gap-2">
+                          <input
+                            className={I}
+                            placeholder="마일스톤 제목"
+                            value={newMilestone.title}
+                            onChange={e => setNewMilestone(p => ({ ...p, title: e.target.value }))}
+                          />
+                          <input
+                            type="date"
+                            className={`${I} w-40 shrink-0`}
+                            value={newMilestone.target_date}
+                            onChange={e => setNewMilestone(p => ({ ...p, target_date: e.target.value }))}
+                          />
+                          <button className={B2} onClick={() => addMilestone(g.id)}>추가</button>
+                        </div>
+                        <button
+                          onClick={() => setEditingMilestones(null)}
+                          className="text-xs text-slate-400 hover:text-slate-600 font-semibold"
+                        >
+                          닫기
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}

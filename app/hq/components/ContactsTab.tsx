@@ -159,6 +159,46 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
     }
   };
 
+  const generateVCard = (c: Contact): string => {
+    const nameParts = c.name.length >= 2 ? `${c.name.slice(0, 1)};${c.name.slice(1)}` : `;${c.name}`;
+    const lines = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `N:${nameParts}`,
+      `FN:${c.name}`,
+      c.department ? `ORG:${c.department}` : "",
+      c.position ? `TITLE:${c.position}` : "",
+      c.phone ? `TEL;TYPE=WORK:${c.phone}` : "",
+      c.email ? `EMAIL:${c.email}` : "",
+      "END:VCARD",
+    ].filter(Boolean);
+    return lines.join("\r\n");
+  };
+
+  const downloadVcf = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: "text/vcard;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportSingle = (c: Contact) => {
+    downloadVcf(generateVCard(c), `${c.name}.vcf`);
+    flash(`${c.name} 연락처를 내보냈습니다`);
+  };
+
+  const exportAll = () => {
+    if (filtered.length === 0) { flash("내보낼 연락처가 없습니다"); return; }
+    const vcards = filtered.map(c => generateVCard(c)).join("\r\n");
+    downloadVcf(vcards, "연락처_전체.vcf");
+    flash(`${filtered.length}건의 연락처를 내보냈습니다`);
+  };
+
   const departments = useMemo(
     () => [...new Set(contacts.map((c) => c.department).filter(Boolean))].sort(),
     [contacts]
@@ -223,27 +263,35 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
               </option>
             ))}
           </select>
-          <div className="flex rounded-xl overflow-hidden border border-slate-200">
+          <div className="flex items-center gap-2">
             <button
-              className={`px-3 py-2 text-xs font-semibold transition-colors ${
-                view === "grid"
-                  ? "bg-[#3182F6] text-white"
-                  : "bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-              onClick={() => setView("grid")}
+              className={B2}
+              onClick={exportAll}
             >
-              카드
+              전체 내보내기
             </button>
-            <button
-              className={`px-3 py-2 text-xs font-semibold transition-colors ${
-                view === "org"
-                  ? "bg-[#3182F6] text-white"
-                  : "bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-              onClick={() => setView("org")}
-            >
-              조직도
-            </button>
+            <div className="flex rounded-xl overflow-hidden border border-slate-200">
+              <button
+                className={`px-3 py-2 text-xs font-semibold transition-colors ${
+                  view === "grid"
+                    ? "bg-[#3182F6] text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+                onClick={() => setView("grid")}
+              >
+                카드
+              </button>
+              <button
+                className={`px-3 py-2 text-xs font-semibold transition-colors ${
+                  view === "org"
+                    ? "bg-[#3182F6] text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+                onClick={() => setView("org")}
+              >
+                조직도
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -369,6 +417,12 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
                       {c.email && <div className="flex items-center gap-2"><span className="text-slate-300">✉️</span><span className="truncate">{c.email}</span></div>}
                       {c.extension && <div className="flex items-center gap-2"><span className="text-slate-300">☎️</span><span>내선 {c.extension}</span></div>}
                     </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); exportSingle(c); }}
+                      className="mt-3 w-full text-xs font-semibold text-slate-400 hover:text-[#3182F6] bg-slate-50 hover:bg-blue-50 rounded-lg py-1.5 transition-colors"
+                    >
+                      내보내기
+                    </button>
                   </>
                 )}
               </div>

@@ -3,6 +3,10 @@ import type { Tab, Goal, Task, AAR, Feedback } from "@/app/hq/types";
 import type { Metric } from "@/app/hq/types";
 import { fmt, today, C, BADGE, ST, useTeamDisplayNames } from "@/app/hq/utils";
 
+const CRM_STAGE_LABEL: Record<string, string> = {
+  lead: "리드", contact: "접촉", proposal: "제안", negotiation: "협상", closed_won: "성사", closed_lost: "실패",
+};
+
 type Comment = { id: string; author: string; text: string; time: string };
 
 interface SharedProps {
@@ -413,6 +417,82 @@ export function AarsSection({ aars, go }: SharedProps & { aars: AAR[] }) {
             <div key={a.id} className="text-xs">
               <span className="text-[10px] text-slate-400">{a.date}</span>
               <p className="truncate text-slate-700">{a.goal}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── 체크인 현황 ──
+export function CheckinStatusSection({ checkinDone, checkinPending, go }: SharedProps & {
+  checkinDone: number; checkinPending: number;
+}) {
+  return (
+    <div className={`${C} !p-4 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("checkin" as Tab)}>
+      <h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+        <span>📍</span> 체크인 현황
+        <span className="text-[10px] text-slate-400 font-normal">오늘</span>
+      </h3>
+      <div className="flex items-center gap-4">
+        <div>
+          <p className="text-xl font-bold text-emerald-600">{checkinDone}명</p>
+          <p className="text-[10px] text-slate-400">완료</p>
+        </div>
+        <div className="w-px h-8 bg-slate-200" />
+        <div>
+          <p className="text-xl font-bold text-amber-500">{checkinPending}명</p>
+          <p className="text-[10px] text-slate-400">미완료</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 자원예약 ──
+export function ResourceBookingsSection({ todayBookingsCount, go }: SharedProps & {
+  todayBookingsCount: number;
+}) {
+  return (
+    <div className={`${C} !p-4 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("booking" as Tab)}>
+      <h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+        <span>🏢</span> 자원예약
+        <span className="text-[10px] text-slate-400 font-normal">오늘</span>
+      </h3>
+      <div>
+        <p className="text-xl font-bold text-[#3182F6]">{todayBookingsCount}건</p>
+        <p className="text-[10px] text-slate-400">오늘 예약 건수</p>
+      </div>
+    </div>
+  );
+}
+
+// ── CRM 파이프라인 ──
+export function CrmPipelineSection({ dealsByStage, totalDealValue, go }: SharedProps & {
+  dealsByStage: { stage: string; count: number; value: number }[];
+  totalDealValue: number;
+}) {
+  return (
+    <div className={`${C} !p-4 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("crm" as Tab)}>
+      <h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center justify-between">
+        <span className="flex items-center gap-1.5"><span>💼</span> CRM 파이프라인</span>
+        <span className="text-[10px] text-slate-400 font-normal">총 ₩{fmt(totalDealValue)}</span>
+      </h3>
+      {dealsByStage.length === 0 ? (
+        <p className="text-xs text-slate-400 text-center py-2">등록된 딜이 없습니다</p>
+      ) : (
+        <div className="space-y-1.5">
+          {dealsByStage.map(d => (
+            <div key={d.stage} className="flex items-center gap-2">
+              <span className="text-xs font-medium text-slate-600 w-12 flex-shrink-0">{CRM_STAGE_LABEL[d.stage] ?? d.stage}</span>
+              <div className="flex-1 h-5 bg-slate-100 rounded-lg overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#3182F6] to-[#3182F6]/70 rounded-lg transition-all"
+                  style={{ width: `${Math.min(100, totalDealValue > 0 ? (d.value / totalDealValue) * 100 : 0)}%`, minWidth: d.value > 0 ? 8 : 0 }}
+                />
+              </div>
+              <span className="text-[10px] text-slate-500 flex-shrink-0 w-16 text-right">{d.count}건 · ₩{fmt(d.value)}</span>
             </div>
           ))}
         </div>
