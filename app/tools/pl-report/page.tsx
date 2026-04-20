@@ -89,7 +89,7 @@ export default function PLReportPage() {
   const [simList, setSimList] = useState<SimHistory[]>([]);
   const [monthList, setMonthList] = useState<MonthSnap[]>([]);
 
-  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<{ form: FormData }>("vela-pl-report", { form: DEFAULT });
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId, error: syncError, retry: syncRetry } = useCloudSync<{ form: FormData }>("vela-pl-report", { form: DEFAULT });
 
   // Load from cloud on mount
   useEffect(() => {
@@ -226,7 +226,14 @@ export default function PLReportPage() {
             </div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">손익계산서 PDF 출력</h1>
-              <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+              <CloudSyncBadge status={syncStatus} userId={syncUserId} onRetry={syncRetry} />
+            {syncError && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={syncRetry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
             </div>
             <p className="text-slate-500 text-sm">수익 데이터를 입력하면 정식 손익계산서 형식으로 PDF 출력이 가능합니다.</p>
           </div>

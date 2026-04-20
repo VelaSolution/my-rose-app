@@ -121,7 +121,7 @@ const CHECKLIST: CheckItem[] = [
 ];
 
 export default function NaverPlacePage() {
-  const { data: checked, update: setChecked, status, userId } = useCloudSync<Record<string, boolean>>("vela-naver-place-checklist", {});
+  const { data: checked, update: setChecked, status, userId, error, retry } = useCloudSync<Record<string, boolean>>("vela-naver-place-checklist", {});
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   const toggleCheck = (id: string) => {
@@ -163,7 +163,14 @@ export default function NaverPlacePage() {
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
                 네이버 플레이스 최적화 체크리스트
               </h1>
-              <CloudSyncBadge status={status} userId={userId} />
+              <CloudSyncBadge status={status} userId={userId} onRetry={retry} />
+            {error && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={retry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
             </div>
             <p className="text-slate-500 text-sm">
               15개 항목을 하나씩 실행하면 네이버 플레이스 검색 노출이 크게 개선됩니다.

@@ -20,7 +20,7 @@ export default function CardSalesPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<CardSalesData>(KEY, defaultData);
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId, error: syncError, retry: syncRetry } = useCloudSync<CardSalesData>(KEY, defaultData);
 
   useEffect(() => {
     if (cloudData) {
@@ -46,7 +46,14 @@ export default function CardSalesPage() {
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">카드매출 자동 수집</h1>
           <p className="text-sm text-slate-500 mb-2">사업자등록번호만 입력하면 여신금융협회를 통해 카드사별 매출을 자동으로 조회합니다. 곧 출시됩니다!</p>
           <div className="mb-8">
-            <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+            <CloudSyncBadge status={syncStatus} userId={syncUserId} onRetry={syncRetry} />
+            {syncError && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={syncRetry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
           </div>
 
           <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-200 mb-6">

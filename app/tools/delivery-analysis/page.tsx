@@ -36,7 +36,7 @@ export default function DeliveryAnalysisPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState("");
 
-  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<DeliveryData>(KEY, defaultDeliveryData);
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId, error: syncError, retry: syncRetry } = useCloudSync<DeliveryData>(KEY, defaultDeliveryData);
 
   useEffect(() => {
     if (cloudData) {
@@ -92,7 +92,14 @@ export default function DeliveryAnalysisPage() {
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">배달앱 매출 분석기</h1>
           <div className="flex items-center gap-2">
             <p className="text-slate-500 text-sm">배달앱 정산서를 업로드하면 수수료·실매출·건당 이익을 자동 분석합니다.</p>
-            <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+            <CloudSyncBadge status={syncStatus} userId={syncUserId} onRetry={syncRetry} />
+            {syncError && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={syncRetry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
           </div>
         </div>
 

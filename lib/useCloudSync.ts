@@ -18,6 +18,8 @@ import { captureError } from "@/lib/sentry";
  */
 
 export type SyncStatus = "idle" | "saving" | "saved" | "offline" | "error";
+export type StorageMode = "cloud" | "local";
+export type ConflictInfo<T> = { local: T; cloud: T } | null;
 
 const TABLE = "tool_saves";
 
@@ -37,12 +39,17 @@ export function useCloudSync<T>(
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+  const [lastLocalSaveAt, setLastLocalSaveAt] = useState<Date | null>(null);
+  const [conflict, setConflict] = useState<ConflictInfo<T>>(null);
 
   const userRef = useRef<string | null>(null);
   const cloudTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const statusTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const lastFailedData = useRef<T | null>(null);
   const lsKey = toolKey;
+
+  const storageMode: StorageMode = userId ? "cloud" : "local";
 
   /* ── 초기 로드: 로컬 → 클라우드 병합 ── */
   useEffect(() => {
@@ -73,12 +80,21 @@ export function useCloudSync<T>(
           .limit(1);
 
         if (rows && rows.length > 0 && rows[0].data) {
-          // 클라우드 데이터가 있으면 우선 사용
           const cloud = typeof rows[0].data === "string"
             ? JSON.parse(rows[0].data)
             : rows[0].data;
-          setData(cloud);
-          localStorage.setItem(lsKey, JSON.stringify(cloud));
+
+          // 로컬과 클라우드 데이터가 모두 존재하고 다르면 충돌 감지
+          const hasLocal = JSON.stringify(local) !== JSON.stringify(defaultData);
+          const differs = hasLocal && JSON.stringify(local) !== JSON.stringify(cloud);
+          if (differs) {
+            setConflict({ local, cloud });
+          } else {
+            // 충돌 없으면 클라우드 데이터 우선 사용
+            setData(cloud);
+            localStorage.setItem(lsKey, JSON.stringify(cloud));
+            setLastSyncedAt(new Date());
+          }
         } else {
           // 클라우드 없고 로컬 있으면 → 클라우드에 업로드
           const hasLocal = JSON.stringify(local) !== JSON.stringify(defaultData);
@@ -135,6 +151,7 @@ export function useCloudSync<T>(
 
       setError(null);
       lastFailedData.current = null;
+      setLastSyncedAt(new Date());
       setStatus("saved");
       if (statusTimer.current) clearTimeout(statusTimer.current);
       statusTimer.current = setTimeout(() => setStatus("idle"), 2000);
@@ -151,6 +168,7 @@ export function useCloudSync<T>(
   const update = useCallback((next: T) => {
     setData(next);
     localStorage.setItem(lsKey, JSON.stringify(next));
+    setLastLocalSaveAt(new Date());
 
     if (cloudTimer.current) clearTimeout(cloudTimer.current);
     cloudTimer.current = setTimeout(() => saveToCloud(next), debounceMs);
@@ -170,6 +188,19 @@ export function useCloudSync<T>(
     if (lastFailedData.current) lastFailedData.current = null;
   }, [data, saveToCloud]);
 
+  /* ── 충돌 해결 ── */
+  const resolveConflict = useCallback(async (choice: "local" | "cloud") => {
+    if (!conflict) return;
+    const chosen = choice === "local" ? conflict.local : conflict.cloud;
+    setData(chosen);
+    localStorage.setItem(lsKey, JSON.stringify(chosen));
+    setLastLocalSaveAt(new Date());
+    setConflict(null);
+    if (userRef.current) {
+      await saveToCloud(chosen);
+    }
+  }, [conflict, lsKey, saveToCloud]);
+
   /* ── 클라우드 데이터 삭제 ── */
   const deleteCloud = useCallback(async () => {
     if (!userRef.current) return;
@@ -182,5 +213,5 @@ export function useCloudSync<T>(
     }
   }, [toolKey]);
 
-  return { data, update, status, error, userId, loaded, saveNow, deleteCloud, retry };
+  return { data, update, status, error, userId, loaded, saveNow, deleteCloud, retry, storageMode, lastSyncedAt, lastLocalSaveAt, conflict, resolveConflict };
 }

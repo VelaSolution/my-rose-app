@@ -175,7 +175,7 @@ const defaultChecklistData: StartupChecklistData = {
 };
 
 export default function StartupChecklistPage() {
-  const { data: savedData, update: updateSavedData, status, userId } = useCloudSync<StartupChecklistData>("vela-startup-checklist", defaultChecklistData);
+  const { data: savedData, update: updateSavedData, status, userId, error, retry } = useCloudSync<StartupChecklistData>("vela-startup-checklist", defaultChecklistData);
 
   const industry = savedData.industry || "cafe";
   const checkedMap = savedData.checked || {};
@@ -239,7 +239,14 @@ export default function StartupChecklistPage() {
               </div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">창업 체크리스트</h1>
-                <CloudSyncBadge status={status} userId={userId} />
+                <CloudSyncBadge status={status} userId={userId} onRetry={retry} />
+            {error && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={retry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
               </div>
               <p className="text-slate-500 text-sm">업종별 인허가·준비사항을 단계별로 확인하세요.</p>
             </div>

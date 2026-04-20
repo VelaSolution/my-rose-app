@@ -54,7 +54,7 @@ export default function LaborLawPage() {
     { id: uid(), name: "직원 1", hourlyWage: MIN_WAGE, weeklyHours: 40, nightHours: 0, holidayHours: 0, includeInsurance: true },
   ];
 
-  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<{ employees: Employee[] }>(
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId, error: syncError, retry: syncRetry } = useCloudSync<{ employees: Employee[] }>(
     "vela-labor-law",
     { employees: defaultEmps }
   );
@@ -96,7 +96,14 @@ export default function LaborLawPage() {
           </div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">인건비 계산기 (법정)</h1>
-            <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+            <CloudSyncBadge status={syncStatus} userId={syncUserId} onRetry={syncRetry} />
+            {syncError && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={syncRetry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
           </div>
           <p className="text-slate-500 text-sm">주휴수당·야간수당·4대보험을 자동 반영한 실제 인건비를 계산합니다.</p>
           <p className="text-xs text-slate-400 mt-1">2026년 최저시급 {fmt(MIN_WAGE)}원 기준</p>

@@ -44,7 +44,7 @@ export default function IncorporationPage() {
   const [annualRevenue, setAnnualRevenue] = useState(0);
   const [annualProfit, setAnnualProfit] = useState(0);
   const [ceoSalary, setCeoSalary] = useState(3600);
-  const { data: incData, update: setIncData, status, userId } = useCloudSync<{ checks: Record<string, boolean>; docChecks: Record<string, boolean> }>(KEY, { checks: {}, docChecks: {} });
+  const { data: incData, update: setIncData, status, userId, error, retry } = useCloudSync<{ checks: Record<string, boolean>; docChecks: Record<string, boolean> }>(KEY, { checks: {}, docChecks: {} });
   const checks = incData.checks;
   const docChecks = incData.docChecks;
   const setChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setIncData({ ...incData, checks: typeof fn === "function" ? fn(incData.checks) : fn });
@@ -83,7 +83,14 @@ export default function IncorporationPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">법인 설립 가이드</h1>
             <div className="flex items-center gap-2">
               <p className="text-slate-500 text-sm">개인 vs 법인 비교부터 설립 절차, 비용까지 한 번에 확인하세요.</p>
-              <CloudSyncBadge status={status} userId={userId} />
+              <CloudSyncBadge status={status} userId={userId} onRetry={retry} />
+            {error && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={retry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
             </div>
           </div>
 

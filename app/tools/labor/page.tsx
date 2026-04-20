@@ -267,7 +267,7 @@ export default function LaborSchedulerPage() {
     (() => { const e = makeEmployee("이서연", "홀 서빙"); e.schedule.sat.enabled = true; e.schedule.sun.enabled = true; e.schedule.sat.start = "11:00"; e.schedule.sat.end = "21:00"; e.schedule.sun.start = "11:00"; e.schedule.sun.end = "21:00"; return e; })(),
   ];
 
-  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<{ employees: Employee[]; insuranceRate: string }>(
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId, error: syncError, retry: syncRetry } = useCloudSync<{ employees: Employee[]; insuranceRate: string }>(
     "vela-labor-scheduler",
     { employees: defaultEmployees, insuranceRate: "9.4" }
   );
@@ -319,7 +319,14 @@ export default function LaborSchedulerPage() {
             </div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">인건비 스케줄러</h1>
-              <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+              <CloudSyncBadge status={syncStatus} userId={syncUserId} onRetry={syncRetry} />
+            {syncError && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={syncRetry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
             </div>
             <p className="text-slate-500 text-sm">직원별 시급과 근무 시간을 설정하면 주간·월간 인건비를 자동 계산합니다.</p>
             <Link href="/tools/labor-law" className="inline-flex items-center gap-1 text-sm text-blue-500 hover:text-blue-700 transition mt-2">

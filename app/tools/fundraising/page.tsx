@@ -91,7 +91,7 @@ export default function FundraisingPage() {
   const [industry, setIndustry] = useState("cafe");
   const [tangibleAssets, setTangibleAssets] = useState(0);
   const [investAmount, setInvestAmount] = useState(0);
-  const { data: frData, update: setFrData, status, userId } = useCloudSync<{ irChecks: Record<string, boolean>; mtChecks: Record<string, boolean> }>(KEY, { irChecks: {}, mtChecks: {} });
+  const { data: frData, update: setFrData, status, userId, error, retry } = useCloudSync<{ irChecks: Record<string, boolean>; mtChecks: Record<string, boolean> }>(KEY, { irChecks: {}, mtChecks: {} });
   const irChecks = frData.irChecks;
   const mtChecks = frData.mtChecks;
   const setIrChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setFrData({ ...frData, irChecks: typeof fn === "function" ? fn(frData.irChecks) : fn });
@@ -177,7 +177,14 @@ export default function FundraisingPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">투자 유치 도구</h1>
             <div className="flex items-center gap-2">
               <p className="text-slate-500 text-sm">밸류에이션, IR 덱, 투자자 미팅까지 한 번에 준비하세요.</p>
-              <CloudSyncBadge status={status} userId={userId} />
+              <CloudSyncBadge status={status} userId={userId} onRetry={retry} />
+            {error && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={retry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
             </div>
           </div>
 

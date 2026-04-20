@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
-import CloudSyncBadge from "@/components/CloudSyncBadge";
+import CloudSyncBadge, { ConflictBanner } from "@/components/CloudSyncBadge";
 
 const TABS = ["사업 개요", "시장 분석", "메뉴 전략", "재무 계획", "마케팅 전략", "실행 일정"] as const;
 type Tab = (typeof TABS)[number];
@@ -44,7 +44,7 @@ const fmt = (n: number) => n.toLocaleString("ko-KR");
 
 export default function BusinessPlanPage() {
   const [tab, setTab] = useState<Tab>("사업 개요");
-  const { data: bp, update: setBpCloud, status, userId } = useCloudSync<BPlan>(KEY, empty);
+  const { data: bp, update: setBpCloud, status, userId, storageMode, lastSyncedAt, conflict, resolveConflict, saveNow } = useCloudSync<BPlan>(KEY, empty);
   const [preview, setPreview] = useState(false);
 
   const up = <K extends keyof BPlan>(k: K, v: BPlan[K]) => setBpCloud({ ...bp, [k]: v });
@@ -93,7 +93,7 @@ export default function BusinessPlanPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">사업계획서 작성 도우미</h1>
             <div className="flex items-center gap-2">
               <p className="text-slate-500 text-sm">단계별로 작성하고 한 번에 미리보기 · 복사할 수 있습니다.</p>
-              <CloudSyncBadge status={status} userId={userId} />
+              <CloudSyncBadge status={status} userId={userId} storageMode={storageMode} lastSyncedAt={lastSyncedAt} onSaveNow={saveNow} />
             </div>
           </div>
 

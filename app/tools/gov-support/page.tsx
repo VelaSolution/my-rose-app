@@ -75,7 +75,7 @@ const defaultProfile: Profile = {
 };
 
 export default function GovSupportPage() {
-  const { data: profile, update: setProfileCloud, status, userId } = useCloudSync<Profile>(KEY, defaultProfile);
+  const { data: profile, update: setProfileCloud, status, userId, error, retry } = useCloudSync<Profile>(KEY, defaultProfile);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [tab, setTab] = useState<"result" | "calendar">("result");
 
@@ -126,7 +126,14 @@ export default function GovSupportPage() {
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-slate-500 text-sm">내 조건에 맞는 정부 지원 프로그램을 찾아드립니다.</p>
               <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">마지막 업데이트: 2026.04.07</span>
-              <CloudSyncBadge status={status} userId={userId} />
+              <CloudSyncBadge status={status} userId={userId} onRetry={retry} />
+            {error && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={retry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
             </div>
           </div>
 

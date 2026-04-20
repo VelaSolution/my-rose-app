@@ -19,7 +19,7 @@ type Competitor = {
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
 export default function CompetitorPricingPage() {
-  const { data: competitors, update: setCompetitors, status, userId } = useCloudSync<Competitor[]>("vela-competitor-pricing", []);
+  const { data: competitors, update: setCompetitors, status, userId, error, retry } = useCloudSync<Competitor[]>("vela-competitor-pricing", []);
   const [showAdd, setShowAdd] = useState(false);
   const [storeName, setStoreName] = useState("");
   const [menus, setMenus] = useState([{ name: "", price: "", note: "" }]);
@@ -75,7 +75,7 @@ export default function CompetitorPricingPage() {
           </div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">경쟁매장 가격 조사</h1>
-            <CloudSyncBadge status={status} userId={userId} />
+            <CloudSyncBadge status={status} userId={userId} onRetry={retry} />
           </div>
           <div className="flex items-center gap-2">
             <p className="text-slate-500 text-sm">주변 매장 메뉴 가격을 기록하고 내 가격과 비교하세요.</p>
@@ -93,6 +93,17 @@ export default function CompetitorPricingPage() {
             )}
           </div>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+            <span className="text-red-500">⚠️</span>
+            <div className="flex-1">
+              <p className="font-semibold text-red-700">클라우드 동기화 실패</p>
+              <p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p>
+            </div>
+            <button onClick={retry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+          </div>
+        )}
 
         {avgPrice > 0 && (
           <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 mb-6 text-center">

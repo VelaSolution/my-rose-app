@@ -16,7 +16,7 @@ const fmt = (n: number) => n.toLocaleString("ko-KR");
 const defaults: Inputs = { cash: 10000, initInvest: 5000, monthlyFixed: 500, variableRate: 35, firstRevenue: 800, growthRate: 5, targetRevenue: 2000 };
 
 export default function FinancialSimPage() {
-  const { data: inputs, update: setInputs, status, userId } = useCloudSync<Inputs>(KEY, defaults);
+  const { data: inputs, update: setInputs, status, userId, error, retry } = useCloudSync<Inputs>(KEY, defaults);
 
   const up = <K extends keyof Inputs>(k: K, v: number) => setInputs({ ...inputs, [k]: v });
 
@@ -66,7 +66,7 @@ export default function FinancialSimPage() {
               >
                 📥 CSV 내보내기
               </button>
-              <CloudSyncBadge status={status} userId={userId} />
+              <CloudSyncBadge status={status} userId={userId} onRetry={retry} />
             </div>
             <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>

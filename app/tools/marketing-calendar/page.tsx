@@ -29,7 +29,7 @@ export default function MarketingCalendarPage() {
   const currentMonth = now.getMonth() + 1;
 
   const [notes, setNotes] = useState<Record<number, string>>({});
-  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<CalendarCloudData>("vela-marketing-calendar", CALENDAR_DEFAULT);
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId, error: syncError, retry: syncRetry } = useCloudSync<CalendarCloudData>("vela-marketing-calendar", CALENDAR_DEFAULT);
 
   // Load from cloud on mount
   useEffect(() => {
@@ -57,7 +57,14 @@ export default function MarketingCalendarPage() {
             </div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">시즌 마케팅 캘린더</h1>
-              <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+              <CloudSyncBadge status={syncStatus} userId={syncUserId} onRetry={syncRetry} />
+            {syncError && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={syncRetry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
             </div>
             <p className="text-slate-500 text-sm">매월 놓치면 안 되는 이벤트와 마케팅 전략을 확인하세요.</p>
           </div>

@@ -72,7 +72,7 @@ const SECTIONS = [
 type CheckState = Record<string, boolean>;
 
 export default function HandoverPage() {
-  const { data: checks, update: setChecks, status, userId } = useCloudSync<CheckState>("vela-handover-checklist", {});
+  const { data: checks, update: setChecks, status, userId, error, retry } = useCloudSync<CheckState>("vela-handover-checklist", {});
   const total = SECTIONS.reduce((a, s) => a + s.items.length, 0);
   const done = Object.values(checks).filter(Boolean).length;
   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -94,7 +94,14 @@ export default function HandoverPage() {
           </div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">매장 인수인계 체크리스트</h1>
-            <CloudSyncBadge status={status} userId={userId} />
+            <CloudSyncBadge status={status} userId={userId} onRetry={retry} />
+            {error && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 border border-red-100 text-sm">
+                <span className="text-red-500">⚠️</span>
+                <div className="flex-1"><p className="font-semibold text-red-700">클라우드 동기화 실패</p><p className="text-red-500 text-xs">데이터는 로컬에 저장되었습니다</p></div>
+                <button onClick={retry} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition">재시도</button>
+              </div>
+            )}
           </div>
           <p className="text-slate-500 text-sm">매장 양도양수 시 빠뜨리면 안 되는 항목들을 체크하세요.</p>
         </div>
