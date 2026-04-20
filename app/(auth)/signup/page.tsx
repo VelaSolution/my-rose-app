@@ -79,7 +79,7 @@ function SignUpForm() {
           plan: "standard",
           marketing_agreed: agreeMarketing,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/${refCode ? `&ref=${refCode}` : ""}`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding${refCode ? `&ref=${refCode}` : ""}`,
       },
     });
 

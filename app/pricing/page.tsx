@@ -199,7 +199,7 @@ export default function PricingPage() {
                 <ul className="plan-features">
                   {plan.features.map((f) => (
                     <li key={f.text} className={`plan-feature${f.included ? "" : " disabled"}`}>
-                      <span className={`feature-check ${f.included ? "check-yes" : "check-no"}`}>
+                      <span className={`feature-check ${f.included ? "check-yes" : "check-no"}`} aria-label={f.included ? "포함됨" : "미포함"}>
                         {f.included ? "✓" : "−"}
                       </span>
                       {f.text}

@@ -289,7 +289,7 @@ export default function DashboardHome() {
     }
 
     if (latestSnap) {
-      const costRate = latestSnap.cogs / (latestSnap.total_sales || 1) * 100;
+      const costRate = (latestSnap?.cogs ?? 0) / (latestSnap?.total_sales || 1) * 100;
       const benchmarkCostRate = 35;
       if (costRate > benchmarkCostRate) {
         alerts.push({ type: "critical", message: "⚠️ 원가율이 업계 평균보다 높습니다" });

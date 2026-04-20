@@ -93,12 +93,12 @@ export default function HomePage() {
     fetch("/api/home?only=stocks")
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(d => { if (d.stocks) setStocks(d.stocks); })
-      .catch(() => {});
+      .catch((e) => console.error("API error:", e));
     // 뉴스: 느릴 수 있음
     fetch("/api/home?only=news")
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(d => { if (d.news) setNews(d.news); })
-      .catch(() => {})
+      .catch((e) => console.error("API error:", e))
       .finally(() => setNewsLoad(false));
   }, []);
 
