@@ -30,10 +30,21 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
+  // Search & Sort
+  const [searchQuery, setSearchQuery] = useState("");
+  type SortMode = "최신순" | "인기순" | "댓글순";
+  const [sortMode, setSortMode] = useState<SortMode>("최신순");
+
   // Form
   const [fCat, setFCat] = useState<string>("자유");
   const [fTitle, setFTitle] = useState("");
   const [fContent, setFContent] = useState("");
+
+  // Edit
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [eCat, setECat] = useState<string>("자유");
+  const [eTitle, setETitle] = useState("");
+  const [eContent, setEContent] = useState("");
 
   // Comment
   const [commentText, setCommentText] = useState("");
@@ -156,13 +167,74 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
     }
   };
 
+  const startEdit = (post: BoardPost) => {
+    setEditingId(post.id);
+    setECat(post.category);
+    setETitle(post.title);
+    setEContent(post.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setETitle(""); setEContent(""); setECat("자유");
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!eTitle.trim()) { flash("제목을 입력하세요"); return; }
+    const s = sb();
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      const { error } = await s.from("hq_board").update({
+        category: eCat,
+        title: eTitle.trim(),
+        content: eContent.trim(),
+      }).eq("id", id);
+      if (error) throw error;
+      await load();
+      cancelEdit();
+      flash("게시글 수정 완료");
+    } catch (e) {
+      console.error("saveEdit error:", e);
+      flash("게시글 수정 실패");
+    }
+  };
+
+  const deletePost = async (id: string) => {
+    if (!confirm("게시글을 삭제하시겠습니까?")) return;
+    const s = sb();
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      await s.from("hq_board_comments").delete().eq("post_id", id);
+      const { error } = await s.from("hq_board").delete().eq("id", id);
+      if (error) throw error;
+      await load();
+      setExpandedId(null);
+      flash("게시글 삭제 완료");
+    } catch (e) {
+      console.error("deletePost error:", e);
+      flash("게시글 삭제 실패");
+    }
+  };
+
   const canPin = myRole === "대표" || myRole === "이사" || myRole === "팀장";
 
   const sorted = [...posts].sort((a, b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    if (sortMode === "인기순") return b.views - a.views;
+    if (sortMode === "댓글순") {
+      const aC = comments.filter((c) => c.postId === a.id).length;
+      const bC = comments.filter((c) => c.postId === b.id).length;
+      return bC - aC;
+    }
     return b.date.localeCompare(a.date);
   });
-  const filtered = activeCat === "전체" ? sorted : sorted.filter((p) => p.category === activeCat);
+  const catFiltered = activeCat === "전체" ? sorted : sorted.filter((p) => p.category === activeCat);
+  const filtered = searchQuery.trim()
+    ? catFiltered.filter((p) => {
+        const q = searchQuery.toLowerCase();
+        return p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q) || p.author.toLowerCase().includes(q);
+      })
+    : catFiltered;
 
   return (
     <div className="space-y-6">
@@ -182,6 +254,32 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
         <button className={B} onClick={() => setShowForm(!showForm)}>
           {showForm ? "취소" : "글쓰기"}
         </button>
+      </div>
+
+      {/* Search & Sort */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            className={`${I} !pl-10`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="제목, 내용, 작성자 검색..."
+          />
+        </div>
+        <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+          {(["최신순", "인기순", "댓글순"] as SortMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setSortMode(mode)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${sortMode === mode ? "bg-white text-[#3182F6] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Write form */}
@@ -250,9 +348,34 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
                 {/* Expanded content */}
                 {expanded && (
                   <div className="mt-4 pt-4 border-t border-slate-100">
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed mb-4">{post.content || "(내용 없음)"}</p>
+                    {/* Edit form */}
+                    {editingId === post.id ? (
+                      <div className="space-y-3 mb-4">
+                        <div>
+                          <label className={L}>카테고리</label>
+                          <select className={I} value={eCat} onChange={(e) => setECat(e.target.value)}>
+                            {CATEGORIES.filter((c) => c !== "전체").map((c) => <option key={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={L}>제목</label>
+                          <input className={I} value={eTitle} onChange={(e) => setETitle(e.target.value)} placeholder="게시글 제목" />
+                        </div>
+                        <div>
+                          <label className={L}>내용</label>
+                          <textarea className={`${I} min-h-[120px]`} rows={5} value={eContent} onChange={(e) => setEContent(e.target.value)} placeholder="내용을 입력하세요" />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <button className={B2} onClick={cancelEdit}>취소</button>
+                          <button className={B} onClick={() => saveEdit(post.id)}>저장</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed mb-4">{post.content || "(내용 없음)"}</p>
+                    )}
 
                     {/* Actions */}
+                    {editingId !== post.id && (
                     <div className="flex items-center gap-2 mb-4">
                       <button
                         onClick={(e) => { e.stopPropagation(); likePost(post.id); }}
@@ -271,7 +394,24 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
                           {post.pinned ? "고정 해제" : "고정"}
                         </button>
                       )}
+                      {post.author === userName && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startEdit(post); }}
+                          className={B2}
+                        >
+                          수정
+                        </button>
+                      )}
+                      {post.author === userName && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deletePost(post.id); }}
+                          className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-semibold hover:bg-red-100 transition-all"
+                        >
+                          삭제
+                        </button>
+                      )}
                     </div>
+                    )}
 
                     {/* Comments */}
                     <div className="space-y-2">

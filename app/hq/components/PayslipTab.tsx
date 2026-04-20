@@ -23,12 +23,22 @@ export default function PayslipTab({ userId, userName, myRole, flash }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const canManage = myRole === "대표" || myRole === "이사";
 
+  const canDelete = myRole === "대표";
+
   // 폼
   const [fName, setFName] = useState("");
   const [fBase, setFBase] = useState("");
   const [fOvertime, setFOvertime] = useState("0");
   const [fBonus, setFBonus] = useState("0");
   const [fMemo, setFMemo] = useState("");
+
+  // 수정
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [eName, setEName] = useState("");
+  const [eBase, setEBase] = useState("");
+  const [eOvertime, setEOvertime] = useState("0");
+  const [eBonus, setEBonus] = useState("0");
+  const [eMemo, setEMemo] = useState("");
 
   const load = async () => {
     const s = sb(); if (!s) return;
@@ -71,6 +81,104 @@ export default function PayslipTab({ userId, userName, myRole, flash }: Props) {
     flash("급여 명세서 저장 완료");
     setShowForm(false); setFBase(""); setFOvertime("0"); setFBonus("0"); setFMemo("");
     load();
+  };
+
+  const startEditSlip = (s: Payslip) => {
+    setEditingId(s.id);
+    setEName(s.name);
+    setEBase(String(s.base_pay));
+    setEOvertime(String(s.overtime_pay));
+    setEBonus(String(s.bonus));
+    setEMemo(s.memo ?? "");
+  };
+
+  const cancelEditSlip = () => {
+    setEditingId(null);
+    setEName(""); setEBase(""); setEOvertime("0"); setEBonus("0"); setEMemo("");
+  };
+
+  const saveEditSlip = async (id: string) => {
+    const base = Number(eBase.replace(/,/g, ""));
+    const overtime = Number(eOvertime.replace(/,/g, ""));
+    const bonus = Number(eBonus.replace(/,/g, ""));
+    if (!base) { flash("기본급을 입력해주세요"); return; }
+    const totalPay = base + overtime + bonus;
+    const ded = calcDeductions(totalPay);
+    const s = sb(); if (!s) return;
+    try {
+      const { error } = await s.from("hq_payslips").update({
+        base_pay: base, overtime_pay: overtime, bonus,
+        ...ded, total_pay: totalPay, net_pay: totalPay - ded.total_deductions,
+        memo: eMemo.trim(),
+      }).eq("id", id);
+      if (error) throw error;
+      flash("급여 명세서 수정 완료");
+      cancelEditSlip();
+      load();
+    } catch (e) {
+      console.error("saveEditSlip error:", e);
+      flash("급여 명세서 수정 실패");
+    }
+  };
+
+  const deleteSlip = async (id: string) => {
+    if (!confirm("급여 명세서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
+    const s = sb(); if (!s) return;
+    try {
+      const { error } = await s.from("hq_payslips").delete().eq("id", id);
+      if (error) throw error;
+      flash("급여 명세서 삭제 완료");
+      setExpandedId(null);
+      load();
+    } catch (e) {
+      console.error("deleteSlip error:", e);
+      flash("급여 명세서 삭제 실패");
+    }
+  };
+
+  const printSlip = (s: Payslip) => {
+    const html = `
+      <html><head><title>급여명세서 - ${s.name} (${s.month})</title>
+      <style>
+        body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; padding: 40px; color: #1e293b; }
+        h1 { text-align: center; font-size: 22px; margin-bottom: 6px; }
+        .sub { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 10px 14px; border: 1px solid #e2e8f0; font-size: 14px; }
+        th { background: #f8fafc; text-align: left; font-weight: 600; width: 35%; }
+        td { text-align: right; }
+        .section { font-weight: 700; background: #f1f5f9; text-align: center; }
+        .total { font-weight: 800; font-size: 16px; color: #059669; }
+        .deduct td { color: #ef4444; }
+        .memo { font-size: 12px; color: #94a3b8; margin-top: 10px; }
+        @media print { body { padding: 20px; } }
+      </style></head><body>
+        <h1>급여명세서</h1>
+        <p class="sub">${s.month.replace("-", "년 ")}월 | ${s.name}</p>
+        <table>
+          <tr class="section"><td colspan="2">지급 내역</td></tr>
+          <tr><th>기본급</th><td>${fmt(s.base_pay)}원</td></tr>
+          ${s.overtime_pay > 0 ? `<tr><th>초과근무수당</th><td>${fmt(s.overtime_pay)}원</td></tr>` : ""}
+          ${s.bonus > 0 ? `<tr><th>상여금</th><td>${fmt(s.bonus)}원</td></tr>` : ""}
+          <tr><th><b>총 지급액</b></th><td><b>${fmt(s.total_pay)}원</b></td></tr>
+          <tr class="section"><td colspan="2">공제 내역</td></tr>
+          <tr class="deduct"><th>국민연금</th><td>-${fmt(s.national_pension)}원</td></tr>
+          <tr class="deduct"><th>건강보험</th><td>-${fmt(s.health_insurance)}원</td></tr>
+          <tr class="deduct"><th>고용보험</th><td>-${fmt(s.employment_insurance)}원</td></tr>
+          <tr class="deduct"><th>소득세</th><td>-${fmt(s.income_tax)}원</td></tr>
+          <tr><th><b>공제 합계</b></th><td><b>-${fmt(s.total_deductions)}원</b></td></tr>
+          <tr class="total"><th>실수령액</th><td>${fmt(s.net_pay)}원</td></tr>
+        </table>
+        ${s.memo ? `<p class="memo">메모: ${s.memo}</p>` : ""}
+      </body></html>
+    `;
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+      w.onafterprint = () => w.close();
+      setTimeout(() => w.print(), 300);
+    }
   };
 
   const monthLabel = (() => { const [y, m] = selectedMonth.split("-"); return `${y}년 ${Number(m)}월`; })();
@@ -147,20 +255,62 @@ export default function PayslipTab({ userId, userName, myRole, flash }: Props) {
             </button>
             {isOpen && (
               <div className="mt-4 pt-4 border-t border-slate-100">
-                <table className="w-full text-sm">
-                  <tbody className="text-slate-700">
-                    <tr className="border-b border-slate-50"><td className="py-1.5 text-slate-500">기본급</td><td className="py-1.5 text-right font-semibold">{fmt(s.base_pay)}원</td></tr>
-                    {s.overtime_pay > 0 && <tr className="border-b border-slate-50"><td className="py-1.5 text-slate-500">초과근무수당</td><td className="py-1.5 text-right font-semibold">{fmt(s.overtime_pay)}원</td></tr>}
-                    {s.bonus > 0 && <tr className="border-b border-slate-50"><td className="py-1.5 text-slate-500">상여금</td><td className="py-1.5 text-right font-semibold">{fmt(s.bonus)}원</td></tr>}
-                    <tr className="border-b border-slate-200 font-bold"><td className="py-1.5">총 지급액</td><td className="py-1.5 text-right">{fmt(s.total_pay)}원</td></tr>
-                    <tr className="border-b border-slate-50 text-red-500"><td className="py-1.5">국민연금</td><td className="py-1.5 text-right">-{fmt(s.national_pension)}원</td></tr>
-                    <tr className="border-b border-slate-50 text-red-500"><td className="py-1.5">건강보험</td><td className="py-1.5 text-right">-{fmt(s.health_insurance)}원</td></tr>
-                    <tr className="border-b border-slate-50 text-red-500"><td className="py-1.5">고용보험</td><td className="py-1.5 text-right">-{fmt(s.employment_insurance)}원</td></tr>
-                    <tr className="border-b border-slate-200 text-red-500"><td className="py-1.5">소득세</td><td className="py-1.5 text-right">-{fmt(s.income_tax)}원</td></tr>
-                    <tr className="font-extrabold text-emerald-700"><td className="py-2">실수령액</td><td className="py-2 text-right text-lg">{fmt(s.net_pay)}원</td></tr>
-                  </tbody>
-                </table>
-                {s.memo && <p className="text-xs text-slate-400 mt-2">메모: {s.memo}</p>}
+                {editingId === s.id ? (
+                  <div className="space-y-3 mb-4">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div><label className={L}>기본급</label><input className={I} inputMode="numeric" value={eBase} onChange={e => setEBase(e.target.value.replace(/[^0-9]/g, ""))} placeholder="0" /></div>
+                      <div><label className={L}>초과근무수당</label><input className={I} inputMode="numeric" value={eOvertime} onChange={e => setEOvertime(e.target.value.replace(/[^0-9]/g, ""))} /></div>
+                      <div><label className={L}>상여금</label><input className={I} inputMode="numeric" value={eBonus} onChange={e => setEBonus(e.target.value.replace(/[^0-9]/g, ""))} /></div>
+                    </div>
+                    <div><label className={L}>메모</label><input className={I} value={eMemo} onChange={e => setEMemo(e.target.value)} placeholder="비고사항" /></div>
+                    {eBase && (
+                      <div className="bg-slate-50 rounded-xl p-3 text-xs text-slate-600 space-y-1">
+                        <p>총 지급액: <b>{fmt(Number(eBase.replace(/,/g, "")) + Number(eOvertime.replace(/,/g, "")) + Number(eBonus.replace(/,/g, "")))}원</b></p>
+                        <p>공제 합계: <b>{fmt(calcDeductions(Number(eBase.replace(/,/g, "")) + Number(eOvertime.replace(/,/g, "")) + Number(eBonus.replace(/,/g, ""))).total_deductions)}원</b></p>
+                        <p className="text-emerald-700 font-bold">실수령액: {fmt(Number(eBase.replace(/,/g, "")) + Number(eOvertime.replace(/,/g, "")) + Number(eBonus.replace(/,/g, "")) - calcDeductions(Number(eBase.replace(/,/g, "")) + Number(eOvertime.replace(/,/g, "")) + Number(eBonus.replace(/,/g, ""))).total_deductions)}원</p>
+                      </div>
+                    )}
+                    <div className="flex justify-end gap-2">
+                      <button onClick={cancelEditSlip} className={B2}>취소</button>
+                      <button onClick={() => saveEditSlip(s.id)} className={B}>저장</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <table className="w-full text-sm">
+                      <tbody className="text-slate-700">
+                        <tr className="border-b border-slate-50"><td className="py-1.5 text-slate-500">기본급</td><td className="py-1.5 text-right font-semibold">{fmt(s.base_pay)}원</td></tr>
+                        {s.overtime_pay > 0 && <tr className="border-b border-slate-50"><td className="py-1.5 text-slate-500">초과근무수당</td><td className="py-1.5 text-right font-semibold">{fmt(s.overtime_pay)}원</td></tr>}
+                        {s.bonus > 0 && <tr className="border-b border-slate-50"><td className="py-1.5 text-slate-500">상여금</td><td className="py-1.5 text-right font-semibold">{fmt(s.bonus)}원</td></tr>}
+                        <tr className="border-b border-slate-200 font-bold"><td className="py-1.5">총 지급액</td><td className="py-1.5 text-right">{fmt(s.total_pay)}원</td></tr>
+                        <tr className="border-b border-slate-50 text-red-500"><td className="py-1.5">국민연금</td><td className="py-1.5 text-right">-{fmt(s.national_pension)}원</td></tr>
+                        <tr className="border-b border-slate-50 text-red-500"><td className="py-1.5">건강보험</td><td className="py-1.5 text-right">-{fmt(s.health_insurance)}원</td></tr>
+                        <tr className="border-b border-slate-50 text-red-500"><td className="py-1.5">고용보험</td><td className="py-1.5 text-right">-{fmt(s.employment_insurance)}원</td></tr>
+                        <tr className="border-b border-slate-200 text-red-500"><td className="py-1.5">소득세</td><td className="py-1.5 text-right">-{fmt(s.income_tax)}원</td></tr>
+                        <tr className="font-extrabold text-emerald-700"><td className="py-2">실수령액</td><td className="py-2 text-right text-lg">{fmt(s.net_pay)}원</td></tr>
+                      </tbody>
+                    </table>
+                    {s.memo && <p className="text-xs text-slate-400 mt-2">메모: {s.memo}</p>}
+                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
+                      <button onClick={() => printSlip(s)} className={B2}>
+                        PDF 출력
+                      </button>
+                      {canManage && (
+                        <button onClick={() => startEditSlip(s)} className={B2}>
+                          수정
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => deleteSlip(s.id)}
+                          className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-semibold hover:bg-red-100 transition-all"
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

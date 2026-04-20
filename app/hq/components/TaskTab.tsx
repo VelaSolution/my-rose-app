@@ -56,6 +56,10 @@ export default function TaskTab({ userId, userName, flash }: Props) {
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [expandedTask, setExpandedTask] = useState<string | null>(null);
   const [filterMode, setFilterMode] = useState<"all" | "mine">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterAssignee, setFilterAssignee] = useState<string>("all");
 
   useEffect(() => {
     load();
@@ -196,9 +200,31 @@ export default function TaskTab({ userId, userName, flash }: Props) {
     );
   }
 
-  const filteredTasks = filterMode === "mine"
-    ? tasks.filter(t => t.assignee === userName)
-    : tasks;
+  // 전체 담당자 목록 (필터 드롭다운용)
+  const allAssignees = Array.from(new Set(tasks.map(t => t.assignee).filter(Boolean)));
+
+  const filteredTasks = tasks.filter(t => {
+    // 내 태스크 필터
+    if (filterMode === "mine" && t.assignee !== userName) return false;
+    // 검색어 필터 (제목, 담당자, 설명)
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const titleMatch = t.title?.toLowerCase().includes(q);
+      const assigneeMatch = t.assignee?.toLowerCase().includes(q);
+      const resultMatch = t.result?.toLowerCase().includes(q);
+      if (!titleMatch && !assigneeMatch && !resultMatch) return false;
+    }
+    // 우선순위 필터
+    if (filterPriority !== "all") {
+      const meta = parseResultMeta(t.result);
+      if (meta.priority !== filterPriority) return false;
+    }
+    // 상태 필터
+    if (filterStatus !== "all" && t.status !== filterStatus) return false;
+    // 담당자 필터
+    if (filterAssignee !== "all" && t.assignee !== filterAssignee) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -234,6 +260,71 @@ export default function TaskTab({ userId, userName, flash }: Props) {
             >
               칸반
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 검색 및 필터 */}
+      <div className={C}>
+        <div className="flex flex-col gap-3">
+          <div className="relative">
+            <input
+              className={I}
+              placeholder="태스크 검색 (제목, 담당자, 설명)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
+                onClick={() => setSearchQuery("")}
+              >
+                초기화
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2 flex-wrap items-center">
+            <select
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:border-blue-400"
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+            >
+              <option value="all">우선순위 전체</option>
+              {PRIORITIES.map(p => (
+                <option key={p.key} value={p.key}>{p.key}</option>
+              ))}
+            </select>
+            <select
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:border-blue-400"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">상태 전체</option>
+              {STATUSES.map(s => (
+                <option key={s.key} value={s.key}>{s.label}</option>
+              ))}
+            </select>
+            <select
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:border-blue-400"
+              value={filterAssignee}
+              onChange={(e) => setFilterAssignee(e.target.value)}
+            >
+              <option value="all">담당자 전체</option>
+              {allAssignees.map(a => (
+                <option key={a} value={a}>{displayName(a)}</option>
+              ))}
+            </select>
+            {(searchQuery || filterPriority !== "all" || filterStatus !== "all" || filterAssignee !== "all") && (
+              <button
+                className="text-xs text-slate-400 hover:text-slate-600 underline"
+                onClick={() => { setSearchQuery(""); setFilterPriority("all"); setFilterStatus("all"); setFilterAssignee("all"); }}
+              >
+                필터 초기화
+              </button>
+            )}
+            <span className={`${BADGE} text-[10px] bg-slate-100 text-slate-600 ml-auto`}>
+              {filteredTasks.length}건
+            </span>
           </div>
         </div>
       </div>
