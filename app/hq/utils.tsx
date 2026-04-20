@@ -49,10 +49,10 @@ export const fmt = (n: number) => n.toLocaleString("ko-KR");
 export const today = () => new Date().toISOString().slice(0, 10);
 export const toKR = (d: string | Date) => new Date(d).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 
-// ── Tailwind 스타일 상수 (Vela 디자인 시스템) ──────────
-export const I = "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:border-[#3182F6] focus:ring-2 focus:ring-[#3182F6]/10 outline-none transition-all";
-export const C = "bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200";
-export const L = "block text-xs font-semibold text-slate-500 mb-1.5";
-export const B = "rounded-xl bg-[#3182F6] text-white font-semibold px-5 py-2.5 text-sm hover:bg-[#2672DE] active:scale-[0.98] transition-all shadow-sm shadow-[#3182F6]/20";
-export const B2 = "rounded-xl bg-slate-100 text-slate-700 font-semibold px-4 py-2 text-sm hover:bg-slate-200 active:scale-[0.98] transition-all";
-export const BADGE = "inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold";
+// ── Tailwind 스타일 상수 (Vela 디자인 시스템 · Toss style) ──
+export const I = "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-[15px] focus:border-[#3182F6] focus:ring-2 focus:ring-[#3182F6]/10 outline-none transition-all placeholder:text-slate-300";
+export const C = "bg-white rounded-2xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200";
+export const L = "block text-[13px] font-semibold text-slate-500 mb-2";
+export const B = "rounded-2xl bg-[#3182F6] text-white font-bold px-6 py-3 text-[15px] hover:bg-[#2672DE] active:scale-[0.97] transition-all shadow-sm shadow-[#3182F6]/20";
+export const B2 = "rounded-2xl bg-slate-100 text-slate-700 font-semibold px-5 py-2.5 text-[15px] hover:bg-slate-200 active:scale-[0.97] transition-all";
+export const BADGE = "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold";

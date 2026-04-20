@@ -1,16 +1,16 @@
 // ── HQ 공유 타입 ──────────────────────────────────────
 
 export type Tab =
-  | "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar"
-  | "notice" | "report" | "feedback" | "calendar" | "memo"
-  | "team" | "timeline" | "files" | "chat" | "approval" | "decision"
-  // 하이윅스 신규
-  | "attendance" | "leave" | "contacts" | "board" | "survey" | "wiki"
-  | "orgchart" | "audit" | "gantt"
-  | "expense" | "kudos" | "payslip"
-  // 인트라넷 확장
-  | "booking" | "education" | "evaluation" | "recruit"
-  | "asset" | "crm" | "shift" | "checkin";
+  | "dashboard" | "task" | "calendar" | "checkin"
+  | "strategy" | "performance"
+  | "report" | "approval"
+  | "notice" | "board" | "chat" | "kudos"
+  | "attendance" | "leave"
+  | "team" | "organization" | "survey" | "evaluation"
+  | "files" | "wiki"
+  | "payslip" | "expense"
+  | "resource" | "education" | "recruit" | "crm"
+  | "activity";
 
 export type HQRole = "대표" | "이사" | "팀장" | "팀원";
 
@@ -90,68 +90,55 @@ export type FixedCost = {
   created_at: string;
 };
 
-// ── 탭 설정 ────────────────────────────────────────────
+// ── 탭 설정 (통합 후 27탭) ────────────────────────────
 export const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: "dashboard", label: "현황판", icon: "📋" },
+  { key: "dashboard", label: "홈", icon: "🏠" },
   { key: "attendance", label: "근태", icon: "⏰" },
   { key: "leave", label: "휴가", icon: "🏖️" },
-  { key: "mett", label: "상황판단", icon: "🎯" },
-  { key: "kpi", label: "KPI", icon: "📊" },
-  { key: "goal", label: "목표", icon: "🏆" },
-  { key: "task", label: "태스크", icon: "✅" },
-  { key: "aar", label: "AAR", icon: "📝" },
-  { key: "notice", label: "공지", icon: "📢" },
-  { key: "report", label: "보고서", icon: "📄" },
-  { key: "feedback", label: "피드백", icon: "🐛" },
-  { key: "board", label: "게시판", icon: "💬" },
-  { key: "survey", label: "설문", icon: "📊" },
+  { key: "task", label: "업무", icon: "✅" },
   { key: "calendar", label: "일정", icon: "📅" },
-  { key: "memo", label: "메모", icon: "🗒️" },
-  { key: "team", label: "팀원", icon: "👥" },
-  { key: "contacts", label: "주소록", icon: "📇" },
-  { key: "timeline", label: "타임라인", icon: "🕐" },
-  { key: "files", label: "파일", icon: "📁" },
-  { key: "chat", label: "채팅", icon: "💬" },
-  { key: "approval", label: "결재", icon: "📋" },
-  { key: "decision", label: "의사결정", icon: "⚖️" },
-  { key: "wiki", label: "위키", icon: "📖" },
-  { key: "orgchart", label: "조직도", icon: "🏢" },
-  { key: "audit", label: "활동로그", icon: "📜" },
-  { key: "gantt", label: "간트", icon: "📊" },
-  { key: "expense", label: "재무", icon: "💰" },
-  { key: "kudos", label: "칭찬", icon: "👏" },
-  { key: "payslip", label: "급여", icon: "💰" },
-  // 인트라넷 확장
-  { key: "booking", label: "자원예약", icon: "🏢" },
-  { key: "education", label: "교육", icon: "🎓" },
-  { key: "evaluation", label: "인사평가", icon: "📋" },
-  { key: "recruit", label: "채용", icon: "🤝" },
-  { key: "asset", label: "자산", icon: "💻" },
-  { key: "crm", label: "CRM", icon: "🤝" },
-  { key: "shift", label: "근무표", icon: "📆" },
   { key: "checkin", label: "체크인", icon: "☀️" },
+  { key: "strategy", label: "전략분석", icon: "🎯" },
+  { key: "performance", label: "성과", icon: "📊" },
+  { key: "report", label: "보고서", icon: "📄" },
+  { key: "approval", label: "결재", icon: "✍️" },
+  { key: "notice", label: "공지", icon: "📢" },
+  { key: "board", label: "게시판", icon: "💬" },
+  { key: "chat", label: "채팅", icon: "💬" },
+  { key: "kudos", label: "칭찬", icon: "👏" },
+  { key: "team", label: "팀원", icon: "👥" },
+  { key: "organization", label: "조직", icon: "🏢" },
+  { key: "survey", label: "설문", icon: "📊" },
+  { key: "evaluation", label: "인사평가", icon: "📋" },
+  { key: "files", label: "파일", icon: "📁" },
+  { key: "wiki", label: "위키", icon: "📖" },
+  { key: "payslip", label: "급여", icon: "💰" },
+  { key: "expense", label: "재무", icon: "💰" },
+  { key: "resource", label: "자원관리", icon: "🏢" },
+  { key: "education", label: "교육", icon: "🎓" },
+  { key: "recruit", label: "채용", icon: "🤝" },
+  { key: "crm", label: "CRM", icon: "🤝" },
+  { key: "activity", label: "활동로그", icon: "📜" },
 ];
 
 export const SIDEBAR_GROUPS: { label: string; items: Tab[] }[] = [
-  { label: "출퇴근", items: ["attendance", "leave", "shift"] },
-  { label: "운영", items: ["dashboard", "task", "calendar", "gantt", "checkin"] },
-  { label: "전략", items: ["mett", "kpi", "goal"] },
-  { label: "보고", items: ["report", "aar", "decision"] },
-  { label: "소통", items: ["notice", "board", "feedback", "chat", "memo", "kudos"] },
-  { label: "조직", items: ["team", "contacts", "survey", "orgchart", "evaluation"] },
-  { label: "문서", items: ["files", "approval", "wiki"] },
+  { label: "근무", items: ["attendance", "leave"] },
+  { label: "운영", items: ["dashboard", "task", "calendar", "checkin"] },
+  { label: "전략", items: ["strategy", "performance"] },
+  { label: "보고", items: ["report", "approval"] },
+  { label: "소통", items: ["notice", "board", "chat", "kudos"] },
+  { label: "조직", items: ["team", "organization", "survey", "evaluation"] },
+  { label: "문서", items: ["files", "wiki"] },
   { label: "재무", items: ["payslip", "expense"] },
-  { label: "자원", items: ["booking", "asset"] },
-  { label: "인사", items: ["recruit", "education"] },
-  { label: "영업", items: ["crm"] },
-  { label: "분석", items: ["timeline", "audit"] },
+  { label: "관리", items: ["resource", "education", "recruit", "crm"] },
+  { label: "분석", items: ["activity"] },
 ];
 
 export const ROLE_PERMISSIONS: Record<HQRole, Tab[]> = {
   "대표": TABS.map(t => t.key),
   "이사": TABS.map(t => t.key).filter(k => k !== "team"),
-  "팀장": ["dashboard", "attendance", "leave", "kpi", "task", "aar", "notice", "report", "feedback", "board", "survey", "calendar", "memo", "contacts", "files", "chat", "decision", "wiki", "orgchart", "gantt", "expense", "kudos", "payslip", "booking", "education", "evaluation", "recruit", "asset", "crm", "shift", "checkin"],
-  "팀원": ["dashboard", "attendance", "leave", "task", "notice", "board", "calendar", "memo", "chat", "contacts", "wiki", "survey", "orgchart", "expense", "kudos", "payslip", "booking", "education", "evaluation", "asset", "checkin"],
+  "팀장": ["dashboard", "attendance", "leave", "task", "calendar", "checkin", "strategy", "performance", "report", "approval", "notice", "board", "chat", "kudos", "team", "organization", "survey", "evaluation", "files", "wiki", "payslip", "expense", "resource", "education", "recruit", "crm", "activity"],
+  "팀원": ["dashboard", "attendance", "leave", "task", "calendar", "checkin", "performance", "notice", "board", "chat", "kudos", "organization", "survey", "evaluation", "files", "wiki", "payslip", "expense", "resource", "education", "activity"],
 };
 
 export const TAB_MAP = Object.fromEntries(TABS.map(t => [t.key, t]));

@@ -131,7 +131,7 @@ export function KpiSection({ metrics, go }: SharedProps & { metrics: Metric[] })
   return (
     <div>
       {latest && (
-        <div className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20 mb-4`} onClick={() => go("kpi")}>
+        <div className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20 mb-4`} onClick={() => go("performance")}>
           <h3 className="mb-2 text-xs font-bold text-slate-700">최근 KPI ({latest.date}) <span className="text-[10px] text-slate-400 font-normal">→ 상세보기</span></h3>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div><p className="text-[11px] text-slate-500">매출</p><p className="text-sm font-bold text-slate-900">₩{fmt(latest.revenue)}</p></div>
@@ -169,13 +169,13 @@ export function GoalsSection({ goals, go }: SharedProps & { goals: Goal[] }) {
   const totalGoals = goals.length || 1;
 
   return (
-    <div className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("goal")}>
+    <div className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("performance")}>
       <h3 className="mb-1 text-xs font-bold text-slate-700">활성 목표 <span className="text-[10px] text-slate-400 font-normal">({Math.round((achievedGoals / totalGoals) * 100)}% 달성) →</span></h3>
       {activeGoals.length === 0 ? (
         <div className="text-center py-2">
           <span className="text-xl block mb-0.5">🎯</span>
           <p className="text-xs text-slate-400">설정된 목표가 없습니다.</p>
-          <button onClick={() => go("goal")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">목표 탭에서 추가하세요 &rarr;</button>
+          <button onClick={() => go("performance")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">목표 탭에서 추가하세요 &rarr;</button>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -241,13 +241,13 @@ export function FeedbackSectionDash({ feedbacks, comments, go, openFeedback }: S
 }) {
   const feedbackCount = feedbacks.filter(f => f.status !== "완료").length;
   return (
-    <div className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("feedback")}>
+    <div className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("board")}>
       <h3 className="mb-1 text-xs font-bold text-slate-700">최근 피드백 <span className="text-[10px] text-slate-400 font-normal">(미해결 {feedbackCount}건) →</span></h3>
       {feedbacks.length === 0 ? (
         <div className="text-center py-2">
           <span className="text-xl block mb-0.5">💬</span>
           <p className="text-xs text-slate-400">피드백이 없습니다.</p>
-          <button onClick={() => go("feedback")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">피드백 탭에서 추가하세요 &rarr;</button>
+          <button onClick={() => go("board")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">피드백 탭에서 추가하세요 &rarr;</button>
         </div>
       ) : (
         <div className="space-y-0.5">
@@ -403,13 +403,13 @@ export function RecentReportsSection({ reports, go }: SharedProps & {
 export function AarsSection({ aars, go }: SharedProps & { aars: AAR[] }) {
   const monthAars = aars.filter((a) => a.date?.startsWith(today().slice(0, 7))).length;
   return (
-    <div className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("aar")}>
+    <div className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("strategy")}>
       <h3 className="mb-1 text-xs font-bold text-slate-700">최근 AAR <span className="text-[10px] text-slate-400 font-normal">(이번 달 {monthAars}건) →</span></h3>
       {aars.length === 0 ? (
         <div className="text-center py-2">
           <span className="text-xl block mb-0.5">📝</span>
           <p className="text-xs text-slate-400">AAR이 없습니다.</p>
-          <button onClick={() => go("aar")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">AAR 탭에서 추가하세요 &rarr;</button>
+          <button onClick={() => go("strategy")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">AAR 탭에서 추가하세요 &rarr;</button>
         </div>
       ) : (
         <div className="space-y-0.5">
@@ -455,7 +455,7 @@ export function ResourceBookingsSection({ todayBookingsCount, go }: SharedProps 
   todayBookingsCount: number;
 }) {
   return (
-    <div className={`${C} !p-4 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("booking" as Tab)}>
+    <div className={`${C} !p-4 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("resource")}>
       <h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
         <span>🏢</span> 자원예약
         <span className="text-[10px] text-slate-400 font-normal">오늘</span>

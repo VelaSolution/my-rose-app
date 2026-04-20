@@ -196,7 +196,7 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
         const activities: { type: string; icon: string; title: string; time: string; tab: Tab }[] = [];
         (noticeRecent.data ?? []).forEach((n: any) => activities.push({ type: "공지", icon: "📢", title: n.title, time: n.created_at, tab: "notice" }));
         (taskRecent.data ?? []).forEach((t: any) => activities.push({ type: "태스크", icon: "✅", title: t.title, time: t.created_at, tab: "task" }));
-        (fbRecent.data ?? []).forEach((f: any) => activities.push({ type: "피드백", icon: "🐛", title: f.title, time: f.created_at, tab: "feedback" }));
+        (fbRecent.data ?? []).forEach((f: any) => activities.push({ type: "피드백", icon: "🐛", title: f.title, time: f.created_at, tab: "board" }));
         activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
         setRecentActivity(activities.slice(0, 5));
       } catch {}

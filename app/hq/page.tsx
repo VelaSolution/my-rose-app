@@ -16,53 +16,45 @@ import SearchModal from "./components/SearchModal";
 
 // ── 탭 컴포넌트 (lazy loaded) ─────────────────────────
 const Dashboard = dynamic(() => import("./components/Dashboard"));
-const MettTab = dynamic(() => import("./components/MettTab"));
-const KpiTab = dynamic(() => import("./components/KpiTab"));
-const GoalTab = dynamic(() => import("./components/GoalTab"));
 const TaskTab = dynamic(() => import("./components/TaskTab"));
-const AarTab = dynamic(() => import("./components/AarTab"));
-const NoticeTab = dynamic(() => import("./components/NoticeTab"));
-const ReportTab = dynamic(() => import("./components/ReportTab"));
-const FeedbackTab = dynamic(() => import("./components/FeedbackTab"));
 const CalendarTab = dynamic(() => import("./components/CalendarTab"));
-const MemoTab = dynamic(() => import("./components/MemoTab"));
-const TeamTab = dynamic(() => import("./components/TeamTab"));
-const TimelineTab = dynamic(() => import("./components/TimelineTab"));
-const FilesTab = dynamic(() => import("./components/FilesTab"));
-const ChatTab = dynamic(() => import("./components/ChatTab"));
+const CheckinTab = dynamic(() => import("./components/CheckinTab"));
+const StrategyTab = dynamic(() => import("./components/StrategyTab"));
+const PerformanceTab = dynamic(() => import("./components/PerformanceTab"));
+const ReportTab = dynamic(() => import("./components/ReportTab"));
 const ApprovalTab = dynamic(() => import("./components/ApprovalTab"));
-const DecisionTab = dynamic(() => import("./components/DecisionTab"));
+const NoticeTab = dynamic(() => import("./components/NoticeTab"));
+const BoardTab = dynamic(() => import("./components/BoardTab"));
+const ChatTab = dynamic(() => import("./components/ChatTab"));
+const KudosTab = dynamic(() => import("./components/KudosTab"));
 const AttendanceTab = dynamic(() => import("./components/AttendanceTab"));
 const LeaveTab = dynamic(() => import("./components/LeaveTab"));
-const ContactsTab = dynamic(() => import("./components/ContactsTab"));
-const BoardTab = dynamic(() => import("./components/BoardTab"));
+const TeamTab = dynamic(() => import("./components/TeamTab"));
+const OrganizationTab = dynamic(() => import("./components/OrganizationTab"));
 const SurveyTab = dynamic(() => import("./components/SurveyTab"));
-const WikiTab = dynamic(() => import("./components/WikiTab"));
-const OrgChartTab = dynamic(() => import("./components/OrgChartTab"));
-const AuditLog = dynamic(() => import("./components/AuditLog"));
-const GanttTab = dynamic(() => import("./components/GanttTab"));
-const ExpenseTab = dynamic(() => import("./components/ExpenseTab"));
-const KudosTab = dynamic(() => import("./components/KudosTab"));
-const PayslipTab = dynamic(() => import("./components/PayslipTab"));
-const BookingTab = dynamic(() => import("./components/BookingTab"));
-const EducationTab = dynamic(() => import("./components/EducationTab"));
 const EvaluationTab = dynamic(() => import("./components/EvaluationTab"));
+const FilesTab = dynamic(() => import("./components/FilesTab"));
+const WikiTab = dynamic(() => import("./components/WikiTab"));
+const PayslipTab = dynamic(() => import("./components/PayslipTab"));
+const ExpenseTab = dynamic(() => import("./components/ExpenseTab"));
+const ResourceTab = dynamic(() => import("./components/ResourceTab"));
+const EducationTab = dynamic(() => import("./components/EducationTab"));
 const RecruitTab = dynamic(() => import("./components/RecruitTab"));
-const AssetTab = dynamic(() => import("./components/AssetTab"));
 const CrmTab = dynamic(() => import("./components/CrmTab"));
-const ShiftTab = dynamic(() => import("./components/ShiftTab"));
-const CheckinTab = dynamic(() => import("./components/CheckinTab"));
+const ActivityTab = dynamic(() => import("./components/ActivityTab"));
 
-// ── 탭 → 컴포넌트 매핑 ────────────────────────────────
+// ── 탭 → 컴포넌트 매핑 (통합 27탭) ───────────────────
 const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName: string; myRole: HQRole; flash: (m: string) => void }>> = {
-  dashboard: Dashboard, mett: MettTab, kpi: KpiTab, goal: GoalTab, task: TaskTab, aar: AarTab,
-  notice: NoticeTab, report: ReportTab, feedback: FeedbackTab, calendar: CalendarTab, memo: MemoTab,
-  team: TeamTab, timeline: TimelineTab, files: FilesTab, chat: ChatTab, approval: ApprovalTab,
-  decision: DecisionTab, attendance: AttendanceTab, leave: LeaveTab, contacts: ContactsTab,
-  board: BoardTab, survey: SurveyTab, wiki: WikiTab, orgchart: OrgChartTab, audit: AuditLog, gantt: GanttTab,
-  expense: ExpenseTab, kudos: KudosTab, payslip: PayslipTab,
-  booking: BookingTab, education: EducationTab, evaluation: EvaluationTab, recruit: RecruitTab,
-  asset: AssetTab, crm: CrmTab, shift: ShiftTab, checkin: CheckinTab,
+  dashboard: Dashboard, task: TaskTab, calendar: CalendarTab, checkin: CheckinTab,
+  strategy: StrategyTab, performance: PerformanceTab,
+  report: ReportTab, approval: ApprovalTab,
+  notice: NoticeTab, board: BoardTab, chat: ChatTab, kudos: KudosTab,
+  attendance: AttendanceTab, leave: LeaveTab,
+  team: TeamTab, organization: OrganizationTab, survey: SurveyTab, evaluation: EvaluationTab,
+  files: FilesTab, wiki: WikiTab,
+  payslip: PayslipTab, expense: ExpenseTab,
+  resource: ResourceTab, education: EducationTab, recruit: RecruitTab, crm: CrmTab,
+  activity: ActivityTab,
 };
 
 // 모바일 하단 고정 5탭
@@ -221,45 +213,42 @@ export default function HQPage() {
   const todayDate = new Date().toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
   const ActiveComponent = TAB_COMPONENTS[tab];
   const activeTabInfo = TAB_MAP[tab];
-  const activeGroup = SIDEBAR_GROUPS.find(g => g.items.includes(tab));
 
-  // 사이드바 렌더링 함수 (데스크톱/모바일 공용)
+  // 사이드바 렌더링 함수 (데스크톱/모바일 공용, Toss style)
   const renderNav = (isMobile: boolean) => (
-    <nav className="flex-1 px-2.5 py-3 overflow-y-auto">
+    <nav className="flex-1 px-3 py-4 overflow-y-auto">
       {SIDEBAR_GROUPS.map(g => {
         const groupTabs = g.items.filter(k => ROLE_PERMISSIONS[myRole]?.includes(k));
         if (groupTabs.length === 0) return null;
         const isCollapsed = collapsedGroups.has(g.label);
         const hasActive = groupTabs.includes(tab);
         return (
-          <div key={g.label} className="mb-1">
+          <div key={g.label} className="mb-2">
             <button
               onClick={() => toggleGroup(g.label)}
-              className={`w-full flex items-center justify-between px-3 py-2 text-[11px] font-bold uppercase tracking-widest rounded-lg transition-colors ${
-                hasActive && isCollapsed ? "text-[#3182F6] bg-[#3182F6]/5" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+              className={`w-full flex items-center justify-between px-3 py-2.5 text-[13px] font-bold rounded-xl transition-colors border-b border-slate-100 ${
+                hasActive && isCollapsed ? "text-[#3182F6]" : "text-slate-800 hover:text-slate-900"
               }`}
             >
               <span>{g.label}</span>
               <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                className={`transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}>
+                className={`transition-transform duration-200 text-slate-300 ${isCollapsed ? "-rotate-90" : ""}`}>
                 <path d="M3 4.5l3 3 3-3" />
               </svg>
             </button>
             {!isCollapsed && (
-              <div className="mt-0.5 space-y-0.5">
+              <div className="mt-1 space-y-0.5">
                 {groupTabs.map(k => {
                   const t = TAB_MAP[k]; if (!t) return null;
                   const isActive = tab === k;
                   return (
                     <button key={k} onClick={() => { setTab(k); if (isMobile) setSidebarOpen(false); }}
-                      className={`hq-sidebar-item w-full text-left px-3 py-2.5 text-[13px] rounded-xl flex items-center gap-2.5 ${
+                      className={`hq-sidebar-item w-full text-left px-4 py-3 text-[14px] rounded-2xl flex items-center ${
                         isActive
-                          ? "bg-[#3182F6] text-white font-semibold shadow-sm shadow-[#3182F6]/25"
-                          : "text-slate-600 hover:bg-slate-100/80 font-medium"
+                          ? "text-[#3182F6] font-bold bg-[#3182F6]/5 border-l-[3px] border-[#3182F6]"
+                          : "text-slate-600 hover:bg-slate-50 font-medium border-l-[3px] border-transparent"
                       }`}>
-                      <span className="text-sm">{t.icon}</span>
                       <span>{t.label}</span>
-                      {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white/60" />}
                     </button>
                   );
                 })}
@@ -282,13 +271,14 @@ export default function HQPage() {
         .hq-dark .text-slate-900, .hq-dark .text-slate-800, .hq-dark .text-slate-700 { color: #E2E8F0 !important; }
         .hq-dark .text-slate-600, .hq-dark .text-slate-500 { color: #94A3B8 !important; }
         .hq-dark .text-slate-400 { color: #64748B !important; }
-        .hq-dark .border-slate-200, .hq-dark .border-slate-100 { border-color: #334155 !important; }
+        .hq-dark .border-slate-200, .hq-dark .border-slate-100 { border-color: #1E293B !important; }
         .hq-dark .bg-slate-50, .hq-dark .bg-slate-100 { background: #1E293B !important; }
+        .hq-dark .shadow-\\[0_2px_8px_rgba\\(0\\,0\\,0\\,0\\.04\\)\\] { box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
         .hq-dark input, .hq-dark textarea, .hq-dark select { background: #1E293B !important; color: #E2E8F0 !important; border-color: #334155 !important; }
-        .hq-dark .hq-header-inner { background: rgba(15,23,42,0.97) !important; border-color: #334155 !important; }
+        .hq-dark .hq-header-inner { background: rgba(15,23,42,0.97) !important; border-color: #1E293B !important; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
         .hq-more-sheet { animation: slideUp 0.25s ease-out; }
         .hq-fade-in { animation: fadeIn 0.3s ease-out; }
         .hq-toast { animation: toastIn 0.3s ease-out; }
@@ -296,65 +286,55 @@ export default function HQPage() {
         .hq-sidebar-item:hover { transform: translateX(2px); }
       `}</style>
 
-      {/* ── 헤더 ─────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 h-14 flex-shrink-0">
-        <div className="hq-header-inner h-full bg-white/97 backdrop-blur-xl border-b border-slate-200/80 flex items-center px-3 lg:px-4">
+      {/* ── 헤더 (Toss style: clean, minimal) ────────── */}
+      <header className="sticky top-0 z-50 h-16 flex-shrink-0">
+        <div className="hq-header-inner h-full bg-white/97 backdrop-blur-xl border-b border-slate-100 flex items-center px-4 lg:px-6">
           <div className="flex items-center justify-between w-full">
-            {/* 좌측: 메뉴 + 로고 + 브레드크럼 */}
-            <div className="flex items-center gap-2 min-w-0">
-              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 transition active:scale-95 flex-shrink-0">
+            {/* 좌측: 메뉴 + 로고 */}
+            <div className="flex items-center gap-3 min-w-0">
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-slate-50 transition active:scale-95 flex-shrink-0">
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
               </button>
-              <button onClick={() => setTab("dashboard")} className="flex items-center gap-1.5 flex-shrink-0">
-                <div className="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center">
-                  <span className="text-xs font-extrabold text-white tracking-tight">V<span className="text-[#3182F6]">.</span></span>
+              <button onClick={() => setTab("dashboard")} className="flex items-center gap-2 flex-shrink-0">
+                <div className="w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center">
+                  <span className="text-sm font-extrabold text-white tracking-tight">V<span className="text-[#3182F6]">.</span></span>
                 </div>
-                <span className="text-sm font-bold text-slate-400 hidden sm:block">HQ</span>
+                <span className="text-[15px] font-bold text-slate-800 hidden sm:block">HQ</span>
               </button>
-              {/* 브레드크럼 */}
-              {tab !== "dashboard" && (
-                <div className="hidden sm:flex items-center gap-1.5 ml-2 text-xs text-slate-400 min-w-0">
-                  <span>/</span>
-                  {activeGroup && <><span className="text-slate-300">{activeGroup.label}</span><span>/</span></>}
-                  <span className="font-semibold text-slate-700 truncate">{activeTabInfo?.icon} {activeTabInfo?.label}</span>
-                </div>
-              )}
             </div>
 
-            {/* 우측: 시간 · 검색 · 알림 · 다크모드 · 프로필 */}
-            <div className="flex items-center gap-1 lg:gap-2">
-              {msg && (
-                <div className="hq-toast fixed top-16 left-1/2 -translate-x-1/2 z-[200] bg-slate-900 text-white px-5 py-3 rounded-2xl text-sm font-semibold shadow-2xl flex items-center gap-2">
-                  <span className="text-emerald-400">✓</span> {msg}
-                </div>
-              )}
-              {/* 인라인 검색바 (데스크톱) */}
+            {/* 중앙: 검색바 (데스크톱) */}
+            <div className="hidden lg:flex flex-1 justify-center max-w-md mx-8">
               <button onClick={() => setSearchOpen(true)}
-                className="hidden lg:flex items-center gap-2 bg-slate-100 hover:bg-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-400 transition min-w-[180px]">
-                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="5.5" cy="5.5" r="4" /><path d="M12 12l-2.5-2.5" /></svg>
+                className="w-full flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 rounded-2xl px-4 py-2.5 text-sm text-slate-400 transition">
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="6" cy="6" r="4.5" /><path d="M13 13l-3-3" /></svg>
                 <span>검색...</span>
-                <kbd className="ml-auto text-[10px] bg-white rounded px-1 py-0.5 text-slate-300 font-mono">⌘K</kbd>
+                <kbd className="ml-auto text-[10px] bg-white rounded-lg px-1.5 py-0.5 text-slate-300 font-mono shadow-sm">⌘K</kbd>
               </button>
-              <span className="text-[11px] text-slate-400 hidden xl:block tabular-nums whitespace-nowrap">{todayDate} {currentTime}</span>
+            </div>
+
+            {/* 우측: 시간 · 알림 · 다크모드 · 프로필 */}
+            <div className="flex items-center gap-1.5 lg:gap-2.5">
+              <span className="text-[12px] text-slate-400 hidden xl:block tabular-nums whitespace-nowrap font-medium">{todayDate} {currentTime}</span>
               {/* 모바일 검색 버튼 */}
               <button onClick={() => setSearchOpen(true)}
-                className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition text-slate-400 active:scale-95"
+                className="lg:hidden w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-slate-50 transition text-slate-400 active:scale-95"
                 title="검색">
-                <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="6.5" cy="6.5" r="4.5" /><path d="M14 14l-3-3" /></svg>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="7" cy="7" r="5" /><path d="M15 15l-3.5-3.5" /></svg>
               </button>
               {userId && <NotificationBell userId={userId} userName={userName} myRole={myRole} onNavigate={(t) => setTab(t as Tab)} />}
               <button onClick={() => setDarkMode(!darkMode)}
-                className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition text-slate-400 active:scale-95 hidden sm:flex">
+                className="w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-slate-50 transition text-slate-400 active:scale-95 hidden sm:flex">
                 {darkMode ? "☀️" : "🌙"}
               </button>
-              <div className="hidden lg:block w-px h-4 bg-slate-200 mx-1" />
-              <button onClick={() => setTab("dashboard")} className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-[#3182F6] to-[#7C3AED] rounded-xl flex items-center justify-center shadow-sm">
-                  <span className="text-xs font-bold text-white">{userName[0]}</span>
+              <div className="hidden lg:block w-px h-5 bg-slate-100 mx-1" />
+              <button onClick={() => setTab("dashboard")} className="flex items-center gap-2.5">
+                <div className="w-9 h-9 bg-gradient-to-br from-[#3182F6] to-[#7C3AED] rounded-2xl flex items-center justify-center shadow-sm">
+                  <span className="text-sm font-bold text-white">{userName[0]}</span>
                 </div>
                 <div className="hidden lg:block text-left">
-                  <p className="text-xs font-semibold text-slate-700 leading-tight">{userName}</p>
-                  <p className="text-[10px] text-slate-400 leading-tight">{myRole}</p>
+                  <p className="text-[13px] font-bold text-slate-800 leading-tight">{userName}</p>
+                  <p className="text-[11px] text-slate-400 leading-tight">{myRole}</p>
                 </div>
               </button>
             </div>
@@ -370,7 +350,7 @@ export default function HQPage() {
           style={{ paddingTop: "env(safe-area-inset-top)" }}
           onClick={e => e.stopPropagation()}>
           {/* 사이드바 헤더 */}
-          <div className="px-4 py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+          <div className="px-5 py-5 border-b border-slate-50 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 bg-gradient-to-br from-[#3182F6] to-[#7C3AED] rounded-xl flex items-center justify-center">
                 <span className="text-sm font-bold text-white">{userName[0]}</span>
@@ -394,8 +374,8 @@ export default function HQPage() {
       </div>
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* ── 데스크톱 사이드바 ──────────────────────────── */}
-        <aside className="hidden md:flex flex-col w-[220px] lg:w-[240px] bg-white border-r border-slate-200/80 flex-shrink-0">
+        {/* ── 데스크톱 사이드바 (Toss style: no border, subtle shadow) ── */}
+        <aside className="hidden md:flex flex-col w-[230px] lg:w-[250px] bg-white shadow-[1px_0_8px_rgba(0,0,0,0.03)] flex-shrink-0">
           {renderNav(false)}
           <div className="px-4 py-3 border-t border-slate-100 space-y-2 flex-shrink-0">
             <div className="flex items-center gap-2 px-1">
@@ -417,15 +397,11 @@ export default function HQPage() {
         <main className="flex-1 min-w-0 pb-20 md:pb-0 overflow-y-auto">
           {/* 모바일 현재 탭 표시 */}
           {tab !== "dashboard" && (
-            <div className="md:hidden px-4 pt-3 pb-1">
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <button onClick={() => setTab("dashboard")} className="hover:text-[#3182F6] transition">홈</button>
-                <span>/</span>
-                <span className="font-semibold text-slate-700">{activeTabInfo?.icon} {activeTabInfo?.label}</span>
-              </div>
+            <div className="md:hidden px-4 pt-4 pb-1">
+              <h2 className="text-lg font-bold text-slate-900">{activeTabInfo?.label}</h2>
             </div>
           )}
-          <div className="px-3 lg:px-6 pt-2 lg:pt-3 pb-10">
+          <div className="px-4 lg:px-8 pt-4 lg:pt-5 pb-10">
             <div key={tab} className="hq-fade-in">
               {userId && tab === "dashboard" ? (
                 <Dashboard userId={userId} userName={userName} myRole={myRole} flash={flash} onNavigate={setTab} />
@@ -436,6 +412,16 @@ export default function HQPage() {
           </div>
         </main>
       </div>
+
+      {/* ── 토스트 알림 (bottom-center, Toss style) ──────── */}
+      {msg && (
+        <div className="hq-toast fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[200] bg-slate-900 text-white px-6 py-3.5 rounded-2xl text-[14px] font-semibold shadow-2xl flex items-center gap-2.5">
+          <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg width="12" height="12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 6l3 3 5-6"/></svg>
+          </div>
+          {msg}
+        </div>
+      )}
 
       {/* ── 모바일 하단 탭바 ──────────────────────────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/97 backdrop-blur-2xl border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.04)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>

@@ -125,7 +125,7 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
     if (r4) for (const l of r4) items.push({ id: `leave-${l.id}`, icon: "🏖️", title: `휴가 ${l.status === "승인" ? "승인됨" : "반려됨"}: ${l.type}`, time: l.date, tab: "leave" });
     if (r5) for (const c of r5) items.push({ id: `chat-${c.id}`, icon: "💬", title: `${displayName(c.sender)}: ${c.text.slice(0, 30)}`, time: c.created_at, tab: "chat" });
     if (r6) for (const d of r6) items.push({ id: `dm-${d.id}`, icon: "✉️", title: `DM ${displayName(d.sender)}: ${d.text.slice(0, 30)}`, time: d.created_at, tab: "chat" });
-    if (r7) for (const f of r7) { if (f.author !== userName) items.push({ id: `feedback-${f.id}`, icon: "🐛", title: `피드백: ${f.title}`, time: f.date, tab: "feedback" }); }
+    if (r7) for (const f of r7) { if (f.author !== userName) items.push({ id: `feedback-${f.id}`, icon: "🐛", title: `피드백: ${f.title}`, time: f.date, tab: "board" }); }
     if (r8) for (const r of r8) { if (r.author !== userName) items.push({ id: `report-${r.id}`, icon: "📄", title: `보고서 제출: ${r.title ?? "무제"}`, time: r.date, tab: "report" }); }
     if (r9) for (const b of r9) { if (b.author !== userName) items.push({ id: `board-${b.id}`, icon: "📝", title: `게시판: ${b.title}`, time: b.date, tab: "board" }); }
     if (r10) for (const sv of r10) { if (sv.author !== userName) items.push({ id: `survey-${sv.id}`, icon: "📊", title: `설문 참여: ${sv.title}`, time: sv.date, tab: "survey" }); }
