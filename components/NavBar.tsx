@@ -111,6 +111,7 @@ export default function NavBar() {
 
           <div className="vela-nav-links">
             {!user && <a href="/#features">{t("nav.service", locale)}</a>}
+            {user && <Link href="/?landing=1">서비스 소개</Link>}
             <div className="vela-dropdown">
               <Link href="/tools" className="vela-dropdown-btn" style={{ textDecoration:"none" }}>{t("nav.tools", locale)} <span className="vela-dropdown-arrow">▾</span></Link>
               <div className="vela-dropdown-menu vela-mega-menu">
@@ -145,7 +146,6 @@ export default function NavBar() {
                 <Link href="/profile" className="vela-user-name">
                   {user.user_metadata?.nickname ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "내 계정"}
                 </Link>
-                <Link href="/?landing=1" className="vela-btn-dashboard" style={{background:"transparent",color:"var(--gray-600)",border:"1px solid var(--gray-200)"}}>서비스 소개</Link>
                 <Link href="/dashboard" className="vela-btn-dashboard">{t("nav.dashboard", locale)}</Link>
                 {isHqMember && (
                   <Link href="/hq" className="vela-btn-dashboard" style={{background:"#1a1a2e",color:"#fff"}}>⚓ Bridge</Link>
