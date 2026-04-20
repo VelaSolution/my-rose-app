@@ -879,7 +879,19 @@ ALTER TABLE hq_checkins ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "hq_checkins_auth" ON hq_checkins FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
 
 
+-- ──────────────────────────────────────────────────────────────
+-- 46. user_sessions (중복 로그인 방지)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_sessions (
+  user_id     uuid PRIMARY KEY,
+  session_id  text NOT NULL,
+  device      text DEFAULT '',
+  last_active timestamptz DEFAULT now()
+);
+ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_sessions_auth" ON user_sessions FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
 -- ============================================================
--- 완료! 총 45개 테이블 생성
+-- 완료! 총 46개 테이블 생성
 -- 참고: hq-files Storage 버킷은 Supabase 대시보드에서 별도 생성 필요
 -- ============================================================
