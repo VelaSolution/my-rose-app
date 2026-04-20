@@ -16,10 +16,14 @@ const NEWS_TAGS = [
   { key: "all", label: "전체" },
   { key: "외식업", label: "🍽️ 외식업" },
   { key: "경제", label: "📈 경제" },
+  { key: "정책", label: "📋 정책" },
+  { key: "트렌드", label: "🔥 트렌드" },
 ];
 const TAG_COLORS: Record<string, string> = {
   "외식업": "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
   "경제": "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  "정책": "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+  "트렌드": "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
 };
 
 const QUICK_ACTIONS = [
@@ -191,18 +195,22 @@ export default function HomePage() {
         <div className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">📰 오늘의 뉴스</h2>
-              <span className="text-[11px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">AI 요약</span>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">📰 오늘의 뉴스</h2>
+              <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full font-semibold">AI 요약</span>
             </div>
+            <button onClick={() => { setNewsLoad(true); fetch("/api/home?only=news").then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(d => { if (d.news) setNews(d.news); }).catch(() => {}).finally(() => setNewsLoad(false)); }}
+              className="text-xs text-slate-400 hover:text-[#3182F6] font-semibold transition active:scale-95">
+              🔄 새로고침
+            </button>
           </div>
 
-          <div className="flex gap-2 mb-4 overflow-x-auto">
+          <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 scrollbar-none">
             {NEWS_TAGS.map(t => (
               <button key={t.key} onClick={() => setNewsFilter(t.key)}
-                className={`px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+                className={`px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition active:scale-95 ${
                   newsFilter === t.key
-                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                    : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+                    : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200"
                 }`}>
                 {t.label}
               </button>
@@ -211,27 +219,53 @@ export default function HomePage() {
 
           {newsLoad ? (
             <div className="space-y-3">
-              {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-100 dark:bg-slate-700 rounded-xl animate-pulse" />)}
+              {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-100 dark:bg-slate-700 rounded-xl animate-pulse" />)}
             </div>
           ) : filteredNews.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-6">해당 카테고리 뉴스가 없어요.</p>
+            <p className="text-sm text-slate-400 text-center py-8">해당 카테고리 뉴스가 없어요.</p>
           ) : (
-            <div className="space-y-2">
-              {filteredNews.slice(0, 8).map((n, i) => (
-                <a key={i} href={n.url || "#"} target="_blank" rel="noopener noreferrer"
-                  className="block rounded-xl border border-slate-100 dark:border-slate-700 p-3.5 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition group">
-                  <div className="flex items-center gap-2 mb-1">
-                    {n.tag && <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${TAG_COLORS[n.tag] ?? "bg-slate-100 text-slate-600"}`}>{n.tag}</span>}
-                    <span className="text-[11px] text-slate-400">{n.source}</span>
-                    {n.date && <span className="text-[11px] text-slate-300 dark:text-slate-500">{n.date.slice(5).replace("-", "/")}</span>}
-                  </div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug group-hover:text-blue-600 transition">{n.title}</p>
-                  <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">{n.summary}</p>
-                  {n.insight && (
-                    <div className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2">
-                      <p className="text-xs text-amber-800 dark:text-amber-300">💡 <b>인사이트:</b> {n.insight}</p>
+            <div className="space-y-3">
+              {/* 헤드라인 (첫 번째 뉴스 크게) */}
+              {filteredNews.length > 0 && (
+                <a href={filteredNews[0].url || "#"} target="_blank" rel="noopener noreferrer"
+                  className="block rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-700 dark:to-slate-600 p-5 group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-[4rem]" />
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      {filteredNews[0].tag && <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/15 text-white/80">{filteredNews[0].tag}</span>}
+                      <span className="text-[11px] text-white/50">{filteredNews[0].source}</span>
+                      {filteredNews[0].date && <span className="text-[11px] text-white/40">{filteredNews[0].date.slice(5).replace("-", "/")}</span>}
                     </div>
-                  )}
+                    <p className="text-base font-bold text-white leading-snug group-hover:text-blue-300 transition">{filteredNews[0].title}</p>
+                    <p className="text-sm text-white/60 mt-1.5 leading-relaxed">{filteredNews[0].summary}</p>
+                    {filteredNews[0].insight && (
+                      <div className="mt-3 flex items-start gap-2 bg-white/10 rounded-xl px-3 py-2.5">
+                        <span className="text-sm flex-shrink-0">💡</span>
+                        <p className="text-xs text-white/80 font-medium">{filteredNews[0].insight}</p>
+                      </div>
+                    )}
+                  </div>
+                </a>
+              )}
+
+              {/* 나머지 뉴스 */}
+              {filteredNews.slice(1, 8).map((n, i) => (
+                <a key={i} href={n.url || "#"} target="_blank" rel="noopener noreferrer"
+                  className="flex gap-3 rounded-xl border border-slate-100 dark:border-slate-700 p-3.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition group">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {n.tag && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TAG_COLORS[n.tag] ?? "bg-slate-100 text-slate-600"}`}>{n.tag}</span>}
+                      <span className="text-[10px] text-slate-400">{n.source}</span>
+                      {n.date && <span className="text-[10px] text-slate-300 dark:text-slate-500">{n.date.slice(5).replace("-", "/")}</span>}
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug group-hover:text-blue-600 transition line-clamp-2">{n.title}</p>
+                    {n.insight && (
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mt-1.5 font-medium">💡 {n.insight}</p>
+                    )}
+                  </div>
+                  <div className="flex-shrink-0 flex items-center">
+                    <span className="text-slate-300 group-hover:text-blue-400 transition text-xs">→</span>
+                  </div>
                 </a>
               ))}
             </div>
