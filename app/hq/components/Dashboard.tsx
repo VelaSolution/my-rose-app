@@ -298,6 +298,28 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
         </button>
       </div>
 
+      {/* 퀵 액세스 */}
+      {!editMode && (
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+          {([
+            { tab: "attendance" as Tab, icon: "⏰", label: "출퇴근" },
+            { tab: "task" as Tab, icon: "✅", label: "업무" },
+            { tab: "report" as Tab, icon: "📄", label: "보고서" },
+            { tab: "approval" as Tab, icon: "📋", label: "결재" },
+            { tab: "chat" as Tab, icon: "💬", label: "채팅" },
+            { tab: "notice" as Tab, icon: "📢", label: "공지" },
+            { tab: "calendar" as Tab, icon: "📅", label: "일정" },
+            { tab: "files" as Tab, icon: "📁", label: "파일" },
+          ]).map(q => (
+            <button key={q.tab} onClick={() => go(q.tab)}
+              className="flex flex-col items-center gap-1 py-3 rounded-xl bg-white ring-1 ring-slate-200/60 hover:ring-[#3182F6]/30 hover:bg-blue-50/30 transition active:scale-95 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+              <span className="text-lg">{q.icon}</span>
+              <span className="text-[11px] font-semibold text-slate-600">{q.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {editMode && (
         <WidgetEditor widgetPrefs={widgetPrefs} dragItem={dragItem}
           onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}

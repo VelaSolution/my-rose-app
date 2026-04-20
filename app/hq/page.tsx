@@ -307,11 +307,18 @@ export default function HQPage() {
                   {msg}
                 </div>
               )}
-              <span className="text-xs text-slate-400 hidden lg:block tabular-nums">{todayDate} {currentTime}</span>
-              <div className="hidden lg:block w-px h-4 bg-slate-200 mx-1" />
+              {/* 인라인 검색바 (데스크톱) */}
               <button onClick={() => setSearchOpen(true)}
-                className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition text-slate-400 active:scale-95"
-                title="검색 (⌘K)">
+                className="hidden lg:flex items-center gap-2 bg-slate-100 hover:bg-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-400 transition min-w-[180px]">
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="5.5" cy="5.5" r="4" /><path d="M12 12l-2.5-2.5" /></svg>
+                <span>검색...</span>
+                <kbd className="ml-auto text-[10px] bg-white rounded px-1 py-0.5 text-slate-300 font-mono">⌘K</kbd>
+              </button>
+              <span className="text-[11px] text-slate-400 hidden xl:block tabular-nums whitespace-nowrap">{todayDate} {currentTime}</span>
+              {/* 모바일 검색 버튼 */}
+              <button onClick={() => setSearchOpen(true)}
+                className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition text-slate-400 active:scale-95"
+                title="검색">
                 <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="6.5" cy="6.5" r="4.5" /><path d="M14 14l-3-3" /></svg>
               </button>
               {userId && <NotificationBell userId={userId} userName={userName} myRole={myRole} onNavigate={(t) => setTab(t as Tab)} />}
