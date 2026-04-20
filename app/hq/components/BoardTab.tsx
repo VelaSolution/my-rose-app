@@ -76,7 +76,7 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
       const { data: fbData } = await s.from("hq_feedback").select("*").order("created_at", { ascending: false });
       const feedbackPosts: BoardPost[] = (fbData ?? []).map((f: any) => ({
         id: `fb-${f.id}`,
-        category: (f.type === "버그" || f.type === "bug") ? "버그" as const : "건의" as const,
+        category: "버그" as const,
         title: f.title ?? "",
         content: `${f.description ?? ""}\n\n우선순위: ${f.priority ?? "-"} | 상태: ${f.status ?? "-"}`,
         author: f.author ?? "",
