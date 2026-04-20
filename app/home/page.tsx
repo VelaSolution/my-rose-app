@@ -28,8 +28,8 @@ const TAG_COLORS: Record<string, string> = {
 
 const QUICK_ACTIONS = [
   { icon: "🔮", label: "시뮬레이터", href: "/simulator", color: "bg-blue-600 text-white" },
-  { icon: "📊", label: "매출 입력", href: "/sales-connect", color: "bg-emerald-600 text-white" },
-  { icon: "📈", label: "대시보드", href: "/dashboard", color: "bg-white dark:bg-slate-800 text-slate-900 dark:text-white ring-1 ring-slate-200 dark:ring-slate-700" },
+  { icon: "📒", label: "가계부", href: "/tools/cashbook", color: "bg-emerald-600 text-white" },
+  { icon: "📊", label: "매출 입력", href: "/sales-connect", color: "bg-white dark:bg-slate-800 text-slate-900 dark:text-white ring-1 ring-slate-200 dark:ring-slate-700" },
   { icon: "🛠️", label: "도구 모음", href: "/tools", color: "bg-white dark:bg-slate-800 text-slate-900 dark:text-white ring-1 ring-slate-200 dark:ring-slate-700" },
 ];
 

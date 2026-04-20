@@ -18,6 +18,7 @@ const TOOL_SECTIONS = [
       { href: "/tools/tax", emoji: "🧾", label: "세금 계산기" },
       { href: "/tools/pl-report", emoji: "📄", label: "손익계산서 PDF" },
       { href: "/tools/labor-law", emoji: "⚖️", label: "인건비 계산기 (법정)" },
+      { href: "/tools/cashbook", emoji: "📒", label: "매장 가계부" },
       { href: "/tools/daily-sales", emoji: "📝", label: "일일 매출 기록" },
       { href: "/tools/competitor-pricing", emoji: "🔍", label: "경쟁매장 가격" },
     ],
@@ -55,9 +56,9 @@ const TOOL_SECTIONS = [
 ];
 
 const MOBILE_TABS = [
+  { href: "/tools/cashbook", emoji: "📒", label: "가계부" },
   { href: "/tools/menu-cost", emoji: "🧮", label: "메뉴 원가" },
   { href: "/tools/labor", emoji: "👥", label: "인건비" },
-  { href: "/tools/tax", emoji: "🧾", label: "세금" },
   { href: "/tools", emoji: "🛠️", label: "도구목록" },
 ];
 

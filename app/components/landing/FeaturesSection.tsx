@@ -6,6 +6,7 @@ const FEATURES = [
   { icon:"👥", title:"인건비 계산",       desc:"알바 시급, 근무시간 넣으면 주휴수당·4대보험 포함 실제 인건비를 보여줍니다.",                  tag:"인건비",  href:"/tools/labor" },
   { icon:"💬", title:"리뷰 답변 생성",    desc:"배민·쿠팡이츠 리뷰 붙여넣으면 AI가 답변을 써줍니다. 악성 리뷰도 프로답게.",                  tag:"리뷰",    href:"/tools/review-reply" },
   { icon:"🧾", title:"세금 미리보기",     desc:"매출 넣으면 부가세·종합소득세 얼마 나올지 미리 봅니다. 세금 폭탄 방지.",                      tag:"세금",    href:"/tools/tax" },
+  { icon:"📒", title:"매장 가계부",       desc:"매일 수입/지출 기록하면 돈 새는 곳이 바로 보입니다. 이번 달 순이익 한눈에.",               tag:"가계부",  href:"/tools/cashbook" },
   { icon:"📱", title:"SNS 홍보글 생성",   desc:"메뉴 이름만 넣으면 인스타 캡션을 AI가 만들어줍니다. 매일 고민하는 포스팅 해결.",             tag:"홍보",    href:"/tools/sns-content" },
 ];
 

@@ -12,6 +12,7 @@ const TOOL_CATEGORIES = [
     title: "수익 분석",
     icon: "📊",
     tools: [
+      { icon:"📒", label:"매장 가계부",          desc:"수입/지출 기록 → 월간 순이익",     href:"/tools/cashbook" },
       { icon:"🧮", label:"메뉴별 원가 계산기", desc:"원가율·건당 순익 자동 계산",       href:"/tools/menu-cost" },
       { icon:"👥", label:"인건비 스케줄러",     desc:"주간·월간 인건비 예측",             href:"/tools/labor" },
       { icon:"🧾", label:"세금 계산기",         desc:"부가세·소득세 예상액 산출",         href:"/tools/tax" },
