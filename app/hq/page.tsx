@@ -44,6 +44,14 @@ const GanttTab = dynamic(() => import("./components/GanttTab"));
 const ExpenseTab = dynamic(() => import("./components/ExpenseTab"));
 const KudosTab = dynamic(() => import("./components/KudosTab"));
 const PayslipTab = dynamic(() => import("./components/PayslipTab"));
+const BookingTab = dynamic(() => import("./components/BookingTab"));
+const EducationTab = dynamic(() => import("./components/EducationTab"));
+const EvaluationTab = dynamic(() => import("./components/EvaluationTab"));
+const RecruitTab = dynamic(() => import("./components/RecruitTab"));
+const AssetTab = dynamic(() => import("./components/AssetTab"));
+const CrmTab = dynamic(() => import("./components/CrmTab"));
+const ShiftTab = dynamic(() => import("./components/ShiftTab"));
+const CheckinTab = dynamic(() => import("./components/CheckinTab"));
 
 // ── 탭 → 컴포넌트 매핑 ────────────────────────────────
 const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName: string; myRole: HQRole; flash: (m: string) => void }>> = {
@@ -53,6 +61,8 @@ const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName
   decision: DecisionTab, attendance: AttendanceTab, leave: LeaveTab, contacts: ContactsTab,
   board: BoardTab, survey: SurveyTab, wiki: WikiTab, orgchart: OrgChartTab, audit: AuditLog, gantt: GanttTab,
   expense: ExpenseTab, kudos: KudosTab, payslip: PayslipTab,
+  booking: BookingTab, education: EducationTab, evaluation: EvaluationTab, recruit: RecruitTab,
+  asset: AssetTab, crm: CrmTab, shift: ShiftTab, checkin: CheckinTab,
 };
 
 // 모바일 하단 고정 5탭

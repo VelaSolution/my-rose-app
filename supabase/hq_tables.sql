@@ -626,7 +626,260 @@ CREATE POLICY "hq_fixed_costs_auth" ON hq_fixed_costs
   WITH CHECK (auth.role() = 'authenticated');
 
 
+-- ──────────────────────────────────────────────────────────────
+-- 31. hq_resources (자원 마스터)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_resources (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name        text NOT NULL,
+  type        text NOT NULL,              -- 회의실 | 차량 | 장비
+  description text DEFAULT '',
+  capacity    int DEFAULT 0,
+  active      boolean DEFAULT true,
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE hq_resources ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_resources_auth" ON hq_resources FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 32. hq_bookings (자원 예약)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_bookings (
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  resource_id   uuid REFERENCES hq_resources(id) ON DELETE CASCADE,
+  resource_name text NOT NULL,
+  resource_type text NOT NULL,
+  date          text NOT NULL,
+  start_time    text NOT NULL,
+  end_time      text NOT NULL,
+  purpose       text DEFAULT '',
+  booker        text NOT NULL,
+  status        text DEFAULT '예약',       -- 예약 | 취소
+  created_at    timestamptz DEFAULT now()
+);
+ALTER TABLE hq_bookings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_bookings_auth" ON hq_bookings FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 33. hq_courses (교육 과정)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_courses (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  title       text NOT NULL,
+  description text DEFAULT '',
+  instructor  text DEFAULT '',
+  category    text DEFAULT '직무',         -- 직무 | 리더십 | 안전 | IT | 기타
+  duration    text DEFAULT '',
+  deadline    text,
+  status      text DEFAULT '예정',         -- 예정 | 진행중 | 완료
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE hq_courses ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_courses_auth" ON hq_courses FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 34. hq_enrollments (수강 등록)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_enrollments (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  course_id    uuid REFERENCES hq_courses(id) ON DELETE CASCADE,
+  user_name    text NOT NULL,
+  status       text DEFAULT '미수강',      -- 미수강 | 수강중 | 완료
+  progress     int DEFAULT 0,
+  completed_at timestamptz,
+  created_at   timestamptz DEFAULT now(),
+  UNIQUE (course_id, user_name)
+);
+ALTER TABLE hq_enrollments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_enrollments_auth" ON hq_enrollments FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 35. hq_eval_periods (평가 기간)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_eval_periods (
+  id         uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name       text NOT NULL,
+  start_date text NOT NULL,
+  end_date   text NOT NULL,
+  type       text DEFAULT 'MBO',           -- MBO | 역량 | 다면
+  status     text DEFAULT '진행중',        -- 진행중 | 마감
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE hq_eval_periods ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_eval_periods_auth" ON hq_eval_periods FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 36. hq_evaluations (평가 내용)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_evaluations (
+  id               uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  period_id        uuid REFERENCES hq_eval_periods(id) ON DELETE CASCADE,
+  evaluator        text NOT NULL,
+  evaluatee        text NOT NULL,
+  type             text DEFAULT '자기',     -- 자기 | 상사 | 동료
+  goals_score      int DEFAULT 0,
+  competency_score int DEFAULT 0,
+  comment          text DEFAULT '',
+  status           text DEFAULT '작성중',   -- 작성중 | 제출 | 확정
+  created_at       timestamptz DEFAULT now()
+);
+ALTER TABLE hq_evaluations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_evaluations_auth" ON hq_evaluations FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 37. hq_job_postings (채용 공고)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_job_postings (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  title        text NOT NULL,
+  department   text DEFAULT '',
+  type         text DEFAULT '정규직',       -- 정규직 | 계약직 | 인턴
+  description  text DEFAULT '',
+  requirements text DEFAULT '',
+  deadline     text,
+  status       text DEFAULT '모집중',       -- 모집중 | 마감 | 진행중
+  author       text NOT NULL,
+  created_at   timestamptz DEFAULT now()
+);
+ALTER TABLE hq_job_postings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_job_postings_auth" ON hq_job_postings FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 38. hq_applicants (지원자)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_applicants (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  posting_id  uuid REFERENCES hq_job_postings(id) ON DELETE CASCADE,
+  name        text NOT NULL,
+  email       text DEFAULT '',
+  phone       text DEFAULT '',
+  resume_url  text,
+  stage       text DEFAULT '서류검토',     -- 서류검토 | 1차면접 | 2차면접 | 최종합격 | 불합격
+  notes       text DEFAULT '',
+  applied_at  timestamptz DEFAULT now()
+);
+ALTER TABLE hq_applicants ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_applicants_auth" ON hq_applicants FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 39. hq_assets (자산 관리)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_assets (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name            text NOT NULL,
+  category        text NOT NULL,            -- 노트북 | 모니터 | 키보드/마우스 | 사무가구 | 차량 | 기타
+  serial_number   text DEFAULT '',
+  purchase_date   text,
+  purchase_price  numeric DEFAULT 0,
+  current_holder  text DEFAULT '',
+  status          text DEFAULT '보관중',    -- 사용중 | 보관중 | 수리중 | 폐기
+  description     text DEFAULT '',
+  created_at      timestamptz DEFAULT now()
+);
+ALTER TABLE hq_assets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_assets_auth" ON hq_assets FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 40. hq_asset_logs (자산 이력)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_asset_logs (
+  id        uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  asset_id  uuid REFERENCES hq_assets(id) ON DELETE CASCADE,
+  action    text NOT NULL,                  -- 대여 | 반납 | 수리 | 폐기
+  user_name text NOT NULL,
+  date      text NOT NULL,
+  memo      text DEFAULT '',
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE hq_asset_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_asset_logs_auth" ON hq_asset_logs FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 41. hq_crm_companies (거래처/고객)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_crm_companies (
+  id             uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name           text NOT NULL,
+  industry       text DEFAULT '',
+  contact_person text DEFAULT '',
+  phone          text DEFAULT '',
+  email          text DEFAULT '',
+  address        text DEFAULT '',
+  notes          text DEFAULT '',
+  grade          text DEFAULT '일반',       -- VIP | 일반 | 잠재
+  author         text NOT NULL,
+  created_at     timestamptz DEFAULT now()
+);
+ALTER TABLE hq_crm_companies ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_crm_companies_auth" ON hq_crm_companies FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 42. hq_crm_deals (영업 기회)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_crm_deals (
+  id             uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  title          text NOT NULL,
+  company_id     uuid REFERENCES hq_crm_companies(id) ON DELETE CASCADE,
+  amount         numeric DEFAULT 0,
+  stage          text DEFAULT '발굴',       -- 발굴 | 제안 | 협상 | 계약 | 완료 | 실패
+  probability    int DEFAULT 0,
+  expected_close text,
+  author         text NOT NULL,
+  created_at     timestamptz DEFAULT now()
+);
+ALTER TABLE hq_crm_deals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_crm_deals_auth" ON hq_crm_deals FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 43. hq_crm_activities (CRM 활동)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_crm_activities (
+  id         uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  company_id uuid REFERENCES hq_crm_companies(id) ON DELETE CASCADE,
+  type       text NOT NULL,                 -- 전화 | 미팅 | 이메일 | 메모
+  content    text DEFAULT '',
+  author     text NOT NULL,
+  date       text NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE hq_crm_activities ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_crm_activities_auth" ON hq_crm_activities FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 44. hq_shifts (근무 스케줄)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_shifts (
+  id         uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_name  text NOT NULL,
+  date       text NOT NULL,
+  shift_type text NOT NULL,                 -- 주간 | 야간 | 오전 | 오후 | 휴무 | 재택
+  start_time text DEFAULT '',
+  end_time   text DEFAULT '',
+  memo       text DEFAULT '',
+  created_at timestamptz DEFAULT now(),
+  UNIQUE (user_name, date)
+);
+ALTER TABLE hq_shifts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_shifts_auth" ON hq_shifts FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ──────────────────────────────────────────────────────────────
+-- 45. hq_checkins (데일리 체크인)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_checkins (
+  id             uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_name      text NOT NULL,
+  date           text NOT NULL,
+  today_plan     text DEFAULT '',
+  yesterday_done text DEFAULT '',
+  blockers       text DEFAULT '',
+  created_at     timestamptz DEFAULT now(),
+  UNIQUE (user_name, date)
+);
+ALTER TABLE hq_checkins ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_checkins_auth" ON hq_checkins FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
 -- ============================================================
--- 완료! 총 30개 테이블 생성
+-- 완료! 총 45개 테이블 생성
 -- 참고: hq-files Storage 버킷은 Supabase 대시보드에서 별도 생성 필요
 -- ============================================================

@@ -7,7 +7,10 @@ export type Tab =
   // 하이윅스 신규
   | "attendance" | "leave" | "contacts" | "board" | "survey" | "wiki"
   | "orgchart" | "audit" | "gantt"
-  | "expense" | "kudos" | "payslip";
+  | "expense" | "kudos" | "payslip"
+  // 인트라넷 확장
+  | "booking" | "education" | "evaluation" | "recruit"
+  | "asset" | "crm" | "shift" | "checkin";
 
 export type HQRole = "대표" | "이사" | "팀장" | "팀원";
 
@@ -118,25 +121,37 @@ export const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "expense", label: "재무", icon: "💰" },
   { key: "kudos", label: "칭찬", icon: "👏" },
   { key: "payslip", label: "급여", icon: "💰" },
+  // 인트라넷 확장
+  { key: "booking", label: "자원예약", icon: "🏢" },
+  { key: "education", label: "교육", icon: "🎓" },
+  { key: "evaluation", label: "인사평가", icon: "📋" },
+  { key: "recruit", label: "채용", icon: "🤝" },
+  { key: "asset", label: "자산", icon: "💻" },
+  { key: "crm", label: "CRM", icon: "🤝" },
+  { key: "shift", label: "근무표", icon: "📆" },
+  { key: "checkin", label: "체크인", icon: "☀️" },
 ];
 
 export const SIDEBAR_GROUPS: { label: string; items: Tab[] }[] = [
-  { label: "출퇴근", items: ["attendance", "leave"] },
-  { label: "운영", items: ["dashboard", "task", "calendar", "gantt"] },
+  { label: "출퇴근", items: ["attendance", "leave", "shift"] },
+  { label: "운영", items: ["dashboard", "task", "calendar", "gantt", "checkin"] },
   { label: "전략", items: ["mett", "kpi", "goal"] },
   { label: "보고", items: ["report", "aar", "decision"] },
   { label: "소통", items: ["notice", "board", "feedback", "chat", "memo", "kudos"] },
-  { label: "조직", items: ["team", "contacts", "survey", "orgchart"] },
+  { label: "조직", items: ["team", "contacts", "survey", "orgchart", "evaluation"] },
   { label: "문서", items: ["files", "approval", "wiki"] },
   { label: "재무", items: ["payslip", "expense"] },
+  { label: "자원", items: ["booking", "asset"] },
+  { label: "인사", items: ["recruit", "education"] },
+  { label: "영업", items: ["crm"] },
   { label: "분석", items: ["timeline", "audit"] },
 ];
 
 export const ROLE_PERMISSIONS: Record<HQRole, Tab[]> = {
   "대표": TABS.map(t => t.key),
   "이사": TABS.map(t => t.key).filter(k => k !== "team"),
-  "팀장": ["dashboard", "attendance", "leave", "kpi", "task", "aar", "notice", "report", "feedback", "board", "survey", "calendar", "memo", "contacts", "files", "chat", "decision", "wiki", "orgchart", "gantt", "expense", "kudos", "payslip"],
-  "팀원": ["dashboard", "attendance", "leave", "task", "notice", "board", "calendar", "memo", "chat", "contacts", "wiki", "survey", "orgchart", "expense", "kudos", "payslip"],
+  "팀장": ["dashboard", "attendance", "leave", "kpi", "task", "aar", "notice", "report", "feedback", "board", "survey", "calendar", "memo", "contacts", "files", "chat", "decision", "wiki", "orgchart", "gantt", "expense", "kudos", "payslip", "booking", "education", "evaluation", "recruit", "asset", "crm", "shift", "checkin"],
+  "팀원": ["dashboard", "attendance", "leave", "task", "notice", "board", "calendar", "memo", "chat", "contacts", "wiki", "survey", "orgchart", "expense", "kudos", "payslip", "booking", "education", "evaluation", "asset", "checkin"],
 };
 
 export const TAB_MAP = Object.fromEntries(TABS.map(t => [t.key, t]));
