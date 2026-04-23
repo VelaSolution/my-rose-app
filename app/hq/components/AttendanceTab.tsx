@@ -742,7 +742,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
             <div className={`w-16 h-16 rounded-full border-2 border-dashed ${isInside ? "border-emerald-400 bg-emerald-50/50" : "border-slate-300 bg-slate-50/50"} flex items-center justify-center`}>
               <div className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-200" />
             </div>
-            <p className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-slate-400 whitespace-nowrap">사업장</p>
+            <p className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-slate-400 whitespace-nowrap">사업장</p>
           </div>
         )}
         {/* User location */}
@@ -751,7 +751,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
             <div className={`w-4 h-4 rounded-full ${isInside ? "bg-emerald-500" : "bg-orange-500"} shadow-lg animate-pulse`} />
             <div className={`absolute -inset-1.5 rounded-full ${isInside ? "bg-emerald-400/30" : "bg-orange-400/30"} animate-ping`} />
           </div>
-          <p className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-slate-500 whitespace-nowrap">내 위치</p>
+          <p className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-500 whitespace-nowrap">내 위치</p>
         </div>
         {/* Distance label */}
         {dist !== null && (
@@ -762,7 +762,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
           </div>
         )}
         {/* Coordinates */}
-        <div className="absolute top-2 left-2 text-[9px] text-slate-400 font-mono">
+        <div className="absolute top-2 left-2 text-[10px] text-slate-400 font-mono">
           {userLat.toFixed(5)}, {userLng.toFixed(5)}
         </div>
       </div>
@@ -1147,7 +1147,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                       })() ? (
                         <button
                           onClick={() => { setEditPastClockOutId(r!.id); setEditPastClockOutTime("18:00"); }}
-                          className="text-[11px] font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-lg px-2 py-1 transition-all"
+                          className="text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-lg px-2 py-1 transition-all"
                         >
                           퇴근 입력
                         </button>
@@ -1175,9 +1175,9 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                     </td>
                     <td className="py-2.5 px-3">
                       {r ? (
-                        <span className={`${BADGE} text-[11px] ${STATUS_COLOR[r.status]}`}>{r.status}</span>
+                        <span className={`${BADGE} text-xs ${STATUS_COLOR[r.status]}`}>{r.status}</span>
                       ) : d <= todayStr ? (
-                        <span className={`${BADGE} text-[11px] bg-slate-100 text-slate-400`}>-</span>
+                        <span className={`${BADGE} text-xs bg-slate-100 text-slate-400`}>-</span>
                       ) : null}
                     </td>
                     <td className="py-2.5 px-3 text-xs text-slate-400">
@@ -1377,9 +1377,9 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                         </td>
                         <td className="py-2.5 px-3">
                           {rec ? (
-                            <span className={`${BADGE} text-[11px] ${STATUS_COLOR[rec.status]}`}>{rec.status}</span>
+                            <span className={`${BADGE} text-xs ${STATUS_COLOR[rec.status]}`}>{rec.status}</span>
                           ) : (
-                            <span className={`${BADGE} text-[11px] bg-red-50 text-red-500`}>미출근</span>
+                            <span className={`${BADGE} text-xs bg-red-50 text-red-500`}>미출근</span>
                           )}
                         </td>
                         <td className="py-2.5 px-3 text-xs">

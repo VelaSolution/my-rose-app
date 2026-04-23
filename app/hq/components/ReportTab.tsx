@@ -64,6 +64,30 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
   const [commentTarget, setCommentTarget] = useState<string | null>(null);
 
   const canApprove = myRole === "대표" || myRole === "이사" || myRole === "팀장";
+  const [approver, setApprover] = useState("");
+  const [approvers, setApprovers] = useState<{ name: string; hqRole: string }[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const s = sb(); if (!s) return;
+      const { data } = await s.from("hq_team").select("name, hq_role").order("created_at", { ascending: true });
+      if (data) setApprovers(data.map((d: any) => ({ name: d.name, hqRole: d.hq_role })));
+    })();
+  }, []);
+
+  /** 보고서 작성 시 전자결재에 자동 기안 */
+  const createApprovalForReport = async (type: string, title: string, content: string, approverName: string) => {
+    const s = sb(); if (!s) return;
+    const line = approverName ? JSON.stringify([approverName]) : JSON.stringify([userName]);
+    await s.from("hq_approvals").insert({
+      title: `[${type}] ${title}`,
+      content,
+      author: userName,
+      approver: line,
+      status: "대기",
+      approved_steps: "0",
+    });
+  };
 
   const loadDailies = async () => {
     const s = sb(); if (!s) return;
@@ -124,26 +148,35 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
 
   const addDaily = async () => {
     if (!dContent.trim()) { flash("내용을 입력하세요"); return; }
+    if (!approver) { flash("결재자를 선택하세요"); return; }
     const s = sb(); if (!s) return;
     await s.from("hq_reports").insert({ report_type: "daily", content: dContent.trim(), problems: dProblems.trim(), next_steps: dNext.trim(), status: "submitted", author: userName });
+    const body = `[일일보고서]\n\n■ 보고일: ${dDate}\n\n■ 금일 완료 업무:\n${dContent.trim()}\n\n■ 이슈사항:\n${dProblems.trim() || "(없음)"}\n\n■ 익일 예정:\n${dNext.trim() || "(없음)"}`;
+    await createApprovalForReport("일일보고서", `${dDate} 일일보고`, body, approver);
     setDContent(""); setDProblems(""); setDNext("");
-    flash("일일보고 등록"); loadDailies();
+    flash("일일보고 등록 + 결재 요청 완료"); loadDailies();
   };
 
   const addIssue = async () => {
     if (!iTitle.trim()) { flash("제목을 입력하세요"); return; }
+    if (!approver) { flash("결재자를 선택하세요"); return; }
     const s = sb(); if (!s) return;
     await s.from("hq_reports").insert({ report_type: "issue", title: iTitle.trim(), description: iDesc.trim(), priority: iPriority, status: "submitted", author: userName });
+    const body = `[이슈보고서]\n\n• 제목: ${iTitle.trim()}\n• 우선순위: ${iPriority}\n\n■ 상세 내용:\n${iDesc.trim() || "(미입력)"}`;
+    await createApprovalForReport("이슈보고서", iTitle.trim(), body, approver);
     setITitle(""); setIDesc(""); setIPriority("중간"); setIStatus("신규");
-    flash("이슈 보고 등록"); loadIssues();
+    flash("이슈 보고 등록 + 결재 요청 완료"); loadIssues();
   };
 
   const addProject = async () => {
     if (!pTitle.trim()) { flash("제목을 입력하세요"); return; }
+    if (!approver) { flash("결재자를 선택하세요"); return; }
     const s = sb(); if (!s) return;
     await s.from("hq_reports").insert({ report_type: "project", title: pTitle.trim(), progress: pProgress, deadline: pDeadline, description: pDesc.trim(), status: "submitted", author: userName });
+    const body = `[프로젝트보고서]\n\n• 프로젝트명: ${pTitle.trim()}\n• 진행률: ${pProgress}%\n• 마감일: ${pDeadline}\n\n■ 상세 내용:\n${pDesc.trim() || "(미입력)"}`;
+    await createApprovalForReport("프로젝트보고서", pTitle.trim(), body, approver);
     setPTitle(""); setPProgress(0); setPDeadline(today()); setPDesc("");
-    flash("프로젝트 보고 등록"); loadProjects();
+    flash("프로젝트 보고 등록 + 결재 요청 완료"); loadProjects();
   };
 
   const approveReport = async (id: string, action: "approved" | "rejected") => {
@@ -237,6 +270,23 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
           </button>
         ))}
       </div>
+
+      {/* 결재자 선택 (주간 외 모든 보고서) */}
+      {sub !== "weekly" && (
+        <div className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100">
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="text-sm font-semibold text-slate-700">결재자 지정</label>
+            <select value={approver} onChange={e => setApprover(e.target.value)}
+              className="text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#3182F6]/20 focus:border-[#3182F6]">
+              <option value="">결재자 선택</option>
+              {approvers.filter(a => a.hqRole === "대표" || a.hqRole === "이사" || a.hqRole === "팀장").map(a => (
+                <option key={a.name} value={a.name}>{a.name} ({a.hqRole})</option>
+              ))}
+            </select>
+            <span className="text-xs text-slate-400">* 보고서 작성 시 전자결재에 자동 기안됩니다</span>
+          </div>
+        </div>
+      )}
 
       {sub === "weekly" && (
         <WeeklyReport weeklyText={weeklyText} weeklyLoading={weeklyLoading} onRefresh={generateWeekly} flash={flash} />

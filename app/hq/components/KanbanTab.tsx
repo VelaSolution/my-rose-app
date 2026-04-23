@@ -351,7 +351,7 @@ export default function KanbanTab({ userId, userName, myRole, flash }: Props) {
                 ) : (
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm font-bold text-slate-700">{col.title}</h4>
-                    <span className="text-[11px] font-bold bg-slate-200 text-slate-500 rounded-full w-5 h-5 flex items-center justify-center">{col.cards.length}</span>
+                    <span className="text-xs font-bold bg-slate-200 text-slate-500 rounded-full w-5 h-5 flex items-center justify-center">{col.cards.length}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1">

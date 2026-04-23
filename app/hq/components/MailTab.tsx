@@ -1230,10 +1230,10 @@ export default function MailTab({ userId, userName, myRole, flash }: Props) {
                           <p className={`text-sm truncate ${isUnread ? "font-semibold text-slate-800" : "text-slate-500"}`}>
                             {m.subject}
                           </p>
-                          <p className="text-[11px] text-slate-400 truncate mt-0.5">{m.body.slice(0, 60)}</p>
+                          <p className="text-xs text-slate-400 truncate mt-0.5">{m.body.slice(0, 60)}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                          <span className="text-[11px] text-slate-400">{formatDate(m.created_at)}</span>
+                          <span className="text-xs text-slate-400">{formatDate(m.created_at)}</span>
                           {m.attachments && m.attachments.length > 0 && (
                             <span className="text-[10px] text-slate-400">📎</span>
                           )}

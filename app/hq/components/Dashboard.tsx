@@ -519,7 +519,7 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
             <button key={q.tab} onClick={() => go(q.tab)}
               className="flex flex-col items-center gap-1.5 py-3.5 rounded-2xl bg-white ring-1 ring-slate-200/60 hover:ring-[#3182F6]/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 active:scale-95">
               <span className="text-xl">{q.icon}</span>
-              <span className="text-[11px] font-bold text-slate-600">{q.label}</span>
+              <span className="text-xs font-bold text-slate-600">{q.label}</span>
             </button>
           ))}
         </div>

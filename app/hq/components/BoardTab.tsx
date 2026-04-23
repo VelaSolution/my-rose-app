@@ -366,7 +366,7 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
       {/* Bug status filter */}
       {activeCat === "버그" && (
         <div className="flex items-center gap-2">
-          <span className="text-[14px] font-semibold text-slate-500">상태:</span>
+          <span className="text-sm font-semibold text-slate-500">상태:</span>
           {(["전체", ...BUG_STATUSES] as const).map(s => (
             <button key={s} onClick={() => setBugStatusFilter(s)}
               className={`${BADGE} transition-all ${bugStatusFilter === s
@@ -468,16 +468,16 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
                     {post.category === "버그" && (
                       <div className="flex flex-wrap items-center gap-4 mb-4 p-3 bg-slate-50 rounded-2xl">
                         <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-semibold text-slate-500">상태</span>
-                          <select className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[14px] font-semibold outline-none"
+                          <span className="text-sm font-semibold text-slate-500">상태</span>
+                          <select className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold outline-none"
                             value={post.bugStatus ?? "접수"}
                             onChange={e => changeBugStatus(post.id, e.target.value as BugStatus)}>
                             {BUG_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-semibold text-slate-500">우선순위</span>
-                          <select className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[14px] font-semibold outline-none"
+                          <span className="text-sm font-semibold text-slate-500">우선순위</span>
+                          <select className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold outline-none"
                             value={post.bugPriority ?? "보통"}
                             onChange={e => changeBugPriority(post.id, e.target.value as BugPriority)}>
                             {BUG_PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}

@@ -466,20 +466,20 @@ function HQPage() {
       {moreOpen && (
         <div className="md:hidden fixed inset-0 z-[60]" onClick={() => setMoreOpen(false)}>
           <div className="absolute inset-0 bg-black/30" />
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl hq-more-sheet" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} onClick={e => e.stopPropagation()}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl hq-more-sheet" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }} onClick={e => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-10 h-1 bg-slate-200 rounded-full" />
             </div>
-            <div className="px-4 pb-2">
+            <div className="px-4 pb-4">
               <p className="text-sm font-bold text-slate-900 mb-3">전체 메뉴</p>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[60vh] overflow-y-auto pb-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 overflow-y-auto pb-2" style={{ maxHeight: "calc(70vh - 80px)" }}>
                 {allowedTabs.filter(t => !MOBILE_NAV.some(m => m.key === t.key)).map(t => (
                   <button key={t.key} onClick={() => setTab(t.key)}
                     className={`flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all active:scale-95 ${
                       tab === t.key ? "bg-[#3182F6]/10 text-[#3182F6]" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
                     }`}>
                     <TabIcon name={t.icon} size={22} />
-                    <span className="text-[11px] font-semibold">{t.label}</span>
+                    <span className="text-xs font-semibold">{t.label}</span>
                   </button>
                 ))}
               </div>

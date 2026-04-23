@@ -1065,7 +1065,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
                             return (
                               <span key={idx} className="flex items-center gap-0.5">
                                 {idx > 0 && <span className="text-slate-300 text-[10px] mx-0.5">&rarr;</span>}
-                                <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-medium ${
+                                <span className={`text-xs px-1.5 py-0.5 rounded-md font-medium ${
                                   isDone ? "bg-emerald-50 text-emerald-700" :
                                   isCurrent ? "bg-amber-50 text-amber-700 ring-1 ring-amber-300" :
                                   isRejectedAt ? "bg-red-50 text-red-700 ring-1 ring-red-300" :
@@ -1126,7 +1126,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
                                     <div className={`w-6 h-0.5 ${isDone ? "bg-emerald-400" : "bg-slate-200"}`} />
                                   )}
                                   <div className={`flex flex-col items-center min-w-[60px] ${isCurrent ? "scale-110" : ""}`}>
-                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                                       isDone ? "bg-emerald-500 text-white" :
                                       isCurrent ? "bg-amber-400 text-white ring-2 ring-amber-200" :
                                       isRejectedAt ? "bg-red-500 text-white" :
@@ -1141,11 +1141,11 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
                                       "text-slate-400"
                                     }`}>{displayName(name)}</p>
                                     {isCurrent && delegateForStep && (
-                                      <p className="text-[9px] text-purple-500 font-medium">
+                                      <p className="text-[10px] text-purple-500 font-medium">
                                         (위임: {displayName(delegateForStep)})
                                       </p>
                                     )}
-                                    <p className="text-[9px] text-slate-400">
+                                    <p className="text-[10px] text-slate-400">
                                       {isDone ? "승인 완료" : isCurrent ? "결재 대기" : isRejectedAt ? "반려" : "대기"}
                                     </p>
                                   </div>
