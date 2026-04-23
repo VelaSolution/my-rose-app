@@ -408,7 +408,7 @@ function HQPage() {
         </aside>
 
         {/* ── 메인 콘텐츠 ──────────────────────────────── */}
-        <main className="hq-content flex-1 min-w-0 pb-24 md:pb-0 overflow-y-auto bg-[#F7F8FA]" style={{ overscrollBehavior: "contain" }}>
+        <main className="hq-content flex-1 min-w-0 pb-6 md:pb-0 overflow-y-auto bg-[#F7F8FA]" style={{ overscrollBehavior: "contain" }}>
           {/* 모바일 현재 탭 표시 */}
           {tab !== "dashboard" && (
             <div className="md:hidden px-4 pt-4 pb-1 flex items-center gap-2">
@@ -438,31 +438,20 @@ function HQPage() {
         </div>
       )}
 
-      {/* ── 모바일 하단 탭바 ──────────────────────────────── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="flex items-center h-[56px]">
-          {MOBILE_NAV.map(item => {
-            const isActive = tab === item.key;
-            const tabInfo = TAB_MAP[item.key];
-            return (
-              <button key={item.key} onClick={() => setTab(item.key)}
-                className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 ${isActive ? "text-[#3182F6]" : "text-slate-400"}`}>
-                <TabIcon name={tabInfo?.icon ?? "dashboard"} size={22} className={isActive ? "text-[#3182F6]" : "text-slate-400"} />
-                <span className={`text-[10px] font-semibold ${isActive ? "text-[#3182F6]" : "text-slate-400"}`}>{item.label}</span>
-              </button>
-            );
-          })}
-          <button onClick={() => setMoreOpen(!moreOpen)}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-colors active:scale-95 ${moreOpen ? "text-[#3182F6]" : "text-slate-400"}`}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" viewBox="0 0 24 24">
-              <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" /><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none" />
-            </svg>
-            <span className={`text-[10px] font-semibold ${moreOpen ? "text-[#3182F6]" : "text-slate-400"}`}>더보기</span>
-          </button>
-        </div>
-      </nav>
+      {/* ── 모바일 플로팅 메뉴 버튼 ──────────────────────── */}
+      <button
+        onClick={() => setMoreOpen(!moreOpen)}
+        className="md:hidden fixed z-50 w-12 h-12 rounded-full bg-[#3182F6] text-white shadow-lg shadow-[#3182F6]/30 flex items-center justify-center active:scale-90 transition-all"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)", right: 20 }}
+      >
+        {moreOpen ? (
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        ) : (
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        )}
+      </button>
 
-      {/* ── 더보기 시트 ──────────────────────────────────── */}
+      {/* ── 메뉴 시트 ──────────────────────────────────── */}
       {moreOpen && (
         <div className="md:hidden fixed inset-0 z-[60]" onClick={() => setMoreOpen(false)}>
           <div className="absolute inset-0 bg-black/30" />
@@ -471,15 +460,15 @@ function HQPage() {
               <div className="w-10 h-1 bg-slate-200 rounded-full" />
             </div>
             <div className="px-4 pb-4">
-              <p className="text-sm font-bold text-slate-900 mb-3">전체 메뉴</p>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 overflow-y-auto pb-2" style={{ maxHeight: "calc(70vh - 80px)" }}>
-                {allowedTabs.filter(t => !MOBILE_NAV.some(m => m.key === t.key)).map(t => (
+              <p className="text-[13px] font-bold text-slate-900 mb-3">메뉴</p>
+              <div className="grid grid-cols-4 gap-2 overflow-y-auto pb-2" style={{ maxHeight: "calc(70vh - 60px)" }}>
+                {allowedTabs.map(t => (
                   <button key={t.key} onClick={() => setTab(t.key)}
-                    className={`flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all active:scale-95 ${
+                    className={`flex flex-col items-center gap-1 py-2.5 rounded-xl transition-all active:scale-95 ${
                       tab === t.key ? "bg-[#3182F6]/10 text-[#3182F6]" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
                     }`}>
-                    <TabIcon name={t.icon} size={22} />
-                    <span className="text-xs font-semibold">{t.label}</span>
+                    <TabIcon name={t.icon} size={20} />
+                    <span className="text-[10px] font-semibold">{t.label}</span>
                   </button>
                 ))}
               </div>
