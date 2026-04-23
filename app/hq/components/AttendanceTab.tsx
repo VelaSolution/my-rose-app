@@ -1175,9 +1175,9 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                     </td>
                     <td className="py-2.5 px-3">
                       {r ? (
-                        <span className={`${BADGE} text-xs ${STATUS_COLOR[r.status]}`}>{r.status}</span>
+                        <span className={`${BADGE} ${STATUS_COLOR[r.status]}`}>{r.status}</span>
                       ) : d <= todayStr ? (
-                        <span className={`${BADGE} text-xs bg-slate-100 text-slate-400`}>-</span>
+                        <span className={`${BADGE} bg-slate-100 text-slate-400`}>-</span>
                       ) : null}
                     </td>
                     <td className="py-2.5 px-3 text-xs text-slate-400">
@@ -1377,9 +1377,9 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                         </td>
                         <td className="py-2.5 px-3">
                           {rec ? (
-                            <span className={`${BADGE} text-xs ${STATUS_COLOR[rec.status]}`}>{rec.status}</span>
+                            <span className={`${BADGE} ${STATUS_COLOR[rec.status]}`}>{rec.status}</span>
                           ) : (
-                            <span className={`${BADGE} text-xs bg-red-50 text-red-500`}>미출근</span>
+                            <span className={`${BADGE} bg-red-50 text-red-500`}>미출근</span>
                           )}
                         </td>
                         <td className="py-2.5 px-3 text-xs">

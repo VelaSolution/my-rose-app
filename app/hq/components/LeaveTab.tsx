@@ -426,8 +426,8 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`${BADGE} text-[11px] bg-blue-50 text-blue-600`}>{r.type}</span>
-                      <span className={`${BADGE} text-[11px] ${STATUS_STYLE[r.status]}`}>{r.status}</span>
+                      <span className={`${BADGE} bg-blue-50 text-blue-600`}>{r.type}</span>
+                      <span className={`${BADGE} ${STATUS_STYLE[r.status]}`}>{r.status}</span>
                       {r.approver && <span className="text-[11px] text-slate-400">결재: {displayName(r.approver)}</span>}
                     </div>
                     <p className="text-sm text-slate-700 font-medium">

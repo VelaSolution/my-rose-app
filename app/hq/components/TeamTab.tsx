@@ -561,7 +561,7 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
                               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                                 <span className="text-base">{CHANGE_ICONS[h.change_type]}</span>
                                 <span className="font-bold text-sm text-slate-800">{h.user_name}</span>
-                                <span className={`${BADGE} text-[11px] border ${CHANGE_COLORS[h.change_type]}`}>
+                                <span className={`${BADGE} border ${CHANGE_COLORS[h.change_type]}`}>
                                   {h.change_type}
                                 </span>
                               </div>

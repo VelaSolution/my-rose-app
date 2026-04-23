@@ -117,7 +117,7 @@ function IssueList(props: Omit<Props, "iTitle" | "setITitle" | "iDesc" | "setIDe
           <div key={iss.id} className={C}>
             <button onClick={() => toggle(iss.id)} className="w-full flex items-center justify-between text-left">
               <div className="flex items-center gap-2 min-w-0">
-                <span className={`${BADGE} text-[11px] ${priorityColor[iss.priority] ?? priorityColor["중간"]}`}>{iss.priority}</span>
+                <span className={`${BADGE} ${priorityColor[iss.priority] ?? priorityColor["중간"]}`}>{iss.priority}</span>
                 <span className="text-sm font-semibold text-slate-800 truncate">{iss.title}</span>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">

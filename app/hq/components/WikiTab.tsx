@@ -322,7 +322,7 @@ export default function WikiTab({ userId, userName, myRole, flash }: Props) {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`${BADGE} text-[11px] ${CAT_COLOR[selected.category] || CAT_COLOR["일반"]}`}>{selected.category}</span>
+                    <span className={`${BADGE} ${CAT_COLOR[selected.category] || CAT_COLOR["일반"]}`}>{selected.category}</span>
                     <span className="text-xs text-slate-400">조회 {selected.views}</span>
                   </div>
                   <h2 className="text-xl font-bold text-slate-800">{selected.title}</h2>
@@ -632,7 +632,7 @@ export default function WikiTab({ userId, userName, myRole, flash }: Props) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`${BADGE} text-[11px] ${CAT_COLOR[a.category] || CAT_COLOR["일반"]}`}>{a.category}</span>
+                      <span className={`${BADGE} ${CAT_COLOR[a.category] || CAT_COLOR["일반"]}`}>{a.category}</span>
                       <h3 className="text-sm font-bold text-slate-800 truncate">
                         {search ? highlightText(a.title, search) : a.title}
                       </h3>

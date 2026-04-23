@@ -47,8 +47,8 @@ export default function SurveyList({
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`${BADGE} text-[11px] ${STATUS_STYLE[status]}`}>{status}</span>
-                      {hasAnswered && <span className={`${BADGE} text-[11px] bg-emerald-50 text-emerald-600`}>참여완료</span>}
+                      <span className={`${BADGE} ${STATUS_STYLE[status]}`}>{status}</span>
+                      {hasAnswered && <span className={`${BADGE} bg-emerald-50 text-emerald-600`}>참여완료</span>}
                     </div>
                     <h3 className="text-sm font-bold text-slate-800">{s.title}</h3>
                     {s.description && <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{s.description}</p>}

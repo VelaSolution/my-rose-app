@@ -50,10 +50,10 @@ export const today = () => new Date().toISOString().slice(0, 10);
 export const toKR = (d: string | Date) => new Date(d).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 
 // ── Tailwind 스타일 상수 (Vela 디자인 시스템) ──
-// 글씨 크기 비율: 라벨 13px > 입력 14px (동급), 버튼 14px, 뱃지 12px
-export const I = "w-full rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 text-sm focus:border-[#3182F6] focus:ring-2 focus:ring-[#3182F6]/10 outline-none transition-all placeholder:text-slate-300";
+// 라벨 = 입력 = 버튼 모두 13px(text-[13px])으로 통일
+export const I = "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] focus:border-[#3182F6] focus:ring-2 focus:ring-[#3182F6]/10 outline-none transition-all placeholder:text-slate-300";
 export const C = "bg-white rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200";
-export const L = "block text-sm font-semibold text-slate-600 mb-1.5";
-export const B = "rounded-xl bg-[#3182F6] text-white font-semibold px-5 py-2.5 text-sm hover:bg-[#2672DE] active:scale-[0.97] transition-all shadow-sm shadow-[#3182F6]/20";
-export const B2 = "rounded-xl bg-slate-100 text-slate-700 font-semibold px-4 py-2 text-sm hover:bg-slate-200 active:scale-[0.97] transition-all";
-export const BADGE = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold";
+export const L = "block text-[13px] font-semibold text-slate-600 mb-1";
+export const B = "rounded-lg bg-[#3182F6] text-white font-semibold px-4 py-2 text-[13px] hover:bg-[#2672DE] active:scale-[0.97] transition-all shadow-sm shadow-[#3182F6]/20";
+export const B2 = "rounded-lg bg-slate-100 text-slate-700 font-semibold px-3.5 py-1.5 text-[13px] hover:bg-slate-200 active:scale-[0.97] transition-all";
+export const BADGE = "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold";

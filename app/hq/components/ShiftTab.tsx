@@ -805,7 +805,7 @@ export default function ShiftTab({ userId, userName, myRole, flash }: Props) {
                           </span>
                         </div>
                         {(isOver || isUnder) && (
-                          <span className={`${BADGE} text-[11px] ${isOver ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"}`}>
+                          <span className={`${BADGE} ${isOver ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"}`}>
                             {isOver ? "과다" : "부족"} ({diff > 0 ? "+" : ""}{diff.toFixed(1)}h)
                           </span>
                         )}
