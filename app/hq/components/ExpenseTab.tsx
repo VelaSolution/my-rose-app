@@ -30,7 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
   "대기": "bg-amber-50 text-amber-700", "승인": "bg-emerald-50 text-emerald-700", "반려": "bg-red-50 text-red-700",
 };
 
-const EXP_EMPTY = { date: today(), category: "식비" as string, amount: "", currency: "KRW" as string, description: "", payment: "법인카드" as string, memo: "" };
+const EXP_EMPTY = { date: today(), category: "식비" as string, amount: "", currency: "KRW" as string, description: "", payment: "법인카드" as string, memo: "", receiptFiles: [] as File[] };
 const FIX_EMPTY = { name: "", category: "급여" as string, amount: "", billing_cycle: "월" as string, due_day: "1", description: "" };
 
 export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
@@ -145,13 +145,42 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
   }
 
   const expSummary = useMemo(() => {
-    const total = filteredExpenses.reduce((s, e) => s + Number(e.amount), 0);
-    const approved = filteredExpenses.filter(e => e.status === "승인").reduce((s, e) => s + Number(e.amount), 0);
-    const pending = filteredExpenses.filter(e => e.status === "대기").reduce((s, e) => s + Number(e.amount), 0);
+    const byCurrency = (list: Expense[]) => {
+      const krw = list.filter(e => (e as any).currency !== "USD").reduce((s, e) => s + Number(e.amount), 0);
+      const usd = list.filter(e => (e as any).currency === "USD").reduce((s, e) => s + Number(e.amount), 0);
+      return { krw, usd };
+    };
+    const total = byCurrency(filteredExpenses);
+    const approved = byCurrency(filteredExpenses.filter(e => e.status === "승인"));
+    const pending = byCurrency(filteredExpenses.filter(e => e.status === "대기"));
     const byCategory: Record<string, number> = {};
     for (const e of filteredExpenses) byCategory[e.category] = (byCategory[e.category] ?? 0) + Number(e.amount);
     return { total, approved, pending, byCategory };
   }, [filteredExpenses]);
+
+  const fmtCurrency = (c: { krw: number; usd: number }) => {
+    const parts: string[] = [];
+    if (c.krw > 0) parts.push(`${fmt(c.krw)}원`);
+    if (c.usd > 0) parts.push(`$${fmt(c.usd)}`);
+    return parts.length > 0 ? parts : ["0원"];
+  };
+
+  // ── 영수증 업로드 ──────────────────────────────────────
+  async function uploadReceipts(files: File[]): Promise<string[]> {
+    const s = sb();
+    if (!s || files.length === 0) return [];
+    const urls: string[] = [];
+    for (const file of files) {
+      const ext = file.name.split(".").pop() || "file";
+      const path = `receipts/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await s.storage.from("hq-files").upload(path, file);
+      if (!error) {
+        const { data: { publicUrl } } = s.storage.from("hq-files").getPublicUrl(path);
+        urls.push(publicUrl);
+      }
+    }
+    return urls;
+  }
 
   // ── 경비 CRUD ──────────────────────────────────────────
   async function saveExpense() {
@@ -160,7 +189,17 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
     setExpSaving(true);
     const s = sb();
     if (!s) { setExpSaving(false); return; }
-    const row = { author: userName, date: expForm.date, category: expForm.category, amount: amt, currency: expForm.currency, description: expForm.description.trim(), payment: expForm.payment, memo: expForm.memo.trim(), status: "대기" };
+
+    // 영수증 업로드
+    let receiptUrls: string[] = [];
+    if (expForm.receiptFiles.length > 0) {
+      receiptUrls = await uploadReceipts(expForm.receiptFiles);
+      if (receiptUrls.length === 0) { flash("영수증 업로드 실패"); setExpSaving(false); return; }
+    }
+
+    const row: any = { author: userName, date: expForm.date, category: expForm.category, amount: amt, currency: expForm.currency, description: expForm.description.trim(), payment: expForm.payment, memo: expForm.memo.trim(), status: "대기" };
+    if (receiptUrls.length > 0) row.receipt_url = receiptUrls.join(",");
+
     if (expEditId) {
       const { error } = await s.from("hq_expenses").update(row).eq("id", expEditId);
       if (error) { flash("수정 실패"); setExpSaving(false); return; }
@@ -174,7 +213,7 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
   }
 
   function startEditExp(e: Expense) {
-    setExpForm({ date: e.date, category: e.category, amount: String(e.amount), currency: (e as any).currency || "KRW", description: e.description, payment: e.payment, memo: e.memo });
+    setExpForm({ date: e.date, category: e.category, amount: String(e.amount), currency: (e as any).currency || "KRW", description: e.description, payment: e.payment, memo: e.memo, receiptFiles: [] });
     setExpEditId(e.id); setShowExpForm(true);
   }
 
@@ -264,14 +303,23 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
               <p className="text-xs font-semibold text-slate-500 mb-1">월 고정비</p>
               <p className="text-xl font-bold text-slate-900">{fmt(Math.round(monthlyFixed))}<span className="text-sm font-medium text-slate-400">원</span></p>
             </div>
-            <div className={C}>
-              <p className="text-xs font-semibold text-slate-500 mb-1">이번달 지출</p>
-              <p className="text-xl font-bold text-slate-900">{fmt(expenses.filter(e => e.date.startsWith(today().slice(0, 7))).reduce((s, e) => s + Number(e.amount), 0))}<span className="text-sm font-medium text-slate-400">원</span></p>
-            </div>
-            <div className={C}>
-              <p className="text-xs font-semibold text-slate-500 mb-1">월 총 비용</p>
-              <p className="text-xl font-bold text-[#3182F6]">{fmt(Math.round(monthlyFixed) + expenses.filter(e => e.date.startsWith(today().slice(0, 7))).reduce((s, e) => s + Number(e.amount), 0))}<span className="text-sm font-medium text-slate-400">원</span></p>
-            </div>
+            {(() => {
+              const thisMonth = expenses.filter(e => e.date.startsWith(today().slice(0, 7)));
+              const krw = thisMonth.filter(e => (e as any).currency !== "USD").reduce((s, e) => s + Number(e.amount), 0);
+              const usd = thisMonth.filter(e => (e as any).currency === "USD").reduce((s, e) => s + Number(e.amount), 0);
+              return (
+                <>
+                  <div className={C}>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">이번달 지출</p>
+                    <div className="text-xl font-bold text-slate-900">{fmtCurrency({ krw, usd }).map((t, i) => <span key={i}>{i > 0 && <span className="text-sm text-slate-300 mx-1">/</span>}{t}</span>)}</div>
+                  </div>
+                  <div className={C}>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">월 총 비용 (KRW)</p>
+                    <p className="text-xl font-bold text-[#3182F6]">{fmt(Math.round(monthlyFixed) + krw)}<span className="text-sm font-medium text-slate-400">원</span>{usd > 0 && <span className="text-sm text-slate-400 ml-1">+ ${fmt(usd)}</span>}</p>
+                  </div>
+                </>
+              );
+            })()}
             <div className={C}>
               <p className="text-xs font-semibold text-slate-500 mb-1">연간 고정비 예상</p>
               <p className="text-xl font-bold text-slate-900">{fmt(Math.round(monthlyFixed * 12))}<span className="text-sm font-medium text-slate-400">원</span></p>
@@ -561,6 +609,34 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
                   <label className={L}>비고</label>
                   <input className={I} placeholder="추가 메모 (선택)" value={expForm.memo} onChange={e => setExpForm({ ...expForm, memo: e.target.value })} />
                 </div>
+                <div className="md:col-span-3 lg:col-span-3">
+                  <label className={L}>영수증 / 세금계산서 첨부</label>
+                  <div className="flex items-center gap-3">
+                    <label className={`${B2} cursor-pointer inline-flex items-center gap-1.5`}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                      파일 선택
+                      <input type="file" className="hidden" multiple accept="image/*,.pdf,.jpg,.jpeg,.png,.heic"
+                        onChange={e => {
+                          const files = Array.from(e.target.files || []);
+                          setExpForm(prev => ({ ...prev, receiptFiles: [...prev.receiptFiles, ...files] }));
+                          e.target.value = "";
+                        }} />
+                    </label>
+                    <span className="text-xs text-slate-400">이미지, PDF 지원 (여러 파일 가능)</span>
+                  </div>
+                  {expForm.receiptFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {expForm.receiptFiles.map((f, i) => (
+                        <div key={i} className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-1.5 text-xs text-slate-600">
+                          <span className="truncate max-w-[150px]">{f.name}</span>
+                          <span className="text-slate-300">({(f.size / 1024).toFixed(0)}KB)</span>
+                          <button onClick={() => setExpForm(prev => ({ ...prev, receiptFiles: prev.receiptFiles.filter((_, idx) => idx !== i) }))}
+                            className="text-slate-300 hover:text-red-500 ml-0.5">✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
                 <button className={B2} onClick={() => { setShowExpForm(false); setExpEditId(null); setExpForm(EXP_EMPTY); }}>취소</button>
@@ -573,15 +649,15 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className={C}>
               <p className="text-xs font-semibold text-slate-500 mb-1">총 지출</p>
-              <p className="text-xl font-bold text-slate-900">{fmt(expSummary.total)}<span className="text-sm font-medium text-slate-400">원</span></p>
+              <div className="text-xl font-bold text-slate-900">{fmtCurrency(expSummary.total).map((t, i) => <span key={i}>{i > 0 && <span className="text-sm text-slate-300 mx-1">/</span>}{t}</span>)}</div>
             </div>
             <div className={C}>
               <p className="text-xs font-semibold text-slate-500 mb-1">승인 완료</p>
-              <p className="text-xl font-bold text-emerald-600">{fmt(expSummary.approved)}<span className="text-sm font-medium text-slate-400">원</span></p>
+              <div className="text-xl font-bold text-emerald-600">{fmtCurrency(expSummary.approved).map((t, i) => <span key={i}>{i > 0 && <span className="text-sm text-slate-300 mx-1">/</span>}{t}</span>)}</div>
             </div>
             <div className={C}>
               <p className="text-xs font-semibold text-slate-500 mb-1">승인 대기</p>
-              <p className="text-xl font-bold text-amber-600">{fmt(expSummary.pending)}<span className="text-sm font-medium text-slate-400">원</span></p>
+              <div className="text-xl font-bold text-amber-600">{fmtCurrency(expSummary.pending).map((t, i) => <span key={i}>{i > 0 && <span className="text-sm text-slate-300 mx-1">/</span>}{t}</span>)}</div>
             </div>
             <div className={C}>
               <p className="text-xs font-semibold text-slate-500 mb-1">건수</p>
@@ -676,6 +752,17 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
                         {e.description && <span className="text-sm text-slate-600">{e.description}</span>}
                       </div>
                       {e.memo && <p className="text-xs text-slate-400 mt-1">{e.memo}</p>}
+                      {e.receipt_url && (
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          {e.receipt_url.split(",").map((url, i) => (
+                            <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-[#3182F6] hover:underline bg-blue-50 rounded-md px-2 py-1">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                              영수증{e.receipt_url!.split(",").length > 1 ? ` ${i + 1}` : ""}
+                            </a>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
                         <span>{displayName(e.author)}</span><span>·</span><span>{e.date}</span>
                         {e.approver && e.status !== "대기" && <><span>·</span><span>{e.status}: {displayName(e.approver)}</span></>}
