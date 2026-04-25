@@ -642,6 +642,11 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
         flash(`${currentStep + 1}단계 승인 완료 — 다음 결재자: ${line[nextStep]}`);
       }
     }
+    // 알림 발송
+    await s.from("hq_notifications").insert({
+      type: "approval", target_user: item.author, created_by: userName,
+      message: `결재 "${item.title}" ${status === "승인" ? (currentStep + 1 >= line.length ? "최종 승인되었습니다" : `${currentStep + 1}단계 승인되었습니다`) : "반려되었습니다"}`,
+    }).catch(() => {});
     setComment("");
     load();
   };

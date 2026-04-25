@@ -203,6 +203,14 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
       .update(updateData)
       .eq("id", id);
     if (error) { flash("처리 실패: " + error.message); return; }
+    // 알림 발송
+    const target = requests.find(r => r.id === id);
+    if (target) {
+      await s.from("hq_notifications").insert({
+        type: "leave", target_user: target.requester, created_by: userName,
+        message: `휴가 신청 (${target.type}) ${status === "승인" ? "승인되었습니다" : "반려되었습니다"}`,
+      }).catch(() => {});
+    }
     setApprovalComments(prev => { const next = { ...prev }; delete next[id]; return next; });
     flash(status === "승인" ? "승인 완료" : "반려 완료");
     fetchAll();

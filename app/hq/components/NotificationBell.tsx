@@ -130,6 +130,13 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
     if (r9) for (const b of r9) { if (b.author !== userName) items.push({ id: `board-${b.id}`, icon: "📝", title: `게시판: ${b.title}`, time: b.date, tab: "board" }); }
     if (r10) for (const sv of r10) { if (sv.author !== userName) items.push({ id: `survey-${sv.id}`, icon: "📊", title: `설문 참여: ${sv.title}`, time: sv.date, tab: "board" }); }
 
+    // hq_notifications 테이블에서 내 알림 로드
+    const rNoti = await s.from("hq_notifications").select("*").eq("target_user", userName).eq("read", false).order("created_at", { ascending: false }).limit(20).then((res: any) => res.data).catch(() => null);
+    if (rNoti) for (const n of rNoti) {
+      const tabMap: Record<string, string> = { expense: "finance", approval: "approval", leave: "attendance", booking: "resource" };
+      items.push({ id: `noti-${n.id}`, icon: n.type === "expense" ? "💰" : n.type === "approval" ? "📋" : n.type === "leave" ? "🏖️" : "🔔", title: n.message, time: n.created_at, tab: (tabMap[n.type] || "dashboard") as any });
+    }
+
     // 추가 알림
     if (rLeaveReq) for (const l of rLeaveReq) { if (l.requester !== userName) items.push({ id: `leave-req-${l.id}`, icon: "📩", title: `휴가 신청: ${l.requester} (${l.type})`, time: l.date, tab: "attendance" }); }
     if (rWiki) for (const w of rWiki) { if (w.author !== userName) items.push({ id: `wiki-${w.id}`, icon: "📖", title: `위키 수정: ${w.title}`, time: w.updated_at, tab: "docs" }); }

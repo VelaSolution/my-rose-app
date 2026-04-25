@@ -233,6 +233,14 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
   async function approveExpense(id: string, status: "승인" | "반려") {
     const s = sb(); if (!s) return;
     await s.from("hq_expenses").update({ status, approver: userName }).eq("id", id);
+    // 알림 발송
+    const target = expenses.find(e => e.id === id);
+    if (target) {
+      await s.from("hq_notifications").insert({
+        type: "expense", target_user: target.author, created_by: userName,
+        message: `경비 ${fmt(Number(target.amount))}${(target as any).currency === "USD" ? "$" : "원"} (${target.category}) ${status === "승인" ? "승인되었습니다" : "반려되었습니다"}`,
+      }).catch(() => {});
+    }
     flash(`${status} 처리 완료`); load();
   }
 
