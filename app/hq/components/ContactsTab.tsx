@@ -53,6 +53,8 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [extension, setExtension] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [address, setAddress] = useState("");
 
   // 명함 모달
   const [cardContact, setCardContact] = useState<Contact | null>(null);
@@ -80,7 +82,8 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
         id: r.id, name: r.name,
         department: r.department || "", position: r.position || "",
         phone: r.phone || "", email: r.email || "",
-        extension: r.extension || "", manager: r.manager,
+        extension: r.extension || "", mobile: r.mobile || "",
+        address: r.address || "", manager: r.manager,
       }));
 
       // hq_team 데이터를 Contact 형식으로 변환 (중복 제거: 이메일 기준)
@@ -245,6 +248,8 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
         phone: phone.trim(),
         email: email.trim(),
         extension: extension.trim(),
+        mobile: mobile.trim(),
+        address: address.trim(),
       });
       if (error) throw error;
       await load();
@@ -255,6 +260,8 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
       setPhone("");
       setEmail("");
       setExtension("");
+      setMobile("");
+      setAddress("");
     } catch (e) {
       console.error("ContactsTab add error:", e);
       flash("연락처 추가 실패");
@@ -263,11 +270,11 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
 
   const isAdmin = myRole === "대표" || myRole === "이사";
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", department: "", position: "", phone: "", email: "", extension: "" });
+  const [editForm, setEditForm] = useState({ name: "", department: "", position: "", phone: "", email: "", extension: "", mobile: "", address: "" });
 
   const startEdit = (c: Contact) => {
     setEditingId(c.id);
-    setEditForm({ name: c.name, department: c.department, position: c.position, phone: c.phone, email: c.email, extension: c.extension });
+    setEditForm({ name: c.name, department: c.department, position: c.position, phone: c.phone, email: c.email, extension: c.extension, mobile: c.mobile || "", address: c.address || "" });
   };
 
   const saveEdit = async () => {
@@ -287,6 +294,7 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
         const res = await s.from("hq_contacts").update({
           name: editForm.name, department: editForm.department, position: editForm.position,
           phone: editForm.phone, email: editForm.email, extension: editForm.extension,
+          mobile: editForm.mobile, address: editForm.address,
         }).eq("id", editingId);
         error = res.error;
       }
@@ -672,6 +680,24 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
               onChange={(e) => setExtension(e.target.value)}
             />
           </div>
+          <div>
+            <label className={L}>연락처</label>
+            <input
+              className={I}
+              placeholder="010-0000-0000"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+            />
+          </div>
+          <div className="sm:col-span-2 lg:col-span-3">
+            <label className={L}>집주소</label>
+            <input
+              className={I}
+              placeholder="서울특별시..."
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </div>
         </div>
         <button className={`${B} mt-4`} onClick={add}>
           추가
@@ -708,8 +734,10 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
                       <input className={`${I} !text-xs`} placeholder="직책" value={editForm.position} onChange={e => setEditForm({ ...editForm, position: e.target.value })} />
                     </div>
                     <input className={`${I} !text-xs`} placeholder="전화번호" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
+                    <input className={`${I} !text-xs`} placeholder="연락처" value={editForm.mobile} onChange={e => setEditForm({ ...editForm, mobile: e.target.value })} />
                     <input className={`${I} !text-xs`} placeholder="이메일" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
                     <input className={`${I} !text-xs`} placeholder="내선번호" value={editForm.extension} onChange={e => setEditForm({ ...editForm, extension: e.target.value })} />
+                    <input className={`${I} !text-xs`} placeholder="집주소" value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} />
                     <div className="flex gap-2">
                       <button className={`${B} !text-xs !px-3 !py-1.5`} onClick={saveEdit}>저장</button>
                       <button className={`${B2} !text-xs !px-3 !py-1.5`} onClick={() => setEditingId(null)}>취소</button>
@@ -732,8 +760,10 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
                     </div>
                     <div className="space-y-1.5 text-xs text-slate-500">
                       {c.phone && <div className="flex items-center gap-2"><span className="text-slate-300">📱</span><span>{c.phone}</span></div>}
+                      {c.mobile && <div className="flex items-center gap-2"><span className="text-slate-300">📞</span><span>{c.mobile}</span></div>}
                       {c.email && <div className="flex items-center gap-2"><span className="text-slate-300">✉️</span><span className="truncate">{c.email}</span></div>}
                       {c.extension && <div className="flex items-center gap-2"><span className="text-slate-300">☎️</span><span>내선 {c.extension}</span></div>}
+                      {c.address && <div className="flex items-center gap-2"><span className="text-slate-300">🏠</span><span className="truncate">{c.address}</span></div>}
                     </div>
                     <div className="flex gap-2 mt-3">
                       <button

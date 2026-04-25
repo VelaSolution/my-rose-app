@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## [2026-04-25]
+
+### Bridge 경비등록 & 주소록 기능 확장
+
+**경비등록 (재무관리)**
+- 달러(USD) 통화 지원: 금액 입력 시 KRW/USD 선택 가능, 목록·엑셀에 통화 표시
+- 결제수단에 "사업자카드" 옵션 추가
+
+**주소록 (인사관리)**
+- 연락처(mobile) 필드 추가: 개인 휴대폰 번호 등록·표시
+- 집주소(address) 필드 추가: 카드뷰·수정폼·등록폼 모두 지원
+
+**누락 DB 테이블 15개 추가 (hq_tables.sql: 46 → 61개)**
+- hq_settings — 시스템 설정 (출근시간, 사무실위치, 명함 등)
+- hq_payslips — 급여명세서
+- hq_personnel_history — 인사 발령 이력
+- hq_mail — 사내 메일
+- hq_kudos — 칭찬/인정
+- hq_certificates — 증명서 발급 (재직/경력/퇴직)
+- hq_visitors — 방문자 관리
+- hq_vehicle_logs — 차량 운행 기록
+- hq_file_stars — 파일 즐겨찾기
+- hq_file_shares — 파일 공유 링크
+- hq_file_tags — 파일 색상 태그
+- hq_file_versions — 파일 버전 이력
+- hq_notifications — 알림
+- hq_audit_log — 감사 로그
+- hq_booking_invitations — 예약 초대
+
 ## [2026-04-23]
 
 ### Bridge 다우오피스 기능 완전 구현 (3차 — 최종 기능 이식)

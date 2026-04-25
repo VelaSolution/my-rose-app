@@ -10,7 +10,9 @@ type SubTab = "overview" | "fixed" | "expense";
 // ── 상수 ─────────────────────────────────────────────────
 const EXP_CATS = ["식비", "교통비", "사무용품", "마케팅", "소프트웨어", "통신비", "복리후생", "기타"] as const;
 const FIX_CATS = ["급여", "임대료", "도메인", "서버/클라우드", "구독서비스", "보험", "세금/공과금", "통신비", "기타"] as const;
-const PAYMENTS = ["법인카드", "개인카드", "현금", "계좌이체"] as const;
+const PAYMENTS = ["법인카드", "개인카드", "사업자카드", "현금", "계좌이체"] as const;
+const CURRENCIES = ["KRW", "USD"] as const;
+const CURRENCY_SYMBOL: Record<string, string> = { "KRW": "원", "USD": "$" };
 const CYCLES = ["월", "분기", "반기", "연"] as const;
 const CYCLE_MULT: Record<string, number> = { "월": 1, "분기": 3, "반기": 6, "연": 12 };
 
@@ -28,7 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
   "대기": "bg-amber-50 text-amber-700", "승인": "bg-emerald-50 text-emerald-700", "반려": "bg-red-50 text-red-700",
 };
 
-const EXP_EMPTY = { date: today(), category: "식비" as string, amount: "", description: "", payment: "법인카드" as string, memo: "" };
+const EXP_EMPTY = { date: today(), category: "식비" as string, amount: "", currency: "KRW" as string, description: "", payment: "법인카드" as string, memo: "" };
 const FIX_EMPTY = { name: "", category: "급여" as string, amount: "", billing_cycle: "월" as string, due_day: "1", description: "" };
 
 export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
@@ -123,6 +125,7 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
       "날짜": e.date,
       "카테고리": e.category,
       "금액": Number(e.amount),
+      "통화": (e as any).currency || "KRW",
       "설명": e.description,
       "결제수단": e.payment,
       "등록자": e.author,
@@ -157,7 +160,7 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
     setExpSaving(true);
     const s = sb();
     if (!s) { setExpSaving(false); return; }
-    const row = { author: userName, date: expForm.date, category: expForm.category, amount: amt, description: expForm.description.trim(), payment: expForm.payment, memo: expForm.memo.trim(), status: "대기" };
+    const row = { author: userName, date: expForm.date, category: expForm.category, amount: amt, currency: expForm.currency, description: expForm.description.trim(), payment: expForm.payment, memo: expForm.memo.trim(), status: "대기" };
     if (expEditId) {
       const { error } = await s.from("hq_expenses").update(row).eq("id", expEditId);
       if (error) { flash("수정 실패"); setExpSaving(false); return; }
@@ -171,7 +174,7 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
   }
 
   function startEditExp(e: Expense) {
-    setExpForm({ date: e.date, category: e.category, amount: String(e.amount), description: e.description, payment: e.payment, memo: e.memo });
+    setExpForm({ date: e.date, category: e.category, amount: String(e.amount), currency: (e as any).currency || "KRW", description: e.description, payment: e.payment, memo: e.memo });
     setExpEditId(e.id); setShowExpForm(true);
   }
 
@@ -536,8 +539,13 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
                   </select>
                 </div>
                 <div>
-                  <label className={L}>금액 (원)</label>
-                  <input type="number" className={I} placeholder="0" value={expForm.amount} onChange={e => setExpForm({ ...expForm, amount: e.target.value })} />
+                  <label className={L}>금액</label>
+                  <div className="flex gap-2">
+                    <input type="number" className={`${I} flex-1`} placeholder="0" value={expForm.amount} onChange={e => setExpForm({ ...expForm, amount: e.target.value })} />
+                    <select className={`${I} !w-20 flex-shrink-0`} value={expForm.currency} onChange={e => setExpForm({ ...expForm, currency: e.target.value })}>
+                      {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className={L}>결제수단</label>
@@ -664,7 +672,7 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
                         <span className="text-xs text-slate-400">{e.payment}</span>
                       </div>
                       <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-lg font-bold text-slate-900">{fmt(Number(e.amount))}원</span>
+                        <span className="text-lg font-bold text-slate-900">{(e as any).currency === "USD" ? "$" : ""}{fmt(Number(e.amount))}{(e as any).currency === "USD" ? "" : "원"}</span>
                         {e.description && <span className="text-sm text-slate-600">{e.description}</span>}
                       </div>
                       {e.memo && <p className="text-xs text-slate-400 mt-1">{e.memo}</p>}

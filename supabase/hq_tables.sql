@@ -532,6 +532,8 @@ CREATE TABLE IF NOT EXISTS hq_contacts (
   phone      text DEFAULT '',
   email      text DEFAULT '',
   extension  text DEFAULT '',                        -- 내선번호
+  mobile     text DEFAULT '',                        -- 연락처 (개인 휴대폰)
+  address    text DEFAULT '',                        -- 집주소
   created_at timestamptz DEFAULT now()
 );
 
@@ -589,9 +591,10 @@ CREATE TABLE IF NOT EXISTS hq_expenses (
   author      text NOT NULL,                          -- 등록자 이름
   date        text NOT NULL,                          -- YYYY-MM-DD
   category    text NOT NULL,                          -- 식비 | 교통비 | 사무용품 | 마케팅 | 소프트웨어 | 통신비 | 복리후생 | 기타
-  amount      numeric NOT NULL DEFAULT 0,             -- 금액 (원)
+  amount      numeric NOT NULL DEFAULT 0,             -- 금액
+  currency    text DEFAULT 'KRW',                     -- KRW | USD
   description text DEFAULT '',                        -- 설명
-  payment     text DEFAULT '법인카드',                -- 법인카드 | 개인카드 | 현금 | 계좌이체
+  payment     text DEFAULT '법인카드',                -- 법인카드 | 개인카드 | 사업자카드 | 현금 | 계좌이체
   receipt_url text,                                   -- 영수증 이미지 URL
   status      text DEFAULT '대기',                    -- 대기 | 승인 | 반려
   approver    text,                                   -- 승인자 이름
@@ -891,7 +894,265 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "user_sessions_auth" ON user_sessions FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
 
+-- ──────────────────────────────────────────────────────────────
+-- 47. hq_settings (시스템 설정 — 출근시간, 사무실위치, 명함 등)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_settings (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  key         text UNIQUE NOT NULL,                      -- 설정 키 (ex: work_start_time, business_card_김민혁)
+  value       text DEFAULT '',                           -- JSON 문자열 또는 단순 값
+  updated_by  text,                                      -- 마지막 수정자
+  updated_at  timestamptz DEFAULT now(),
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE hq_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_settings_auth" ON hq_settings FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 48. hq_payslips (급여명세서)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_payslips (
+  id                   uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  month                text NOT NULL,                     -- YYYY-MM
+  name                 text NOT NULL,                     -- 직원 이름
+  base_pay             numeric DEFAULT 0,                 -- 기본급
+  overtime_pay         numeric DEFAULT 0,                 -- 초과근무수당
+  bonus                numeric DEFAULT 0,                 -- 상여금
+  national_pension     numeric DEFAULT 0,                 -- 국민연금
+  health_insurance     numeric DEFAULT 0,                 -- 건강보험
+  employment_insurance numeric DEFAULT 0,                 -- 고용보험
+  income_tax           numeric DEFAULT 0,                 -- 소득세
+  total_pay            numeric DEFAULT 0,                 -- 총 지급액
+  total_deductions     numeric DEFAULT 0,                 -- 총 공제액
+  net_pay              numeric DEFAULT 0,                 -- 실수령액
+  memo                 text DEFAULT '',
+  created_at           timestamptz DEFAULT now(),
+  UNIQUE (month, name)
+);
+ALTER TABLE hq_payslips ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_payslips_auth" ON hq_payslips FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 49. hq_personnel_history (인사 발령 이력)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_personnel_history (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_name       text NOT NULL,                          -- 대상 팀원 이름
+  change_type     text NOT NULL,                          -- 입사 | 퇴사 | 승진 | 부서이동 | 직책변경
+  from_value      text DEFAULT '',                        -- 변경 전 값
+  to_value        text DEFAULT '',                        -- 변경 후 값
+  effective_date  text NOT NULL,                          -- YYYY-MM-DD 발령일
+  note            text DEFAULT '',                        -- 비고/사유
+  created_by      text NOT NULL,                          -- 등록자
+  created_at      timestamptz DEFAULT now()
+);
+ALTER TABLE hq_personnel_history ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_personnel_history_auth" ON hq_personnel_history FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 50. hq_mail (사내 메일)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_mail (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  from_name   text NOT NULL,                              -- 발신자
+  to_name     text NOT NULL,                              -- 수신자
+  subject     text DEFAULT '',                            -- 제목
+  body        text DEFAULT '',                            -- 본문
+  read        boolean DEFAULT false,                      -- 읽음 여부
+  starred     boolean DEFAULT false,                      -- 즐겨찾기
+  folder      text DEFAULT '받은편지함',                   -- 받은편지함 | 보낸편지함 | 중요 | 임시보관함 | 휴지통
+  attachments jsonb DEFAULT '[]'::jsonb,                  -- 첨부파일 배열
+  read_at     timestamptz,                                -- 읽은 시각
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE hq_mail ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_mail_auth" ON hq_mail FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 51. hq_kudos (칭찬/인정)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_kudos (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  from_name   text NOT NULL,                              -- 보낸 사람
+  to_name     text NOT NULL,                              -- 받은 사람
+  message     text NOT NULL,                              -- 칭찬 메시지
+  emoji       text DEFAULT '',                            -- 이모지
+  category    text DEFAULT '업무성과',                     -- 업무성과 | 팀워크 | 리더십 | 창의성 | 도움 | 기타
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE hq_kudos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_kudos_auth" ON hq_kudos FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 52. hq_certificates (증명서 발급)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_certificates (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  employee_name   text NOT NULL,                          -- 대상 직원
+  cert_type       text NOT NULL,                          -- 재직증명서 | 경력증명서 | 퇴직증명서
+  cert_number     text UNIQUE NOT NULL,                   -- 증명서 번호 (고유)
+  issued_by       text NOT NULL,                          -- 발급자
+  created_at      timestamptz DEFAULT now()
+);
+ALTER TABLE hq_certificates ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_certificates_auth" ON hq_certificates FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 53. hq_visitors (방문자 관리)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_visitors (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name            text NOT NULL,                          -- 방문자 이름
+  company         text DEFAULT '',                        -- 방문자 소속
+  purpose         text DEFAULT '',                        -- 방문 목적
+  host            text NOT NULL,                          -- 담당자 (사내)
+  visit_date      text NOT NULL,                          -- YYYY-MM-DD
+  expected_time   text DEFAULT '',                        -- 예정 시간 HH:MM
+  arrival_time    text,                                   -- 실제 도착 시간
+  departure_time  text,                                   -- 퇴실 시간
+  phone           text DEFAULT '',                        -- 방문자 연락처
+  vehicle_no      text DEFAULT '',                        -- 차량 번호
+  status          text DEFAULT '예약',                    -- 예약 | 방문중 | 퇴실
+  created_at      timestamptz DEFAULT now()
+);
+ALTER TABLE hq_visitors ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_visitors_auth" ON hq_visitors FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 54. hq_vehicle_logs (차량 운행 기록)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_vehicle_logs (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  date            text NOT NULL,                          -- YYYY-MM-DD
+  driver          text NOT NULL,                          -- 운전자
+  vehicle_name    text NOT NULL,                          -- 차량명
+  purpose         text DEFAULT '',                        -- 운행 목적
+  from_location   text DEFAULT '',                        -- 출발지
+  to_location     text DEFAULT '',                        -- 도착지
+  departure_km    numeric DEFAULT 0,                      -- 출발 km
+  arrival_km      numeric DEFAULT 0,                      -- 도착 km
+  distance        numeric DEFAULT 0,                      -- 주행 거리
+  fuel_amount     numeric DEFAULT 0,                      -- 주유량 (L)
+  fuel_cost       numeric DEFAULT 0,                      -- 주유비 (원)
+  memo            text DEFAULT '',
+  created_at      timestamptz DEFAULT now()
+);
+ALTER TABLE hq_vehicle_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_vehicle_logs_auth" ON hq_vehicle_logs FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 55. hq_file_stars (파일 즐겨찾기)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_file_stars (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  file_id     uuid NOT NULL,                              -- hq_files.id
+  user_id     uuid NOT NULL,                              -- auth.users.id
+  created_at  timestamptz DEFAULT now(),
+  UNIQUE (file_id, user_id)
+);
+ALTER TABLE hq_file_stars ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_file_stars_auth" ON hq_file_stars FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 56. hq_file_shares (파일 공유 링크)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_file_shares (
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  file_id       uuid NOT NULL,                            -- hq_files.id
+  share_token   text UNIQUE NOT NULL,                     -- 공유 토큰
+  expires_at    timestamptz,                              -- 만료 시각
+  created_at    timestamptz DEFAULT now()
+);
+ALTER TABLE hq_file_shares ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_file_shares_auth" ON hq_file_shares FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 57. hq_file_tags (파일 색상 태그)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_file_tags (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  file_id     uuid UNIQUE NOT NULL,                       -- hq_files.id (파일당 1태그)
+  color       text NOT NULL,                              -- red | orange | yellow | green | blue | purple
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE hq_file_tags ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_file_tags_auth" ON hq_file_tags FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 58. hq_file_versions (파일 버전 이력)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_file_versions (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  file_id         uuid NOT NULL,                          -- hq_files.id
+  version_number  int NOT NULL,                           -- 버전 번호
+  url             text NOT NULL,                          -- 파일 URL
+  size            bigint DEFAULT 0,                       -- 파일 크기 (bytes)
+  uploaded_by     text DEFAULT '',                        -- 업로더
+  created_at      timestamptz DEFAULT now()
+);
+ALTER TABLE hq_file_versions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_file_versions_auth" ON hq_file_versions FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 59. hq_notifications (알림)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_notifications (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  type        text NOT NULL,                              -- booking | mail | approval 등
+  message     text NOT NULL,                              -- 알림 메시지
+  target_user text NOT NULL,                              -- 수신 대상
+  created_by  text DEFAULT '',                            -- 발신자
+  read        boolean DEFAULT false,                      -- 읽음 여부
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE hq_notifications ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_notifications_auth" ON hq_notifications FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 60. hq_audit_log (감사 로그)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_audit_log (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_name   text NOT NULL,                              -- 행위자
+  action      text NOT NULL,                              -- 행위 (로그인, 파일열람 등)
+  detail      text DEFAULT '',                            -- 상세 내용
+  browser     text DEFAULT '',                            -- 브라우저/OS 정보
+  ip          text DEFAULT '',                            -- IP 주소
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE hq_audit_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_audit_log_auth" ON hq_audit_log FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
+-- ──────────────────────────────────────────────────────────────
+-- 61. hq_booking_invitations (예약 초대)
+-- ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS hq_booking_invitations (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  booking_id  uuid NOT NULL,                              -- hq_bookings.id
+  target_user text NOT NULL,                              -- 초대 대상
+  response    text DEFAULT '대기',                        -- 대기 | 수락 | 거절
+  created_at  timestamptz DEFAULT now(),
+  UNIQUE (booking_id, target_user)
+);
+ALTER TABLE hq_booking_invitations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "hq_booking_invitations_auth" ON hq_booking_invitations FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+
 -- ============================================================
--- 완료! 총 46개 테이블 생성
+-- 완료! 총 61개 테이블 생성
 -- 참고: hq-files Storage 버킷은 Supabase 대시보드에서 별도 생성 필요
 -- ============================================================

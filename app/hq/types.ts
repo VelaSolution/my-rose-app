@@ -44,6 +44,7 @@ export type LeaveRequest = {
 export type Contact = {
   id: string; name: string; department: string; position: string;
   phone: string; email: string; extension: string;
+  address?: string; mobile?: string;
   profileImg?: string; manager?: string;
 };
 export type BugStatus = "접수" | "진행" | "완료" | "보류";
@@ -74,7 +75,8 @@ export type Expense = {
   id: string; author: string; date: string;
   category: "식비" | "교통비" | "사무용품" | "마케팅" | "소프트웨어" | "통신비" | "복리후생" | "기타";
   amount: number; description: string;
-  payment: "법인카드" | "개인카드" | "현금" | "계좌이체";
+  currency?: "KRW" | "USD";
+  payment: "법인카드" | "개인카드" | "사업자카드" | "현금" | "계좌이체";
   receipt_url?: string; status: "대기" | "승인" | "반려";
   approver?: string; memo: string; created_at: string;
 };
