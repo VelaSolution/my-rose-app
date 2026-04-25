@@ -347,6 +347,78 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
         </div>
       </div>
 
+      {/* ── 팀 휴가 현황 (대표/이사만) ── */}
+      {(myRole === "대표" || myRole === "이사") && (() => {
+        const memberMap = new Map<string, { used: number; pending: number }>();
+        for (const r of requests) {
+          if (!r.startDate.startsWith(String(year))) continue;
+          const prev = memberMap.get(r.requester) || { used: 0, pending: 0 };
+          if (r.status === "승인") prev.used += r.days;
+          else if (r.status === "대기") prev.pending += r.days;
+          else if (r.status !== "반려") prev.used += r.days;
+          memberMap.set(r.requester, prev);
+        }
+        const members = [...memberMap.entries()]
+          .map(([name, v]) => ({ name, ...v, remaining: totalLeave - v.used }))
+          .sort((a, b) => a.remaining - b.remaining);
+
+        return (
+          <div className={C}>
+            <h3 className="text-sm font-bold text-slate-700 mb-4">팀 휴가 현황 ({year}년)</h3>
+            {members.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-4">휴가 사용 기록이 없습니다</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="text-left py-2 px-2 text-xs font-semibold text-slate-500">이름</th>
+                      <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500">총 연차</th>
+                      <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500">사용</th>
+                      <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500">승인 대기</th>
+                      <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500">잔여</th>
+                      <th className="text-left py-2 px-2 text-xs font-semibold text-slate-500 min-w-[120px]">사용률</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {members.map(m => {
+                      const pct = Math.min(100, (m.used / totalLeave) * 100);
+                      return (
+                        <tr key={m.name} className="border-b border-slate-50 hover:bg-slate-50/50">
+                          <td className="py-2.5 px-2 font-semibold text-slate-800">{m.name}</td>
+                          <td className="py-2.5 px-2 text-center text-slate-500">{totalLeave}일</td>
+                          <td className="py-2.5 px-2 text-center font-semibold text-orange-600">{m.used}일</td>
+                          <td className="py-2.5 px-2 text-center">{m.pending > 0 ? <span className="text-amber-500 font-semibold">{m.pending}일</span> : <span className="text-slate-300">-</span>}</td>
+                          <td className="py-2.5 px-2 text-center font-bold" style={{ color: m.remaining <= 3 ? "#dc2626" : m.remaining <= 7 ? "#d97706" : "#059669" }}>{m.remaining}일</td>
+                          <td className="py-2.5 px-2">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: pct >= 80 ? "#dc2626" : pct >= 50 ? "#d97706" : "#3182F6" }} />
+                              </div>
+                              <span className="text-[11px] text-slate-400 w-8 text-right">{pct.toFixed(0)}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-slate-200">
+                      <td className="py-2.5 px-2 font-bold text-slate-700">합계 ({members.length}명)</td>
+                      <td className="py-2.5 px-2 text-center font-semibold text-slate-500">{totalLeave * members.length}일</td>
+                      <td className="py-2.5 px-2 text-center font-bold text-orange-600">{members.reduce((s, m) => s + m.used, 0)}일</td>
+                      <td className="py-2.5 px-2 text-center font-semibold text-amber-500">{members.reduce((s, m) => s + m.pending, 0)}일</td>
+                      <td className="py-2.5 px-2 text-center font-bold text-emerald-600">{members.reduce((s, m) => s + m.remaining, 0)}일</td>
+                      <td />
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Application form */}
       {showForm && (
         <div className={C}>
