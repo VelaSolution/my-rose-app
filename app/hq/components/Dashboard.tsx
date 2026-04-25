@@ -509,12 +509,12 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
           {([
             { tab: "attendance" as Tab, icon: "⏰", label: "출퇴근" },
             { tab: "task" as Tab, icon: "✅", label: "업무" },
-            { tab: "report" as Tab, icon: "📄", label: "보고서" },
             { tab: "approval" as Tab, icon: "📋", label: "결재" },
             { tab: "chat" as Tab, icon: "💬", label: "채팅" },
             { tab: "board" as Tab, icon: "📢", label: "공지" },
-            { tab: "calendar" as Tab, icon: "📅", label: "일정" },
-            { tab: "files" as Tab, icon: "📁", label: "파일" },
+            { tab: "mail" as Tab, icon: "✉️", label: "메일" },
+            { tab: "resource" as Tab, icon: "📅", label: "일정/예약" },
+            { tab: "docs" as Tab, icon: "📁", label: "문서" },
           ]).map(q => (
             <button key={q.tab} onClick={() => go(q.tab)}
               className="flex flex-col items-center gap-1.5 py-3.5 rounded-2xl bg-white ring-1 ring-slate-200/60 hover:ring-[#3182F6]/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 active:scale-95">
