@@ -224,7 +224,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
   const [delegations, setDelegations] = useState<{ owner: string; data: DelegationData }[]>([]);
 
   const { displayName } = useTeamDisplayNames();
-  const canApprove = myRole === "대표" || myRole === "이사" || myRole === "팀장";
+  const canApprove = myRole === "대표";
 
   /** PDF 다운로드 (인쇄용 HTML) */
   function openPrintableApproval(a: EnrichedApproval) {

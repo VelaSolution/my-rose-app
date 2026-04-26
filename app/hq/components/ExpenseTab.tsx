@@ -65,8 +65,8 @@ export default function ExpenseTab({ userId, userName, myRole, flash }: Props) {
     setSelected(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   }, []);
 
-  const canApprove = myRole === "대표" || myRole === "이사";
-  const canManageFixed = myRole === "대표" || myRole === "이사";
+  const canApprove = myRole === "대표";
+  const canManageFixed = myRole === "대표";
 
   // ── 로드 ───────────────────────────────────────────────
   async function load() {

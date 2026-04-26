@@ -63,7 +63,7 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
   const [commentText, setCommentText] = useState("");
   const [commentTarget, setCommentTarget] = useState<string | null>(null);
 
-  const canApprove = myRole === "대표" || myRole === "이사" || myRole === "팀장";
+  const canApprove = myRole === "대표";
   const [approver, setApprover] = useState("");
   const [approvers, setApprovers] = useState<{ name: string; hqRole: string }[]>([]);
 
