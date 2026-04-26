@@ -33,7 +33,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     'startup-checklist', 'daily-sales', 'labor-law', 'card-sales',
     'competitor-pricing', 'handover', 'tax-advisor', 'group-buy', 'integrations',
     'business-plan', 'gov-support', 'incorporation', 'financial-sim',
-    'fundraising', 'tax-guide', 'hiring', 'revenue-forecast',
+    'fundraising', 'tax-guide', 'hiring', 'revenue-forecast', 'cashbook',
   ].map(tool => ({
     url: `${base}/tools/${tool}`,
     lastModified: now,
