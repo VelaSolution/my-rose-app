@@ -12,26 +12,26 @@ export function usePlan(): { plan: Plan; userId: string | null; loading: boolean
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
-    sb.auth.getUser().then(({ data: { user } }: { data: { user: { id: string } | null } }) => {
+    sb.auth.getUser().then(async ({ data: { user } }: { data: { user: { id: string } | null } }) => {
       if (!user) { setLoading(false); return; }
       setUserId(user.id);
 
-      sb.from("profiles").select("plan, plan_expires_at").eq("id", user.id).single()
-        .then(({ data: profile }: { data: { plan: string; plan_expires_at: string | null } | null }) => {
-          if (!profile) { setLoading(false); return; }
+      const { data: profile } = await sb.from("profiles").select("plan, plan_expires_at").eq("id", user.id).single();
+      if (!profile) { setLoading(false); return; }
 
-          const profilePlan = profile.plan ?? "free";
-          const expiresAt = profile.plan_expires_at;
+      const profilePlan = (profile as any).plan ?? "free";
+      const expiresAt = (profile as any).plan_expires_at;
 
-          // 만료일이 있고 과거이면 → free
-          if (expiresAt && new Date(expiresAt) < new Date()) {
-            setPlan("free");
-          } else {
-            setPlan(profilePlan as Plan);
-          }
+      // 만료일이 있고 과거이면 → free
+      if (expiresAt && new Date(expiresAt) < new Date()) {
+        setPlan("free");
+        // 서버에도 반영 (클라이언트에서 감지한 만료)
+        sb.from("profiles").update({ plan: "free", plan_expires_at: null }).eq("id", user.id).then(() => {});
+      } else {
+        setPlan(profilePlan as Plan);
+      }
 
-          setLoading(false);
-        });
+      setLoading(false);
     });
   }, []);
 

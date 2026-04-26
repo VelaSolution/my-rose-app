@@ -93,6 +93,12 @@ export async function POST(req: NextRequest) {
         updated_at: now.toISOString(),
       }).eq("id", sub.id);
 
+      // 결제 실패 시 plan_expires_at을 3일 뒤로 설정 (재시도 기간 유예)
+      const graceEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+      await admin.from("profiles").update({
+        plan_expires_at: graceEnd.toISOString(),
+      }).eq("id", sub.user_id);
+
       await admin.from("subscription_events").insert({
         subscription_id: sub.id,
         user_id: sub.user_id,
